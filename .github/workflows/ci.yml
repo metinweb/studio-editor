@@ -26,11 +26,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npx playwright install --with-deps chromium
       - run: npm run test:unit
       - run: npm run build:site
       - run: npm run build:library
-      - run: npm test
       - run: npm run test:site
       - name: Upload browser failure traces
         if: failure()
@@ -45,10 +44,36 @@ jobs:
         with:
           path: site-dist
 
+  browsers:
+    name: Browser tests (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm run build
+      - run: npx playwright test --project=${{ matrix.browser }} --workers=2 --max-failures=3 --reporter=list
+      - name: Upload browser failure traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-test-results-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 7
+
   deploy:
     name: Publish GitHub Pages
     if: github.event_name != 'pull_request' && github.repository == 'metinweb/studio-editor' && github.ref == 'refs/heads/main'
-    needs: checks
+    needs: [checks, browsers]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
