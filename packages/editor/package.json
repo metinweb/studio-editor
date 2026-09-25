@@ -1,0 +1,51 @@
+{
+  "name": "studio-editor",
+  "version": "0.1.0-beta.11",
+  "description": "Independent Vue 3 rich text editor with tables, media management and image editing",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "author": "metinweb",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metinweb/studio-editor.git",
+    "directory": "packages/editor"
+  },
+  "homepage": "https://metinweb.github.io/studio-editor/",
+  "bugs": {
+    "url": "https://github.com/metinweb/studio-editor/issues"
+  },
+  "main": "./dist/studio-editor.js",
+  "module": "./dist/studio-editor.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./dist/studio-editor.js"
+    },
+    "./style.css": "./dist/studio-editor.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "index.d.ts",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.txt",
+    "dependency-inventory.json"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "peerDependencies": {
+    "vue": "^3.5.0",
+    "pinia": "^4.0.0"
+  },
+  "keywords": [
+    "vue",
+    "editor",
+    "wysiwyg",
+    "rich-text",
+    "image-editor"
+  ]
+}

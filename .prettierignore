@@ -1,0 +1,11 @@
+node_modules
+dist
+site-dist
+test-results
+package-test-results
+package-lock.json
+release
+packages/editor/dist
+packages/editor/THIRD_PARTY_NOTICES.txt
+packages/editor/dependency-inventory.json
+.package-smoke

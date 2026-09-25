@@ -1,0 +1,94 @@
+{
+  "date": "2026-09-24T10:10:34.959Z",
+  "browser": "153.0.8010.12",
+  "node": "v24.5.0",
+  "platform": "win32",
+  "cpu": "AMD Ryzen 9 7900 12-Core Processor             ",
+  "scope": "Built Vue library in a local Vite harness, headless Chromium, 1280x900. No workspace autosave/counting. Input: beforeinput through two animation frames (paint opportunity, not physical display latency), 3 warmups + 20 samples. Selection: programmatic caret + 2 frames, 10 samples. Open and undo: one sample. Heap: CDP Runtime.getHeapUsage after GC, whole page/runtime; not process RAM. Not a competitor comparison.",
+  "results": [
+    {
+      "name": "1000 paragraphs",
+      "htmlBytes": 64020,
+      "loadMs": 29.3,
+      "inputToPaintOpportunityMs": {
+        "p50": 32.2,
+        "p95": 32.9
+      },
+      "selectionToPaintOpportunityMs": {
+        "p50": 32.5,
+        "p95": 33.4
+      },
+      "undoMs": 30.1,
+      "usedHeapBytes": 7560284,
+      "history": {
+        "undo": 1,
+        "redo": 1,
+        "patchBytes": 144608,
+        "documentBytes": 64020
+      }
+    },
+    {
+      "name": "10000 paragraphs",
+      "htmlBytes": 640020,
+      "loadMs": 131.4,
+      "inputToPaintOpportunityMs": {
+        "p50": 36,
+        "p95": 38.1
+      },
+      "selectionToPaintOpportunityMs": {
+        "p50": 32.5,
+        "p95": 33.2
+      },
+      "undoMs": 72.7,
+      "usedHeapBytes": 10252020,
+      "history": {
+        "undo": 1,
+        "redo": 1,
+        "patchBytes": 1422624,
+        "documentBytes": 640020
+      }
+    },
+    {
+      "name": "100x20 table",
+      "htmlBytes": 57850,
+      "loadMs": 32.3,
+      "inputToPaintOpportunityMs": {
+        "p50": 32.4,
+        "p95": 33
+      },
+      "selectionToPaintOpportunityMs": {
+        "p50": 31.9,
+        "p95": 33.4
+      },
+      "undoMs": 30.6,
+      "usedHeapBytes": 7273120,
+      "history": {
+        "undo": 1,
+        "redo": 1,
+        "patchBytes": 60512,
+        "documentBytes": 57880
+      }
+    },
+    {
+      "name": "50 images",
+      "htmlBytes": 4633120,
+      "loadMs": 74.4,
+      "inputToPaintOpportunityMs": {
+        "p50": 33.5,
+        "p95": 36.1
+      },
+      "selectionToPaintOpportunityMs": {
+        "p50": 32,
+        "p95": 33.1
+      },
+      "undoMs": 31.2,
+      "usedHeapBytes": 9577196,
+      "history": {
+        "undo": 1,
+        "redo": 1,
+        "patchBytes": 4640184,
+        "documentBytes": 4633120
+      }
+    }
+  ]
+}

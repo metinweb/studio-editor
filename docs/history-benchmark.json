@@ -1,0 +1,47 @@
+{
+  "node": "v24.5.0",
+  "platform": "win32",
+  "scope": "Pure history commits; no DOM, layout, input-to-paint, actual heap or competing editor measurement. Snapshot reference is an uncapped 80-copy estimate; the previous implementation trimmed at 16 MiB.",
+  "results": [
+    {
+      "name": "1000 paragraphs",
+      "undo": 79,
+      "redo": 0,
+      "patchBytes": 23726,
+      "documentBytes": 64018,
+      "snapshotReferenceBytes": 5121280,
+      "commitP50Ms": 0.089,
+      "commitP95Ms": 0.175
+    },
+    {
+      "name": "10000 paragraphs",
+      "undo": 79,
+      "redo": 0,
+      "patchBytes": 24042,
+      "documentBytes": 640018,
+      "snapshotReferenceBytes": 51201280,
+      "commitP50Ms": 0.872,
+      "commitP95Ms": 1.515
+    },
+    {
+      "name": "100x20 table",
+      "undo": 79,
+      "redo": 0,
+      "patchBytes": 23252,
+      "documentBytes": 57848,
+      "snapshotReferenceBytes": 4627680,
+      "commitP50Ms": 0.068,
+      "commitP95Ms": 0.076
+    },
+    {
+      "name": "50 embedded image URLs",
+      "undo": 79,
+      "redo": 0,
+      "patchBytes": 23726,
+      "documentBytes": 4004118,
+      "snapshotReferenceBytes": 320329280,
+      "commitP50Ms": 4.946,
+      "commitP95Ms": 6.063
+    }
+  ]
+}

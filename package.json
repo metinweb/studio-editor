@@ -1,0 +1,58 @@
+{
+  "name": "studio-editor-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Open-source Vue 3 rich-text editor and local writing workspace",
+  "author": "metinweb",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metinweb/studio-editor.git"
+  },
+  "homepage": "https://metinweb.github.io/studio-editor/",
+  "bugs": {
+    "url": "https://github.com/metinweb/studio-editor/issues"
+  },
+  "engines": {
+    "node": "^22.12.0 || >=24.0.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/build.mjs",
+    "build:library": "node scripts/build-library.mjs",
+    "build:site": "npm run build && npm run licenses && node scripts/build-site.mjs",
+    "preview:site": "vite preview --outDir site-dist --host 127.0.0.1",
+    "test:site": "playwright test --config playwright.site.config.js",
+    "licenses": "node scripts/licenses.mjs",
+    "package:release": "npm run build && npm run build:library && npm run licenses && node scripts/release.mjs",
+    "verify:release": "node scripts/verify-release.mjs && playwright test --config playwright.package.config.js",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "playwright test",
+    "test:unit": "node --test scripts/tests/*.test.mjs",
+    "benchmark:history": "node scripts/benchmark-history.mjs",
+    "benchmark:browser": "npm run build:library && node scripts/benchmark-browser.mjs",
+    "format": "prettier --write src tests scripts docs packages examples *.js *.json *.md index.html"
+  },
+  "dependencies": {
+    "@codemirror/lang-html": "^6.4.12",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@lucide/vue": "^1.47.0",
+    "codemirror": "^6.0.2",
+    "dompurify": "^3.4.15",
+    "fflate": "^0.8.3",
+    "idb": "^8.0.3",
+    "pinia": "^4.0.3",
+    "vue": "^3.5.43",
+    "y-indexeddb": "^9.0.12",
+    "yjs": "^13.6.33"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "prettier": "^3.9.9",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0"
+  }
+}

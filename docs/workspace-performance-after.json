@@ -1,0 +1,92 @@
+{
+  "date": "2026-09-24T15:18:14.695Z",
+  "cpu": "AMD Ryzen 9 7900 12-Core Processor             ",
+  "node": "v24.5.0",
+  "scope": "Production workspace at 4173 including autosave and counters. Input beforeinput to two animation frames, 3 warmups + 12 samples. Programmatic selection near document end, 3 warmups + 9 samples. Cell rect count covers all sampled selections and input. Headless desktop; not physical display latency or a competitor comparison.",
+  "results": [
+    {
+      "browser": "chromium",
+      "version": "153.0.8010.12",
+      "fixture": "10000 paragraphs",
+      "inputMs": {
+        "p50": 43.19999998807907,
+        "p95": 45
+      },
+      "selectionMs": {
+        "p50": 27.200000017881393,
+        "p95": 28.30000001192093
+      },
+      "cellRectReads": 0
+    },
+    {
+      "browser": "chromium",
+      "version": "153.0.8010.12",
+      "fixture": "100x20 table",
+      "inputMs": {
+        "p50": 30.200000017881393,
+        "p95": 33.60000002384186
+      },
+      "selectionMs": {
+        "p50": 28.599999994039536,
+        "p95": 29.799999982118607
+      },
+      "cellRectReads": 2240
+    },
+    {
+      "browser": "firefox",
+      "version": "155.0",
+      "fixture": "10000 paragraphs",
+      "inputMs": {
+        "p50": 31,
+        "p95": 35
+      },
+      "selectionMs": {
+        "p50": 5,
+        "p95": 12
+      },
+      "cellRectReads": 0
+    },
+    {
+      "browser": "firefox",
+      "version": "155.0",
+      "fixture": "100x20 table",
+      "inputMs": {
+        "p50": 14,
+        "p95": 17
+      },
+      "selectionMs": {
+        "p50": 5,
+        "p95": 13
+      },
+      "cellRectReads": 2520
+    },
+    {
+      "browser": "webkit",
+      "version": "26.6",
+      "fixture": "10000 paragraphs",
+      "inputMs": {
+        "p50": 45,
+        "p95": 55
+      },
+      "selectionMs": {
+        "p50": 32,
+        "p95": 47
+      },
+      "cellRectReads": 0
+    },
+    {
+      "browser": "webkit",
+      "version": "26.6",
+      "fixture": "100x20 table",
+      "inputMs": {
+        "p50": 46,
+        "p95": 49
+      },
+      "selectionMs": {
+        "p50": 46,
+        "p95": 52
+      },
+      "cellRectReads": 2220
+    }
+  ]
+}
