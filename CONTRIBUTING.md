@@ -46,7 +46,7 @@ Format only the files you change with Prettier. Keep pull requests small enough 
 
 The editor engine is implemented in this repository. Do not introduce another rich-text editor engine as a dependency without discussing the architecture first. The application stores documents locally by default. Media and collaboration servers under `examples/` are reference implementations, not production services.
 
-Core UI supports Turkish and English; several advanced messages still need translation. Documentation contributions in either language are welcome.
+English is the primary project language. Write new public documentation and issue/PR summaries in English when possible; Turkish contributions are also welcome. Preserve both shipped interface languages when changing labels. See the [localization guide](docs/INTERNATIONALIZATION.md) for message keys, interpolation and tests.
 
 ## Reporting security issues
 

@@ -1,4 +1,6 @@
 <script setup>
+import { useEditorLocale } from '../lib/editor-locale'
+const { t } = useEditorLocale()
 import { ref } from 'vue'
 import { Table2, Settings2 } from '@lucide/vue'
 import EditorPopover from './EditorPopover.vue'
@@ -29,18 +31,23 @@ function key(event, index) {
 </script>
 
 <template>
-  <EditorPopover :anchor="anchor" label="Tablo boyutunu seç" @close="emit('close')">
-    <div class="table-picker" role="dialog" aria-label="Tablo boyutunu seç">
+  <EditorPopover :anchor="anchor" :label="t('Tablo boyutunu seç')" @close="emit('close')">
+    <div class="table-picker" role="dialog" :aria-label="t('Tablo boyutunu seç')">
       <div class="table-picker-title">
-        <Table2 :size="18" /><strong>Tablo ekle</strong
+        <Table2 :size="18" /><strong>{{ t('Tablo ekle') }}</strong
         ><span aria-live="polite">{{ columns }} × {{ rows }}</span>
       </div>
-      <div class="table-grid" role="group" aria-label="Tablo boyutları">
+      <div class="table-grid" role="group" :aria-label="t('Tablo boyutları')">
         <button
           v-for="(_, index) in 80"
           :key="index"
           type="button"
-          :aria-label="`${(index % 10) + 1} sütun, ${Math.floor(index / 10) + 1} satır`"
+          :aria-label="
+            t('{columns} sütun, {rows} satır', {
+              columns: (index % 10) + 1,
+              rows: Math.floor(index / 10) + 1,
+            })
+          "
           :tabindex="index === (rows - 1) * 10 + columns - 1 ? 0 : -1"
           :class="{
             selected: index % 10 < columns && Math.floor(index / 10) < rows,
@@ -52,12 +59,14 @@ function key(event, index) {
           @click="choose(index)"
         ></button>
       </div>
-      <p class="table-picker-hint">{{ columns }} sütun, {{ rows }} satır oluştur</p>
+      <p class="table-picker-hint">
+        {{ columns }} {{ t('sütun,') }} {{ rows }} {{ t('satır oluştur') }}
+      </p>
       <label class="table-picker-check"
-        ><input v-model="header" type="checkbox" /> İlk satır başlık olsun</label
+        ><input v-model="header" type="checkbox" /> {{ t('İlk satır başlık olsun') }}</label
       >
       <button class="table-custom" @click="custom">
-        <Settings2 :size="16" /> Özel boyut… <span>En çok 20 satır</span>
+        <Settings2 :size="16" /> {{ t('Özel boyut…') }} <span>{{ t('En çok 20 satır') }}</span>
       </button>
     </div>
   </EditorPopover>

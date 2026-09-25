@@ -35,6 +35,15 @@ import { useWorkspace } from './stores/workspace'
 import { useMedia } from './stores/media'
 import { cleanHtml, downloadHtml, renderDocument, plainText } from './lib/content'
 import { createDocumentFilter, normalizeTags, searchKey } from './lib/document-library'
+import { provideEditorLocale } from './lib/editor-locale'
+import { workspaceLocale } from './lib/workspace-locale'
+
+const locale = workspaceLocale
+const { t } = provideEditorLocale({
+  get locale() {
+    return locale.value
+  },
+})
 
 const SourceEditor = defineAsyncComponent(() => import('./components/SourceEditor.vue'))
 const MediaManager = defineAsyncComponent(() => import('./components/MediaManager.vue'))
@@ -59,7 +68,7 @@ const availableTags = computed(() => {
   for (const document of workspace.documents)
     for (const tag of normalizeTags(document.tags))
       if (!tags.has(searchKey(tag))) tags.set(searchKey(tag), tag)
-  return [...tags.values()].sort((a, b) => a.localeCompare(b, 'tr'))
+  return [...tags.values()].sort((a, b) => a.localeCompare(b, locale.value))
 })
 const activeTags = computed(() => normalizeTags(workspace.active?.tags))
 const hasFilters = computed(() => Boolean(search.value || favoritesOnly.value || selectedTag.value))
@@ -72,6 +81,7 @@ const filteredDocuments = computed(() =>
     favorite: favoritesOnly.value,
     tag: selectedTag.value,
     sort: documentSort.value,
+    locale: locale.value,
   }),
 )
 watch(availableTags, (tags) => {
@@ -85,7 +95,7 @@ function resetFilters() {
 }
 const updated = computed(() =>
   workspace.active
-    ? new Date(workspace.active.updatedAt).toLocaleDateString('tr-TR', {
+    ? new Date(workspace.active.updatedAt).toLocaleDateString(locale.value, {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -137,7 +147,11 @@ async function selectDocument(id) {
   sidebarOpen.value = false
 }
 async function removeDocument(document) {
-  if (window.confirm(`“${document.title || 'Başlıksız belge'}” kalıcı olarak silinsin mi?`))
+  if (
+    window.confirm(
+      t('“{title}” kalıcı olarak silinsin mi?', { title: document.title || t('Başlıksız belge') }),
+    )
+  )
     await action(() => workspace.remove(document.id))
 }
 function openMedia() {
@@ -207,31 +221,41 @@ onBeforeUnmount(() => {
     <button
       v-if="sidebarOpen"
       class="sidebar-overlay"
-      aria-label="Menüyü kapat"
+      :aria-label="t('Menüyü kapat')"
       @click="sidebarOpen = false"
     ></button>
     <aside class="sidebar" :class="{ 'is-open': sidebarOpen }">
-      <a class="brand" href="./" aria-label="Studio ana sayfa"
+      <a class="brand" href="./" :aria-label="t('Studio ana sayfa')"
         ><span class="brand-mark"><Layers2 :size="22" /></span> studio<span class="brand-dot"
           >.</span
         ></a
       >
       <div class="workspace-label">
         <span class="workspace-avatar">M</span>
-        <div><strong>Benim çalışma alanım</strong><small>Kişisel alan</small></div>
+        <div>
+          <strong>{{ t('Benim çalışma alanım') }}</strong
+          ><small>{{ t('Kişisel alan') }}</small>
+        </div>
         <ChevronRight :size="15" />
       </div>
+      <label class="workspace-language">
+        <span>{{ t('Arayüz dili') }}</span>
+        <select v-model="locale" :aria-label="t('Arayüz dili')">
+          <option value="en" lang="en">English</option>
+          <option value="tr" lang="tr">Türkçe</option>
+        </select>
+      </label>
       <button class="button primary new-document" :disabled="!workspace.ready" @click="newDocument">
-        <Plus :size="17" /> Yeni belge <kbd>+</kbd>
+        <Plus :size="17" /> {{ t('Yeni belge') }} <kbd>+</kbd>
       </button>
-      <p class="nav-label">ÇALIŞMA ALANI</p>
+      <p class="nav-label">{{ t('ÇALIŞMA ALANI') }}</p>
       <button
         class="nav-item"
         :class="{ active: !favoritesOnly }"
         :aria-pressed="!favoritesOnly"
         @click="resetFilters()"
       >
-        <FileText :size="18" /> Belgelerim
+        <FileText :size="18" /> {{ t('Belgelerim') }}
         <span class="nav-count">{{ workspace.documents.length }}</span>
       </button>
       <button
@@ -240,18 +264,17 @@ onBeforeUnmount(() => {
         :aria-pressed="favoritesOnly"
         @click="favoritesOnly = !favoritesOnly"
       >
-        <Star :size="18" /> Favoriler
-        <span class="nav-count">{{ favoriteCount }}</span>
+        <Star :size="18" /> {{ t('Favoriler') }} <span class="nav-count">{{ favoriteCount }}</span>
       </button>
       <button class="nav-item" :disabled="!editorReady" @click="openMedia()">
-        <Image :size="18" /> Medya kütüphanesi
+        <Image :size="18" /> {{ t('Medya kütüphanesi') }}
         <span class="nav-count">{{ media.items.length }}</span>
       </button>
       <div class="documents-heading">
-        <p class="nav-label">BELGELER</p>
+        <p class="nav-label">{{ t('BELGELER') }}</p>
         <button
           class="icon-button"
-          aria-label="Yeni belge oluştur"
+          :aria-label="t('Yeni belge oluştur')"
           :disabled="!workspace.ready"
           @click="newDocument"
         >
@@ -261,34 +284,34 @@ onBeforeUnmount(() => {
       <label class="search-box sidebar-search"
         ><Search :size="15" /><input
           v-model="search"
-          placeholder="Başlık, içerik veya etiket…"
-          aria-label="Belge ara"
+          :placeholder="t('Başlık, içerik veya etiket…')"
+          :aria-label="t('Belge ara')"
       /></label>
       <div class="document-filters">
         <label
-          >Etiket
-          <select v-model="selectedTag" aria-label="Etikete göre filtrele">
-            <option value="">Tüm etiketler</option>
+          >{{ t('Etiket') }}
+          <select v-model="selectedTag" :aria-label="t('Etikete göre filtrele')">
+            <option value="">{{ t('Tüm etiketler') }}</option>
             <option v-for="tag in availableTags" :key="searchKey(tag)" :value="searchKey(tag)">
               {{ tag }}
             </option>
           </select>
         </label>
         <label
-          >Sıralama
-          <select v-model="documentSort" aria-label="Belgeleri sırala">
-            <option value="recent">Son düzenlenen</option>
-            <option value="oldest">Önce eski düzenlenen</option>
-            <option value="title">Başlık A–Z</option>
-            <option value="title-desc">Başlık Z–A</option>
+          >{{ t('Sıralama') }}
+          <select v-model="documentSort" :aria-label="t('Belgeleri sırala')">
+            <option value="recent">{{ t('Son düzenlenen') }}</option>
+            <option value="oldest">{{ t('Önce eski düzenlenen') }}</option>
+            <option value="title">{{ t('Başlık A–Z') }}</option>
+            <option value="title-desc">{{ t('Başlık Z–A') }}</option>
           </select>
         </label>
       </div>
       <div v-if="hasFilters" class="document-filter-status">
-        <span role="status">{{ filteredDocuments.length }} belge bulundu</span>
-        <button class="text-button" @click="resetFilters">Temizle</button>
+        <span role="status">{{ filteredDocuments.length }} {{ t('belge bulundu') }}</span>
+        <button class="text-button" @click="resetFilters">{{ t('Temizle') }}</button>
       </div>
-      <nav class="document-list" aria-label="Belgeler">
+      <nav class="document-list" :aria-label="t('Belgeler')">
         <div
           v-for="document in filteredDocuments"
           :key="document.id"
@@ -304,38 +327,45 @@ onBeforeUnmount(() => {
               v-if="document.favorite"
               class="favorite-star"
               :size="15"
-              aria-label="Favori"
-            /><FileText v-else :size="15" /><span>{{ document.title || 'Başlıksız belge' }}</span>
+              :aria-label="t('Favori')"
+            /><FileText v-else :size="15" /><span>{{
+              document.title || t('Başlıksız belge')
+            }}</span>
           </button>
           <button
             class="icon-button delete-document"
-            :aria-label="`${document.title || 'Başlıksız belge'} belgesini sil`"
+            :aria-label="
+              t('{title} belgesini sil', { title: document.title || t('Başlıksız belge') })
+            "
             @click="removeDocument(document)"
           >
             <Trash2 :size="14" />
           </button>
         </div>
         <p v-if="!filteredDocuments.length" class="muted no-documents">
-          {{ workspace.ready ? 'Belge bulunamadı.' : 'Belgeler yükleniyor…' }}
+          {{ workspace.ready ? t('Belge bulunamadı.') : t('Belgeler yükleniyor…') }}
         </p>
       </nav>
       <div class="sidebar-bottom">
         <button class="nav-item" :disabled="!workspace.ready" @click="modal = 'backup'">
-          <HardDrive :size="17" /> Yedekle / geri yükle
+          <HardDrive :size="17" /> {{ t('Yedekle / geri yükle') }}
         </button>
         <div class="local-note">
           <HardDrive :size="17" />
           <div>
-            <strong>Size ait bir alan</strong>
-            <p>Belgeleriniz bu tarayıcıda saklanır. Yedeklemek için dışa aktarın.</p>
+            <strong>{{ t('Size ait bir alan') }}</strong>
+            <p>{{ t('Belgeleriniz bu tarayıcıda saklanır. Yedeklemek için dışa aktarın.') }}</p>
           </div>
         </div>
         <button class="nav-item help-link" @click="modal = 'help'">
-          <CircleHelp :size="17" /> Kısa rehber <span>↗</span>
+          <CircleHelp :size="17" /> {{ t('Kısa rehber') }} <span>↗</span>
         </button>
         <div class="profile">
           <span class="profile-avatar">M</span>
-          <div><strong>Benim Studio’m</strong><small>Yerel çalışma alanı</small></div>
+          <div>
+            <strong>{{ t('Benim Studio’m') }}</strong
+            ><small>{{ t('Yerel çalışma alanı') }}</small>
+          </div>
           <span class="online-dot"></span>
         </div>
       </div>
@@ -346,27 +376,26 @@ onBeforeUnmount(() => {
         <div class="breadcrumb">
           <button
             class="icon-button mobile-menu"
-            aria-label="Menüyü aç"
+            :aria-label="t('Menüyü aç')"
             @click="sidebarOpen = true"
           >
             <Menu :size="20" /></button
-          ><FolderOpen :size="17" /><span>Çalışma alanı</span><ChevronRight :size="14" /><strong
-            >Belgelerim</strong
-          >
+          ><FolderOpen :size="17" /><span>{{ t('Çalışma alanı') }}</span
+          ><ChevronRight :size="14" /><strong>{{ t('Belgelerim') }}</strong>
         </div>
         <div class="topbar-right">
           <button class="button subtle import-button" @click="importInput?.click()">
-            <Upload :size="16" /> HTML içe aktar
+            <Upload :size="16" /> {{ t('HTML içe aktar') }}
           </button>
-          <span class="local-badge"><span></span> Yerel çalışma alanı</span
-          ><button class="icon-button" aria-label="Kısa rehber" @click="modal = 'help'">
+          <span class="local-badge"><span></span> {{ t('Yerel çalışma alanı') }}</span
+          ><button class="icon-button" :aria-label="t('Kısa rehber')" @click="modal = 'help'">
             <CircleHelp :size="19" />
           </button>
         </div>
       </header>
       <div v-if="!workspace.ready" class="loading-state">
         <LoaderCircle class="spin" :size="28" />
-        <p>Çalışma alanınız hazırlanıyor…</p>
+        <p>{{ t('Çalışma alanınız hazırlanıyor…') }}</p>
       </div>
       <div v-else-if="workspace.active" class="workspace-main">
         <input
@@ -377,8 +406,8 @@ onBeforeUnmount(() => {
           @change="importHtml"
         />
         <div v-if="workspace.error" class="error-banner" role="alert">
-          {{ workspace.error }}
-          <button class="text-button" @click="workspace.save()">Yeniden dene</button>
+          {{ t(workspace.error) }}
+          <button class="text-button" @click="workspace.save()">{{ t('Yeniden dene') }}</button>
         </div>
         <div class="document-heading">
           <div class="document-name">
@@ -386,20 +415,24 @@ onBeforeUnmount(() => {
             <div>
               <input
                 class="title-input"
-                aria-label="Belge başlığı"
+                :aria-label="t('Belge başlığı')"
                 :value="workspace.active.title"
                 maxlength="160"
-                placeholder="Başlıksız belge"
+                :placeholder="t('Başlıksız belge')"
                 @input="workspace.update({ title: $event.target.value })"
               />
               <div class="document-meta">
-                <span class="draft-badge">Taslak</span><span class="meta-dot">·</span
-                ><span>{{ updated }}</span>
+                <span class="draft-badge">{{ t('Taslak') }}</span
+                ><span class="meta-dot">·</span><span>{{ updated }}</span>
                 <button
                   class="document-favorite"
                   :class="{ 'is-favorite': workspace.active.favorite }"
-                  :aria-label="workspace.active.favorite ? 'Favorilerden çıkar' : 'Favorilere ekle'"
-                  :title="workspace.active.favorite ? 'Favorilerden çıkar' : 'Favorilere ekle'"
+                  :aria-label="
+                    workspace.active.favorite ? t('Favorilerden çıkar') : t('Favorilere ekle')
+                  "
+                  :title="
+                    workspace.active.favorite ? t('Favorilerden çıkar') : t('Favorilere ekle')
+                  "
                   :aria-pressed="Boolean(workspace.active.favorite)"
                   @click="workspace.update({ favorite: !workspace.active.favorite })"
                 >
@@ -408,35 +441,43 @@ onBeforeUnmount(() => {
                 <button
                   class="document-tags-button"
                   @click="modal = 'tags'"
-                  aria-label="Belge etiketlerini düzenle"
+                  :aria-label="t('Belge etiketlerini düzenle')"
                 >
                   <Tags :size="14" />
-                  {{ activeTags.length ? `${activeTags.length} etiket` : 'Etiket ekle' }}
+                  {{
+                    activeTags.length
+                      ? t('{count} etiket', { count: activeTags.length })
+                      : t('Etiket ekle')
+                  }}
                 </button>
               </div>
             </div>
           </div>
           <div class="document-actions">
             <button class="button" :disabled="!editorReady" @click="modal = 'versions'">
-              Sürümler
+              {{ t('Sürümler') }}
             </button>
             <button
               class="button"
-              aria-label="Kaynak kodu"
+              :aria-label="t('Kaynak kodu')"
               :disabled="!editorReady"
               @click="modal = 'source'"
             >
-              <Code2 :size="17" /><span>Kaynak kodu</span>
+              <Code2 :size="17" /><span>{{ t('Kaynak kodu') }}</span>
             </button>
             <button class="button" :disabled="!editorReady" @click="modal = 'preview'">
-              <Eye :size="16" /><span>Önizleme</span></button
+              <Eye :size="16" /><span>{{ t('Önizleme') }}</span></button
             ><button class="button primary" @click="downloadHtml(workspace.active)">
-              <Download :size="16" /><span>Dışa aktar</span>
+              <Download :size="16" /><span>{{ t('Dışa aktar') }}</span>
             </button>
             <button
               class="icon-button details-toggle"
-              :aria-label="detailsOpen ? 'Belge ayrıntılarını gizle' : 'Belge ayrıntılarını göster'"
-              :title="detailsOpen ? 'Belge ayrıntılarını gizle' : 'Belge ayrıntılarını göster'"
+              :aria-label="
+                detailsOpen ? t('Belge ayrıntılarını gizle') : t('Belge ayrıntılarını göster')
+              "
+              :title="
+                detailsOpen ? t('Belge ayrıntılarını gizle') : t('Belge ayrıntılarını göster')
+              "
               :aria-pressed="detailsOpen"
               @click="detailsOpen = !detailsOpen"
             >
@@ -445,9 +486,10 @@ onBeforeUnmount(() => {
           </div>
         </div>
         <div class="editor-layout" :class="{ 'without-details': !detailsOpen }">
-          <section class="editor-card" aria-label="Belge düzenleyici">
+          <section class="editor-card" :aria-label="t('Belge düzenleyici')">
             <div class="editor-surface">
               <RichEditor
+                :locale="locale"
                 :key="workspace.activeId"
                 ref="editor"
                 :model-value="workspace.active.content"
@@ -465,76 +507,87 @@ onBeforeUnmount(() => {
                 ><LoaderCircle v-if="workspace.saving" :size="13" class="spin" /><Circle
                   v-else-if="workspace.dirty || workspace.error"
                   :size="9"
-                /><Check v-else :size="14" />{{ saveLabel }}</span
+                /><Check v-else :size="14" />{{ t(saveLabel) }}</span
               ><span
-                >{{ workspace.words }} kelime <i>·</i> {{ workspace.characters }} karakter</span
+                >{{ workspace.words }} {{ t('kelime') }} <i>·</i> {{ workspace.characters }}
+                {{ t('karakter') }}</span
               >
             </footer>
           </section>
           <aside v-if="detailsOpen" class="inspector">
             <div class="inspector-heading">
-              <h2>Belge ayrıntıları</h2>
+              <h2>{{ t('Belge ayrıntıları') }}</h2>
               <button
                 class="icon-button"
-                aria-label="Ayrıntıları kapat"
+                :aria-label="t('Ayrıntıları kapat')"
                 @click="detailsOpen = false"
               >
                 <X :size="15" />
               </button>
             </div>
             <div class="detail-section">
-              <span class="section-label">GENEL BAKIŞ</span>
+              <span class="section-label">{{ t('GENEL BAKIŞ') }}</span>
               <dl>
                 <div>
-                  <dt>Durum</dt>
-                  <dd><span class="draft-badge">Taslak</span></dd>
+                  <dt>{{ t('Durum') }}</dt>
+                  <dd>
+                    <span class="draft-badge">{{ t('Taslak') }}</span>
+                  </dd>
                 </div>
                 <div>
-                  <dt>Kelime</dt>
+                  <dt>{{ t('Kelime') }}</dt>
                   <dd>{{ workspace.words }}</dd>
                 </div>
                 <div>
-                  <dt>Okuma süresi</dt>
-                  <dd>{{ Math.max(1, Math.ceil(workspace.words / 200)) }} dk</dd>
+                  <dt>{{ t('Okuma süresi') }}</dt>
+                  <dd>{{ Math.max(1, Math.ceil(workspace.words / 200)) }} {{ t('dk') }}</dd>
                 </div>
                 <div>
-                  <dt>Biçim</dt>
+                  <dt>{{ t('Biçim') }}</dt>
                   <dd>HTML</dd>
                 </div>
               </dl>
             </div>
             <div class="detail-section">
-              <span class="section-label">HIZLI İŞLEMLER</span
+              <span class="section-label">{{ t('HIZLI İŞLEMLER') }}</span
               ><button class="quick-action" :disabled="!editorReady" @click="openMedia()">
-                <Image :size="17" /><span>Medya ekle</span><Plus :size="15" /></button
+                <Image :size="17" /><span>{{ t('Medya ekle') }}</span
+                ><Plus :size="15" /></button
               ><button class="quick-action" :disabled="!editorReady" @click="modal = 'source'">
-                <Code2 :size="17" /><span>Kaynak kodunu düzenle</span
+                <Code2 :size="17" /><span>{{ t('Kaynak kodunu düzenle') }}</span
                 ><ChevronRight :size="14" /></button
               ><button
                 class="quick-action"
                 @click="
                   action(() =>
                     workspace.create(
-                      `${workspace.active.title} — kopya`,
+                      t('{title} — kopya', { title: workspace.active.title }),
                       workspace.active.content,
                       { tags: workspace.active.tags },
                     ),
                   )
                 "
               >
-                <Copy :size="16" /><span>Belgeyi çoğalt</span><ChevronRight :size="14" />
+                <Copy :size="16" /><span>{{ t('Belgeyi çoğalt') }}</span
+                ><ChevronRight :size="14" />
               </button>
             </div>
             <div class="inspiration">
               <span class="inspiration-icon"><Sparkles :size="19" /></span>
-              <h3>Kelimeler sizin,<br />olasılıklar sınırsız.</h3>
-              <p>Görseller, tablolar ve kod bloklarıyla içeriğinizi bir adım ileri taşıyın.</p>
-              <button @click="modal = 'help'">Editörü keşfedin <span>↗</span></button>
+              <h3>{{ t('Kelimeler sizin,') }}<br />{{ t('olasılıklar sınırsız.') }}</h3>
+              <p>
+                {{
+                  t('Görseller, tablolar ve kod bloklarıyla içeriğinizi bir adım ileri taşıyın.')
+                }}
+              </p>
+              <button @click="modal = 'help'">{{ t('Editörü keşfedin') }} <span>↗</span></button>
             </div>
             <div class="autosave-note">
               <span class="online-dot"></span>
               <p>
-                Otomatik kayıt açık<br /><small>Değişiklikleriniz siz yazdıkça saklanır.</small>
+                {{ t('Otomatik kayıt açık') }}<br /><small>{{
+                  t('Değişiklikleriniz siz yazdıkça saklanır.')
+                }}</small>
               </p>
             </div>
           </aside>
@@ -562,77 +615,94 @@ onBeforeUnmount(() => {
       :title="workspace.active.title || 'Önizleme'"
       wide
       @close="modal = null"
-      ><template #eyebrow><span class="eyebrow">BELGE ÖNİZLEMESİ</span></template
-      ><iframe class="preview-frame" title="Belge önizlemesi" sandbox="" :srcdoc="preview"></iframe
+      ><template #eyebrow
+        ><span class="eyebrow">{{ t('BELGE ÖNİZLEMESİ') }}</span></template
+      ><iframe
+        class="preview-frame"
+        :title="t('Belge önizlemesi')"
+        sandbox=""
+        :srcdoc="preview"
+      ></iframe
       ><template #footer
         ><span class="muted footer-note"
-          >{{ workspace.words }} kelime · {{ Math.max(1, Math.ceil(workspace.words / 200)) }} dk
-          okuma</span
+          >{{ workspace.words }} {{ t('kelime ·') }}
+          {{ Math.max(1, Math.ceil(workspace.words / 200)) }} {{ t('dk okuma') }}</span
         ><button class="button primary" @click="downloadHtml(workspace.active)">
-          <Download :size="16" /> HTML indir
+          <Download :size="16" /> {{ t('HTML indir') }}
         </button></template
       ></AppDialog
     >
-    <AppDialog v-if="modal === 'help'" title="Studio ile tanışın" @close="modal = null"
-      ><template #eyebrow><span class="eyebrow">KÜÇÜK BİR REHBER</span></template>
+    <AppDialog v-if="modal === 'help'" :title="t('Studio ile tanışın')" @close="modal = null"
+      ><template #eyebrow
+        ><span class="eyebrow">{{ t('KÜÇÜK BİR REHBER') }}</span></template
+      >
       <div class="help-content">
         <div>
           <FilePlus2 />
           <section>
-            <h3>Yazmaya başlayın</h3>
+            <h3>{{ t('Yazmaya başlayın') }}</h3>
             <p>
-              Yeni belge oluşturun veya bir HTML dosyasını içe aktarın. Başlığı üstteki alandan
-              değiştirebilirsiniz. Boş paragrafta / ile blok menüsünü açın; ## ve boşlukla başlık
-              oluşturun. Soldaki tutamakla blokları sürükleyin veya ok tuşlarıyla taşıyın.
+              {{
+                t(
+                  'Yeni belge oluşturun veya bir HTML dosyasını içe aktarın. Başlığı üstteki alandan değiştirebilirsiniz. Boş paragrafta / ile blok menüsünü açın; ## ve boşlukla başlık oluşturun. Soldaki tutamakla blokları sürükleyin veya ok tuşlarıyla taşıyın.',
+                )
+              }}
             </p>
           </section>
         </div>
         <div>
           <Image />
           <section>
-            <h3>Dosyalarınıza bir yuva</h3>
+            <h3>{{ t('Dosyalarınıza bir yuva') }}</h3>
             <p>
-              Medya kütüphanesine görsel, video, ses ve PDF yükleyin. Dosyayı seçip “Belgeye ekle”
-              düğmesine basın. Görsele çift tıklayarak kırpın, döndürün, rengini ayarlayın ve PNG,
-              JPEG veya WebP olarak uygulayın.
+              {{
+                t(
+                  'Medya kütüphanesine görsel, video, ses ve PDF yükleyin. Dosyayı seçip “Belgeye ekle” düğmesine basın. Görsele çift tıklayarak kırpın, döndürün, rengini ayarlayın ve PNG, JPEG veya WebP olarak uygulayın.',
+                )
+              }}
             </p>
           </section>
         </div>
         <div>
           <Code2 />
           <section>
-            <h3>Kodun kontrolü sizde</h3>
+            <h3>{{ t('Kodun kontrolü sizde') }}</h3>
             <p>
-              Kaynak kodu editöründe renklendirme, otomatik tamamlama, satır numaraları ve Ctrl / ⌘
-              + F ile arama bulunur. Düzenlemeyi bitirdiğinizde değişiklikleri uygulayın.
+              {{
+                t(
+                  'Kaynak kodu editöründe renklendirme, otomatik tamamlama, satır numaraları ve Ctrl / ⌘ + F ile arama bulunur. Düzenlemeyi bitirdiğinizde değişiklikleri uygulayın.',
+                )
+              }}
             </p>
           </section>
         </div>
         <div>
           <HardDrive />
           <section>
-            <h3>Çalışmanızı koruyun</h3>
+            <h3>{{ t('Çalışmanızı koruyun') }}</h3>
             <p>
-              Sürümler düğmesiyle önceki kayıtları karşılaştırıp geri yükleyin. Yan menüdeki
-              “Yedekle / geri yükle” belgeleri, yorumları, medyayı, şablonları ve sürümleri tek
-              dosyada saklar. Dosya menüsünden sayfa düzeni, PDF yazdırma ve DOCX çıktısına ulaşın.
+              {{
+                t(
+                  'Sürümler düğmesiyle önceki kayıtları karşılaştırıp geri yükleyin. Yan menüdeki “Yedekle / geri yükle” belgeleri, yorumları, medyayı, şablonları ve sürümleri tek dosyada saklar. Dosya menüsünden sayfa düzeni, PDF yazdırma ve DOCX çıktısına ulaşın.',
+                )
+              }}
             </p>
           </section>
         </div>
         <p class="shortcut-note">
-          <kbd>Ctrl / ⌘</kbd> + <kbd>S</kbd> hemen kaydet <span>·</span> <kbd>Ctrl / ⌘</kbd> +
-          <kbd>Z</kbd> geri al
+          <kbd>Ctrl / ⌘</kbd> + <kbd>S</kbd> {{ t('hemen kaydet') }} <span>·</span>
+          <kbd>Ctrl / ⌘</kbd> + <kbd>Z</kbd> {{ t('geri al') }}
         </p>
       </div>
       <template #footer
         ><button class="button primary" @click="modal = null">
-          <BookOpen :size="16" /> Yazmaya başlayalım
+          <BookOpen :size="16" /> {{ t('Yazmaya başlayalım') }}
         </button></template
       ></AppDialog
     >
     <div v-if="notice" class="toast" role="status">
-      <Check :size="17" />{{ notice
-      }}<button class="icon-button" aria-label="Bildirimi kapat" @click="notice = ''">
+      <Check :size="17" />{{ t(notice)
+      }}<button class="icon-button" :aria-label="t('Bildirimi kapat')" @click="notice = ''">
         <X :size="15" />
       </button>
     </div>

@@ -315,6 +315,24 @@ button:disabled:hover {
   gap: 8px;
   margin: 0 4px 10px;
 }
+.workspace-language {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 4px 14px;
+  font-size: 10px;
+  color: #667085;
+}
+.workspace-language select {
+  min-width: 0;
+  padding: 5px;
+  border: 1px solid #e2e6ed;
+  border-radius: 5px;
+  background: #fff;
+  color: #475467;
+  font: inherit;
+}
 .document-filters label {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);

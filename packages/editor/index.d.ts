@@ -298,5 +298,9 @@ export function renderPrintDocument(html: string, options?: PrintOptions): strin
 export function printDocument(html: string, options?: PrintOptions): Promise<void>
 export function exportDocx(html: string, options?: PrintOptions): Promise<Blob>
 export function publicHtml(html: string): string
-export function renderDocument(document: { title: string; content: string }): string
+export function renderDocument(document: {
+  title: string
+  content: string
+  locale?: 'en' | 'tr'
+}): string
 export const documentCss: string

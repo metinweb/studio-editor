@@ -29,7 +29,7 @@ const props = defineProps({
   placeholder: { type: String, default: '' },
   toolbar: { type: [Boolean, Array], default: true },
   menubar: { type: [Boolean, Array], default: true },
-  locale: { type: String, default: 'tr' },
+  locale: { type: String, default: 'en' },
   messages: Object,
   pasteMode: { type: String, default: 'keep' },
   tablePasteStyle: { type: String, default: 'target' },

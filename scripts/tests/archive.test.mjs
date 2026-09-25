@@ -23,6 +23,17 @@ const data = () => ({
     },
   ],
 })
+
+test('document and version locales round trip while unsupported locale metadata is rejected', async () => {
+  const snapshot = data()
+  snapshot.documents[0].locale = 'en'
+  snapshot.versions[0].locale = 'tr'
+  const restored = await decodeArchive(await encodeArchive(snapshot))
+  assert.equal(restored.documents[0].locale, 'en')
+  assert.equal(restored.versions[0].locale, 'tr')
+  snapshot.documents[0].locale = '<script>'
+  assert.throws(() => validateArchive(snapshot))
+})
 test('archive round trip retains comments and history', async () => {
   const input = data()
   assert.deepEqual(await decodeArchive(await encodeArchive(input)), input)

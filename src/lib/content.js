@@ -75,7 +75,7 @@ export function escapeHtml(value) {
 }
 
 export function renderDocument(document) {
-  return `<!doctype html>\n<html lang="tr">\n<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(document.title)}</title><style>${documentCss}</style></head>\n<body>\n${publicHtml(document.content)}\n</body></html>`
+  return `<!doctype html>\n<html lang="${document.locale === 'tr' ? 'tr' : 'en'}">\n<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(document.title)}</title><style>${documentCss}</style></head>\n<body>\n${publicHtml(document.content)}\n</body></html>`
 }
 
 // Review conversations belong to the workspace, not the published document.
@@ -120,3 +120,14 @@ export const welcomeContent = `<p style="color: #8870c7; font-size: 12px; letter
 <h2>Her şey elinizin altında</h2>
 <ul><li><strong>Görsel editör:</strong> Düşüncelerinizi kolayca sayfaya taşıyın.</li><li><strong>Medya kütüphanesi:</strong> Görsel, video ve ses dosyalarınızı tek yerde toplayın.</li><li><strong>Kaynak kodu:</strong> HTML’i renklendirilmiş kod editöründe düzenleyin.</li></ul>
 <p>Hazırsanız, bu sayfayı kendi hikâyenizle değiştirebilirsiniz.</p>`
+
+export const welcomeContentEn = `<p style="color: #8870c7; font-size: 12px; letter-spacing: 2px;"><strong>WELCOME TO STUDIO</strong></p>
+<h1>Good ideas start<br>with a blank page.</h1>
+<p>A story, a guide, or your next big idea. This is your workspace to give your words room to grow.</p>
+<hr>
+<h2>Focus on writing.</h2>
+<p>Format your text, bring it to life with images, and make every detail your own. Studio takes care of the rest.</p>
+<blockquote><p>“Creativity is connecting ideas.”</p></blockquote>
+<h2>Everything within reach</h2>
+<ul><li><strong>Visual editor:</strong> Put your ideas on the page.</li><li><strong>Media library:</strong> Keep images, videos and audio in one place.</li><li><strong>Source code:</strong> Edit HTML with syntax highlighting.</li></ul>
+<p>Ready? Make this page the start of your own story.</p>`

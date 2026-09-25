@@ -182,6 +182,7 @@ function readState() {
     <StudioEditor ref="secondEditor" v-model="second" :height="480" />
     <StudioEditor
       v-if="showRemote"
+      locale="tr"
       v-model="remoteContent"
       :media-adapter="mediaAdapter"
       :readonly="readonly"

@@ -32,7 +32,9 @@ const filtered = computed(() =>
   media.items.filter(
     (item) =>
       (filter.value === 'all' || item.type.startsWith(filter.value)) &&
-      item.name.toLocaleLowerCase('tr').includes(query.value.toLocaleLowerCase('tr')),
+      item.name
+        .toLocaleLowerCase(locale.value)
+        .includes(query.value.toLocaleLowerCase(locale.value)),
   ),
 )
 const filters = [

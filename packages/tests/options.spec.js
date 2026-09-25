@@ -93,7 +93,7 @@ test('placeholder stays outside HTML and locale/options update without resetting
   await expect(content).toHaveAttribute('data-empty', 'false')
   await page.getByLabel('Örnek dil', { exact: true }).selectOption('en')
   await expect(embed(page).getByRole('button', { name: 'Bold', exact: true })).toBeVisible()
-  await expect(embed(page, 1).getByRole('button', { name: 'Kalın', exact: true })).toBeVisible()
+  await expect(embed(page, 1).getByRole('button', { name: 'Bold', exact: true })).toBeVisible()
   await expect(content).toHaveAttribute('aria-label', 'Document content')
   expect(await content.evaluate((el) => el.ownerDocument.documentElement.lang)).toBe('en')
   await expect(content).toHaveText('Hello')

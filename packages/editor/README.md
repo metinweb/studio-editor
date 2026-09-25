@@ -1,86 +1,27 @@
-# Studio Editor — Vue 3
+# Studio Editor for Vue 3
 
-## Yapıştırma seçenekleri (beta.4)
+An MIT-licensed rich-text editor with an independent editing engine, tables, media management, image editing, comments and HTML source editing.
 
-`pasteMode`: `keep` (varsayılan), `clean` veya `text`; dinamik değiştirilebilir.
-Menü seçimlerini izlemek için `v-model:paste-mode="mode"` kullanın.
-`@paste`, `{ source, mode, rows, columns, warnings, inserted }` döndürür;
-HTML taşımaz. `PasteMode` ve `PasteInfo` TypeScript tipleri sunulur.
+[Live demo](https://metinweb.github.io/studio-editor/demo/) · [Source](https://github.com/metinweb/studio-editor) · [Türkçe](README.tr.md)
 
-Word sayısal/maddeli listeleri, iç içe seviyeler, Excel/Sheets dikdörtgen TSV
-(tırnaklı hücreler dahil), HTML tabloları ve Google Docs başlıkları işlenir.
-`clean` satır içi biçimi kaldırır, yapıyı korur; `text` HTML ve görseli almaz.
-Ctrl/⌘+Shift+V ve kod bloğuna yapıştırma düz metindir. Metin+görsel tek undo
-adımında eklenir. Yüklemede belge değişirse eski konuma eklenmez.
+The default interface is **English**. Set `locale="tr"` for Turkish. Changing the interface language preserves document content, selection and undo history.
 
-Tam Office/RTF/özel liste şablonu desteği değildir.
-HTML+metin 5 Mi UTF-16 kod birimi, tablo 10.000 hücre;
-TSV ayrıca 1.000 satır/100 sütunla sınırlıdır. Yerel görsel eşleştirme
-tarayıcının dosya sırasına/sayısına bağlıdır. Uyarılar bu betada Türkçedir.
+## Install from source
 
-## Tablo işlemleri (beta.9)
-
-`tablePasteStyle`: `target` (varsayılan) veya `source`. Dinamik prop ve
-`v-model:table-paste-style` desteklenir; Tablo menüsü değişimleri
-`update:tablePasteStyle` olayı üretir. `TablePasteStyle` tipi dışa aktarılır.
-`source`, yalnız `keep` + HTML tablo yapıştırmada kaynak hücrenin açık renk,
-tipografi, hizalama, padding ve kenar stillerini hedefe uygular. Desteklenen
-hedef stilleri önce kaldırılır; kaynaktaki eksikler varsayılana döner.
-Hedef genişlikleri, kimlikleri ve th/td/scope yapısı korunur. Kaynak CSS sınıfı,
-miras alınan stiller, ölçüler, URL/değişken/konumlandırma ve !important taşınmaz.
-`clean`, `text` ve TSV hedef biçimini korur. Tercih örnekler arasında paylaşılmaz.
-
-Beta.8 HTML matrisinin rowspan/colspan yapısını hedef alana taşır. Normal
-tablo/TSV, tamamen kapsanan birleşik hedefi normal hücrelere ayırır. Kısmen
-kapsanan birleşimler, bölüm sınırını aşan rowspan, taşma ve boyut uyuşmazlığı
-belgeyi değiştirmeden reddedilir. Tek 1×1 değer hedef birleşimleri korur.
-Hedef hücre türü/stili temel alınır; kaynak içeriğin biçimi pasteMode'a uyar.
-Kaynak hücre stilleri yukarıdaki tercihe bağlıdır; tablo genişlikleri alınmaz.
-TSV birleşim bilgisi taşımaz.
-İşlem tek `pasteCells` olayı/undo adımıdır; `paste.rows/columns` mantıksal
-boyutları bildirir. Bunlar temsilî Office pano testleriyle doğrulanmıştır.
-
-Hücre biçimi penceresi, tek/çoklu seçime dolgu, metin rengi, yatay/dikey
-hizalama, iç boşluk ve tüm/dış/iç kenarlık uygular. Yalnızca değiştirilen
-alanlar güncellenir; sıfırlama içeriği ve tablo yapısını korur. İşlem türü
-`formatCells`, tek undo adımıdır. Belge değişmişse eski taslak reddedilir.
-Pencere Türkçe/İngilizcedir. Satır içindeki özel metin renkleri/hizalama
-korunur; komşu hücre kenarlıkları CSS çakışma kurallarına tabidir.
-
-Shift+tık, sürükleme veya Alt+Shift+ok ile dikdörtgen hücre seçilir;
-Esc seçimi kapatır. Birleşik hücreler tam kapsanır. Kopyala/kes HTML tablo ve
-TSV üretir; Delete/Backspace seçili içerikleri temizler. Seçim katmanı HTML
-dışındadır. Yapıştırma mevcut hücrelere dağıtılır; seçili alan boyutuyla
-uyuşmazsa, sığmazsa veya hedef birleşimin yalnızca bir bölümünü kapsarsa
-uyarı verir ve belge değişmez. Tek değer seçime tekrarlanabilir. İşlemler tek
-undo adımıdır; `transaction.kind` değeri `pasteCells` veya `clearCells` olur.
-
-İç sütun sınırını sürüklemek komşu sütunları dengeler; ok tuşları 1 px,
-Shift+ok 10 px. Esc ve readonly iptal eder. Genişlikler colgroup ile HTML'de
-korunur. RTL sütun geometri desteği ve dokunmatik doğrulama henüz tamamlanmadı.
-
-Beta.6 ile seçili dikdörtgeni, sağdaki veya alttaki hücreyi birleştirme;
-yatay/dikey birleşimi ayırma; birleşik tablolara satır/sütun ekleme-silme
-eklendi. Hücre başka satır/sütunlarda yaşamaya devam ediyorsa silmede içeriği
-korunur; tamamen silinen hücrelerin içeriği kaldırılır. Birleştirme sol üst
-hücrenin stilini kullanır; ayırmada içerik sol üstte kalır, diğer hücreler boş
-oluşur. Önceki dağılım undo ile geri gelir. Farklı tablo bölümleri birleşmez.
-`transaction.kind`: `mergeCells`, `splitCell`, `addRow`, `addRowBefore`,
-`appendRow`, `deleteRow`, `addColumn`, `addColumnBefore`, `deleteColumn`.
-
-Bağımsız düzenleme motoru, tablo araçları, yerleşik resim editörü, medya kütüphanesi,
-yorumlar ve renklendirilmiş HTML kaynak görünümü içeren **yerel beta paketi**.
-
-Lisans seçimi ve npm paket adı kesinleştirilmeden herkese açık yayın yapılmaz.
-Bu paket henüz npm kayıt deposunda yayımlanmadı; aşağıdaki kurulum yerel `.tgz` içindir.
-
-## Kurulum
+This beta is not published to npm. Build a local package from this repository:
 
 ```sh
-npm install ./studio-editor-0.1.0-beta.10.tgz vue@^3.5 pinia@^4
+npm ci
+npm run package:release
 ```
 
-Uygulama girişinde Pinia kurun (zaten varsa ikinci kez kurmayın):
+In your Vue application, install the generated tarball and its peer dependencies:
+
+```sh
+npm install /path/to/studio-editor/release/studio-editor-0.1.0-beta.11.tgz vue@^3.5 pinia@^4
+```
+
+Register Pinia once in your application entry:
 
 ```js
 import { createApp } from 'vue'
@@ -96,10 +37,10 @@ import { ref } from 'vue'
 import { StudioEditor } from 'studio-editor'
 import 'studio-editor/style.css'
 
-const content = ref('<p>Merhaba!</p>')
+const content = ref('<p>Hello, world!</p>')
 const editor = ref(null)
 function save(html) {
-  // Kendi kayıt API'nize gönderin. Sunucuda da HTML doğrulaması yapın.
+  // Connect this to your persistence layer. Validate HTML on your server too.
   console.log(html)
 }
 </script>
@@ -109,163 +50,72 @@ function save(html) {
 </template>
 ```
 
-## API
+## Options
 
-Beta.3 entegrasyon seçenekleri çalışma sırasında güncellenebilir; belge veya
-undo geçmişini sıfırlamaz. Medya adaptörünü değiştirmek hâlâ yeni `key` gerektirir.
+Options can change at runtime without resetting document content or history. Changing a media adapter requires remounting with a new `key`.
+
+| Prop                     | Behavior                                                                                                                                           |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `modelValue` / `v-model` | Document HTML. Defaults to an empty document.                                                                                                      |
+| `height`                 | Pixel number or CSS height such as `70vh`. Default 600; minimum 320 px.                                                                            |
+| `locale`                 | `en` by default, or `tr`. Controls interface language, not document text.                                                                          |
+| `messages`               | Instance-specific plain-text translations. Turkish source strings remain stable beta keys; overrides take precedence over the built-in dictionary. |
+| `direction`              | `ltr` (default), `rtl` or `auto`.                                                                                                                  |
+| `readonly`               | Prevents user edits, undo/redo, paste/drop and mutation tools. Selection, copying, search, fullscreen and read-only source remain available.       |
+| `disabled`               | Adds inert focus and interaction behavior to the read-only restrictions.                                                                           |
+| `placeholder`            | Plain-text hint for an empty document; excluded from content, history and exports.                                                                 |
+| `toolbar`                | `true` for all groups, `false` or `[]` to hide, or an array of group IDs.                                                                          |
+| `menubar`                | `true` for all menus, `false` or `[]` to hide, or an array of menu IDs.                                                                            |
+| `pasteMode`              | `keep` (default), `clean` or `text`. Supports `v-model:paste-mode`.                                                                                |
+| `tablePasteStyle`        | `target` (default) or `source`. Supports `v-model:table-paste-style`.                                                                              |
+| `mediaAdapter`           | Optional asynchronous media provider, bound at mount.                                                                                              |
+| `blockIds`               | Saved block IDs. Store `transaction.blockIdsAfter` alongside HTML.                                                                                 |
+| `mentions`               | Local mention suggestions. No user directory or notification service is provided.                                                                  |
+| `allowCreateMention`     | Allow creation of local mentions.                                                                                                                  |
+
+Toolbar groups: `history`, `typography`, `format`, `color`, `align`, `lists`, `insert`, `tools`, `review`.
+Menu IDs: `file`, `edit`, `view`, `insert`, `format`, `table`, `tools`.
+The package exports `toolbarGroups`, `menuNames` and `englishMessages`.
 
 ```vue
 <StudioEditor
   v-model="content"
-  :readonly="false"
-  :disabled="false"
-  placeholder="İçeriğinizi yazın…"
+  locale="en"
+  placeholder="Start writing…"
   :toolbar="['history', 'typography', 'format', 'insert']"
   :menubar="['file', 'edit', 'insert']"
-  locale="en"
   :messages="{ Kalın: 'Strong' }"
 />
 ```
 
-| Seçenek       | Davranış                                                                                                                                                                             |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `readonly`    | Varsayılan `false`. Kullanıcı düzenlemesi, undo/redo, yapıştırma/drop ve mutasyon araçları kapanır. Seçim/kopyalama, bulma, tam ekran ve salt okunur kaynak görünümü kullanılabilir. |
-| `disabled`    | Varsayılan `false`. Salt okunur sınırlamalarına ek olarak editör odağı ve etkileşimi `inert` ile kapanır.                                                                            |
-| `placeholder` | Boş metin belgesinde görünen düz metin ipucu. HTML çıktısına, geçmişe ve belge metnine eklenmez. Medya/tablo/liste/kod içeren belge boş sayılmaz.                                    |
-| `toolbar`     | `true`: varsayılan gruplar; `false` veya `[]`: gizli; grup dizisi: seçilen gruplar standart sırada.                                                                                  |
-| `menubar`     | `true`: tüm üst menüler; `false` veya `[]`: gizli; menü kimliği dizisi: seçilen menüler standart sırada.                                                                             |
-| `locale`      | `tr` (varsayılan) veya `en`. Çekirdek arayüz, temel pencereler, arama ve kaynak görünümü.                                                                                            |
-| `messages`    | Türkçe kaynak metnini anahtar alan, editöre özel düz metin çevirileri. Yerleşik sözlüğün önüne geçer; HTML çalıştırılmaz.                                                            |
+Unknown menu/group IDs are hidden. Tool visibility is not authorization; use `readonly` or `disabled` to prevent user edits. Application code can still replace content through `v-model` or `setHTML()` in locked modes. `insertHTML()`, `undo()` and `redo()` do nothing while locked.
 
-Araç grupları: `history`, `typography`, `format`, `color`, `align`, `lists`,
-`insert`, `tools`, `review`. Üst menüler: `file`, `edit`, `view`, `insert`,
-`format`, `table`, `tools`. `toolbarGroups`, `menuNames`, `englishMessages`
-dışa aktarılır. Bilinmeyen grup/menü kimlikleri gösterilmez; TypeScript bunları
-reddeder. Araç görünürlüğü bir yetkilendirme sistemi değildir; içerik değişimini
-engellemek için `readonly`/`disabled` kullanın.
+## Events and instance API
 
-Her iki modda da uygulama `v-model` ve `setHTML` ile yeni içerik yükleyebilir.
-Bu değişimler geçmişe kaydedilir; kullanıcı düzenlemesi açıldığında geri
-alınabilir. `insertHTML`, `undo`, `redo` kilitli modlarda işlem yapmaz;
-`focus` devre dışı modda işlem yapmaz. Mod değişimi açık pencereleri kapatır,
-aktif sürüklemeyi iptal eder; önceki modda başlayan dosya eklemesi sonradan
-belgeyi değiştiremez. Adaptör yüklemesi iptal sinyali alır.
+Use the API after `ready`. The event receives a `StudioEditorApi` object; the component ref also exposes it.
 
-Dil/mesaj değişimi iframe'i yeniden yüklemez; iframe'in `lang` ve erişilebilir
-etiketleri güncellenir. Belge metni ve Türkçe büyük/küçük harf komutunun davranışı
-değişmez. **İngilizce çeviri henüz
-tüm ürünü kapsamaz:** medya, resim editörü, yorum/şablon/denetim panelleri,
-tablo/renk seçicileri ve bağlam araçlarının iç metinleri Türkçe kalır. Bu
-panellerin tam çevirisi ve RTL sonraki aşamadır. Sözlükte bulunmayan metin
-Türkçeye düşer; özel `messages` yalnızca çeviri altyapısına bağlanmış metinleri
-değiştirir. Türkçe kaynak anahtarları beta API'sinin parçasıdır.
-
-| Alan                              | Davranış                                                                            |
-| --------------------------------- | ----------------------------------------------------------------------------------- |
-| `modelValue` / `v-model`          | Belge HTML'i; varsayılan boş belge.                                                 |
-| `height`                          | Piksel sayısı veya `70vh` gibi CSS yüksekliği; varsayılan 600, minimum 320 px.      |
-| `update:modelValue`, `change`     | Değişen HTML. Yorum metaverisini içerir.                                            |
-| `ready`                           | `StudioEditorApi` nesnesi. Metotları bu olaydan sonra kullanın.                     |
-| `save`                            | Ctrl/⌘+S veya kaydet menüsünde güncel HTML. Kayıt işlemini tüketici gerçekleştirir. |
-| `getHTML()`                       | Yorum metaverisini de içeren belge HTML'i.                                          |
-| `getPublicHTML()`                 | Yorum metaverisi çıkarılmış, temizlenmiş yayın HTML'i.                              |
-| `setHTML(html)`                   | İçeriği temizleyerek değiştirir; geri alınabilir.                                   |
-| `insertHTML(html)`                | Seçime temizlenmiş HTML ekler.                                                      |
-| `focus()`, `undo()`, `redo()`     | Odak ve düzenleme geçmişi.                                                          |
-| `openMedia()`, `openSource()`     | Yerleşik medya ve kaynak pencereleri.                                               |
-| `getDocument()`                   | Oturuma ait `{ schemaVersion: 1, revision, html, blockIds }`.                       |
-| `getHistoryStats()`               | Undo/redo sayıları, `patchBytes` ve `documentBytes`; gerçek heap ölçümü değildir.   |
-| `transaction`                     | Yerel değişim/undo/redo için sürümlü HTML farkı, seçim ve blok eşleme bilgisi.      |
-| `mediaAdapter`                    | İsteğe bağlı sunucu medya sağlayıcısı; mount sırasında bağlanır.                    |
-| `upload-progress`, `upload-error` | Özel medya sağlayıcısının toplu ilerleme yüzdesi (0–100) ve hata metni.             |
-
-`StudioEditorApi`, `StudioEditorProps` TypeScript tipleri yayımlanır.
-`cleanHtml`, `publicHtml`, `renderDocument({ title, content })` ve `documentCss`
-yardımcıları da dışa aktarılır. HTML yardımcıları tarayıcı DOM'u gerektirir.
-
-`EditorDocument`, `EditorTransaction`, `HistoryStats`, `SelectionBookmark`,
-`MediaAdapter` ve `MediaAsset` tipleri de sunulur. `mapSelection` ve `mapOffset`
-aynı blok içindeki metin değişimlerinin seçim konumunu eşlemek içindir;
-eşzamanlı düzenleme veya tüm yapısal dönüşümler için yeterli değildir.
-
-## Sunucu medya adaptörü
-
-```vue
-<StudioEditor
-  v-model="content"
-  :media-adapter="mediaAdapter"
-  @upload-progress="(percent) => console.log(percent)"
-  @upload-error="(message) => console.error(message)"
-/>
-```
-
-`mediaAdapter` dört asenkron metot sunmalıdır: `list()` dosya listesini,
-`upload(file, { signal, alt, onProgress })` yüklenen dosyayı,
-`update(asset)` güncellenen dosyayı döndürür; `remove(id)` silmeyi tamamlar.
-Kayıt biçimi `{ id, name, type, size, url, alt?, createdAt? }` şeklindedir.
-İlerleme callback'ine 0–1 arası değer verin; `signal` iptalinde isteği durdurun.
-Hataları throw/reject ile iletin. İstemci hatalı kayıtları ve güvensiz URL'leri
-reddeder; başarısız dosyalar tekrar denenebilir, geç gelen iptal sonuçları atılır.
-
-Bu paket backend sağlamaz. Kimlik doğrulama, dosya denetimi ve kalıcı URL üretimi
-sağlayıcınıza aittir. Belgeye URL yazılır; imzalı URL yenileme yoktur. Uzak
-görselleri düzenlemek için CORS izni gerekir. Sağlayıcıyı değiştirmek için yeni
-`key` ile mount edin. Sunucudan silinen dosya mevcut belgelerde de kaybolabilir.
-
-## İşlem ve geçmiş sınırları
-
-Geçmiş bir güncel belge ve en fazla 79 tersine çevrilebilir fark kaydı tutar.
-Yaklaşık 16 MiB fark bütçesi vardır; en az bir undo korunduğu için büyük bir
-işlem bütçeyi aşabilir. Gömülü görseller komşu metin değişimlerinde kopyalanmaz.
-`patchBytes` serileştirilmiş UTF-16 boyut hesabıdır, toplam bellek kullanımı değildir.
-
-İşlemler UTF-16 ofsetli `replaceHtml` farklarıdır. Revizyonlar ve HTML dışında
-tutulan blok kimlikleri oturum içindir; `getDocument()` henüz geri yüklenebilen
-taşınabilir bir belge formatı değildir. Aynı DOM bloğu düzenlenirken kimliği
-korunur ve undo/redo ile geri yüklenir; yeni DOM bloğu yeni kimlik alır.
-Anlamsal işlem modeli, kalıcı sürüm geçmişi, CRDT ve değişiklik izleme yoktur.
-
-## Entegrasyon sınırları
-
-- ESM paketi; Vue 3.5+ ve Pinia 4 eş bağımlılıktır. CJS/UMD/CDN global sürümü yoktur.
-- CSS'i bir kez içe aktarın. Kütüphane stilleri `.studio-editor-scope` ile
-  sınırlıdır; `body`, `h1`, `button` gibi ana sayfa öğelerini sıfırlamaz.
-  Ana sitenin agresif `!important` kurallarına karşı Shadow DOM yalıtımı sağlamaz.
-- Sayfada birden fazla editörün belgesi ve geri alma geçmişi ayrıdır.
-  Varsayılan medya ve kişisel şablon kütüphanesi aynı Pinia/origin içinde paylaşılır.
-  Özel medya adaptörlerinin durumu editör örneğine özeldir.
-  Mağaza kimlikleri `studio-media` ve `studio-templates` olarak adlandırılır.
-- **Belge otomatik kaydedilmez.** `v-model` ve `save` olayını kendi kayıt
-  sisteminize bağlayın. Medya/şablonlar varsayılan olarak IndexedDB'de tutulur.
-  Varsayılan görseller data URL olarak eklenir; `mediaAdapter` sunucu URL'si kullanabilir.
-- Eski belgelerle uyumluluk için tarayıcı veritabanı adı `tinymce-studio`
-  korunmuştur. Bu bir motor bağımlılığı değildir. IndexedDB origin'e bağlıdır.
-- SSR ortamında modül içe aktarılabilir; editörü istemcide mount edin
-  (örneğin Nuxt `ClientOnly`). Sunucuda DOM yardımcılarını çağırmayın.
-- Varsayılan arayüz Türkçedir. Çekirdek İngilizce desteği ve editöre özel
-  sözlük vardır. Beta.10 resim/medya/şablon/inceleme panellerinin İngilizce
-  kapsamını ve `direction="rtl"` desteğini genişletir; bazı dinamik bildirimler
-  ve hazır şablon içerikleri Türkçe kalabilir.
-- Resim düzenleme: 8192 px kenar / 16 MP; medya dosyası: 12 MB.
-  Uzak görsellerin düzenlenmesi CORS iznine bağlıdır.
-- Modern Chromium, Firefox ve WebKit motorları hedeflenir. Gerçek iOS/Android
-  klavye ve ekran okuyucu doğrulaması henüz tamamlanmadı.
-
-`LICENSE` projenin MIT lisansını; `THIRD_PARTY_NOTICES.txt`
-paketlenen bağımlılıkların kendi lisanslarını içerir.
-
-## Beta.10 ekleri
-
-Yeni API: `getModel`, `setModel`, `applyOperations`, `registerPlugin`, `executeCommand`, `getCommands`, `refreshMedia`; paket yardımcıları `createHttpMediaAdapter`, `createDocumentSession`, `renderPrintDocument`, `printDocument`, `exportDocx`, `loadCollaboration`. `direction` prop'u `ltr`, `rtl`, `auto` kabul eder. Slash menüsü, Markdown blok kısayolları, sürüklenebilir bloklar, WebP/kalite, metin önerileri ve DOCX/yazdırma paneli bileşene dahildir. Resim Worker'ı pakete gömülüdür; CSP kullanıyorsanız `worker-src blob:` izni gerekir, desteklenmeyen ortamlarda ana iş parçacığına dönülür.
-
-İş birliği deneysel: canlı binding ve yerel undo vardır; eş zamanlı karmaşık yapı değişiklikleri henüz üretim doğrulamasından geçmemiştir. Yeni `.studio.json` yedekleri ve kalıcı sürüm paneli bağımsız web uygulamasındadır. Proje MIT lisansıyla açık kaynaktır; npm kayıt deposuna yayın yapılmadı.
-
-`blockIds` prop'unu kaydedilmiş belgeyle birlikte sağlayabilirsiniz. `transaction.blockIdsAfter`
-değerini HTML ile birlikte saklayın. Şema 2 modeli zaten kimlikleri içerir.
-`applyOperations` revizyonu eskiyse değişiklik uygulamadan hata verir.
+| Event or method                                 | Result                                                                              |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `update:modelValue`, `change`                   | Updated HTML, including review metadata.                                            |
+| `ready`                                         | Editor API, ready for use.                                                          |
+| `save`                                          | Current HTML on Ctrl/⌘+S or the save command. The host application must persist it. |
+| `transaction`                                   | Revisioned HTML change, selection and block mapping data for edits/undo/redo.       |
+| `paste`                                         | `{ source, mode, rows, columns, warnings, inserted }`; no HTML payload.             |
+| `upload-progress`, `upload-error`               | Custom media provider progress (0–100) and error message.                           |
+| `getHTML()`                                     | Document HTML with review metadata.                                                 |
+| `getPublicHTML()`                               | Sanitized publication HTML without review metadata.                                 |
+| `setHTML(html)`                                 | Replace with sanitized HTML; undoable.                                              |
+| `insertHTML(html)`                              | Insert sanitized HTML at the selection.                                             |
+| `focus()`, `undo()`, `redo()`                   | Focus and editing history.                                                          |
+| `openMedia()`, `openSource()`, `refreshMedia()` | Built-in media/source tools and media refresh.                                      |
+| `getDocument()`                                 | Session snapshot `{ schemaVersion: 1, revision, html, blockIds }`.                  |
+| `getModel()`, `setModel(model)`                 | Structured schema-2 document model.                                                 |
+| `applyOperations(batch)`                        | Apply revision-checked structured operations; rejects stale revisions.              |
+| `getHistoryStats()`                             | Undo/redo counts, `patchBytes` and `documentBytes`; not heap usage.                 |
+| `registerPlugin(plugin)`                        | Register trusted application commands; returns a disposer.                          |
+| `executeCommand(id, ...args)`, `getCommands()`  | Execute or inspect registered commands.                                             |
 
 ```js
-// ready olayında verilen API ile:
 const model = api.getModel()
 api.applyOperations({
   baseRevision: model.revision,
@@ -276,8 +126,8 @@ const dispose = api.registerPlugin({
   commands: [
     {
       id: 'signature',
-      title: 'İmza',
-      execute: (editor) => editor.insertHTML('<p>Saygılarımla</p>'),
+      title: 'Signature',
+      execute: (editor) => editor.insertHTML('<p>Best regards</p>'),
     },
   ],
 })
@@ -285,8 +135,52 @@ api.executeCommand('my-tools/signature')
 dispose()
 ```
 
-Komut API'si güvenilir uygulama kodu içindir; eklenti sandbox'ı değildir.
-`createDocumentSession` sağlayıcısının `save(record, {expectedVersion})` uygulaması
-beklenen sürümü sunucuda atomik karşılaştırmalıdır. Çakışma yerel taslağı silmez.
-Medya sunucusu ve ortak düzenleme HTTP sunucusu örnekleri kaynak deponun
-`examples/` klasöründedir; tarball içine sunucu kurulumu eklenmez.
+This command API runs trusted application code; it is not a plugin sandbox.
+
+## Paste and tables
+
+Paste supports representative Word lists, Docs headings, HTML tables and rectangular Excel/Sheets TSV, including quoted cells. `clean` removes inline formatting while retaining structure; `text` discards HTML and images. Ctrl/⌘+Shift+V and pasting into code blocks use plain text. Mixed text/image insertion is one undo step.
+
+Select a cell rectangle with Shift+click, drag, or Alt+Shift+arrow. Escape clears the selection. Copy/cut emits HTML and TSV; Delete/Backspace clears selected content. Table structure remains intact. Merged cells must be fully covered. Overflow, size mismatches and invalid cross-section merges are rejected without changing the document.
+
+`tablePasteStyle="source"` transfers supported explicit cell colors, typography, alignment, padding and borders for `keep` + HTML-table paste. Target dimensions, IDs and semantic cell types remain intact. CSS classes, inherited styles, URLs, positioning and `!important` are not transferred. Plain text, TSV and `clean` retain destination styles. TSV cannot represent merged cells.
+
+The cell-format dialog applies only changed settings. Resets preserve structure and content. Column handles balance adjacent widths; arrows move 1 px, Shift+arrows 10 px. Widths persist as `colgroup` HTML. Merge/split, row/column operations and bulk formatting are undoable.
+
+Limits: HTML + text up to 5 Mi UTF-16 code units; tables up to 10,000 cells; TSV also up to 1,000 rows / 100 columns. This is not full Office/RTF layout fidelity.
+
+## Media adapters
+
+Provide `list()`, `upload(file, { signal, alt, onProgress })`, `update(asset)` and `remove(id)` as asynchronous methods. List returns assets; upload/update return the resulting asset. Asset shape:
+
+```js
+{
+  ;(id, name, type, size, url, alt, createdAt)
+}
+```
+
+Report upload progress between 0 and 1, honor cancellation, and throw/reject on errors. Invalid records and unsafe URLs are rejected. Each custom adapter has instance-specific state. `createHttpMediaAdapter` is also exported; see the repository's `examples/` for reference servers.
+
+The package does not provide authentication, server storage or signed-URL renewal. Remote image editing requires CORS. Deleting server media may break existing documents. Image editing is limited to 8192 px per edge / 16 MP; media files to 12 MB.
+
+## Persistence, export and collaboration
+
+The embedded component **does not autosave documents**. Connect `v-model` and `save` to your storage layer. The standalone workspace provides IndexedDB autosave, persistent versions and `.studio.json` backups. Default media and personal templates are shared within the same Pinia/origin; documents and editing history are per editor instance.
+
+Exports include `cleanHtml`, `publicHtml`, `renderDocument({ title, content, locale? })`, `documentCss`, `renderPrintDocument`, `printDocument` and `exportDocx`. DOM helpers require a browser. `renderDocument` defaults to English document metadata; pass `locale: 'tr'` for Turkish. User text is never translated automatically.
+
+`createDocumentSession` supports persistence providers. Its `save(record, { expectedVersion })` implementation must compare versions atomically on the server. `loadCollaboration` exposes an experimental Yjs binding. Concurrent complex structural edits and live cursors are not production-ready. Suggestions are selected-text changes, not automatic tracking of all edits. DOCX import is not supported.
+
+History retains the current document and up to 79 reversible changes, with an approximate 16 MiB patch budget. At least one undo is retained, so a single large change may exceed the budget. `patchBytes` is a serialized UTF-16 estimate. `mapSelection` and `mapOffset` map changes within a block; they are not a complete concurrent editing model.
+
+## Integration notes
+
+- ESM only, with Vue 3.5+ and Pinia 4 peer dependencies. No CJS/UMD global build.
+- Import CSS once. Styles are scoped under `.studio-editor-scope`, without resetting the host page. This is not Shadow DOM isolation.
+- The module can be imported in SSR, but mount the editor on the client (for example with Nuxt `ClientOnly`).
+- The legacy IndexedDB name `tinymce-studio` is kept for data compatibility. TinyMCE is not an engine dependency.
+- English and Turkish interfaces are included. Built-in templates follow the selected language. Custom content, custom provider errors and user-created template names remain as supplied; unmapped diagnostic messages may use their source language.
+- The image Worker is bundled; CSP deployments need `worker-src blob:`. Unsupported environments use the main thread.
+- Chromium, Firefox and WebKit are tested. Physical mobile keyboards and screen readers still require device testing.
+
+See `index.d.ts` for exported types. `LICENSE` contains the MIT license; `THIRD_PARTY_NOTICES.txt` contains dependency licenses.

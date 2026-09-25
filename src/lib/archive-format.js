@@ -44,6 +44,7 @@ export function validateArchive(data) {
           fail()
       }
       if (store === 'documents' || store === 'versions') {
+        if (v.locale !== undefined && !['en', 'tr'].includes(v.locale)) fail()
         if (
           v.blockIds !== undefined &&
           (!Array.isArray(v.blockIds) ||

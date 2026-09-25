@@ -18,8 +18,8 @@ const props = defineProps({ engine: Object })
 const emit = defineEmits(['close'])
 const store = useTemplates()
 const selected = ref('brief')
-const title = ref('Yeni proje')
-const owner = ref('Ekibimiz')
+const title = ref(t('Yeni proje'))
+const owner = ref(t('Ekibimiz'))
 const name = ref('')
 const saved = ref(false)
 const templates = [
@@ -48,7 +48,18 @@ const templates = [
 const html = computed(() => {
   const custom = store.items.find((t) => t.id === selected.value)
   if (custom) return custom.html
-  const heading = `<p style="color:#7953bd;font:12px sans-serif;letter-spacing:2px">${selected.value === 'meeting' ? 'TOPLANTI NOTLARI' : selected.value === 'article' ? 'EDİTORYAL' : 'PROJE ÖZETİ'}</p><h1>${escapeHtml(title.value || 'Başlıksız')}</h1><p style="color:#8c929f;font-size:14px">${escapeHtml(owner.value)} · ${new Date().toLocaleDateString('tr')}</p><hr>`
+  const heading = `<p style="color:#7953bd;font:12px sans-serif;letter-spacing:2px">${escapeHtml(t(selected.value === 'meeting' ? 'TOPLANTI NOTLARI' : selected.value === 'article' ? 'EDİTORYAL' : 'PROJE ÖZETİ'))}</p><h1>${escapeHtml(title.value || t('Başlıksız'))}</h1><p style="color:#8c929f;font-size:14px">${escapeHtml(owner.value)} · ${new Date().toLocaleDateString(locale.value)}</p><hr>`
+  if (locale.value === 'en') {
+    const content = {
+      meeting:
+        '<h2>Agenda</h2><ol><li>Priorities and current status</li><li>Items awaiting a decision</li></ol><h2>Decisions</h2><p>Record the decisions agreed during the meeting.</p><h2>Action plan</h2><table style="width:100%" data-studio-table="striped"><tr><th scope="col">Action</th><th scope="col">Owner</th><th scope="col">Due date</th></tr><tr><td>First step</td><td>Team</td><td>This week</td></tr></table><p><br></p>',
+      article:
+        '<p style="font-size:21px;color:#6b6178">Write a short introduction that draws your reader in.</p><h2>Where the story begins</h2><p>Introduce the topic with a concrete example.</p><blockquote><p>The idea you want your reader to remember.</p></blockquote><h2>A closer look</h2><p>Develop your evidence and examples here.</p><h2>The next step</h2><p>Give your reader an actionable suggestion.</p>',
+      brief:
+        '<h2>What do we want to achieve?</h2><p>Describe the project goal and success criteria.</p><h2>Scope</h2><ul><li>First deliverable</li><li>Priority requirements</li></ul><h2>Roadmap</h2><table style="width:100%" data-studio-table="striped"><tr><th scope="col">Stage</th><th scope="col">Deliverable</th><th scope="col">Status</th></tr><tr><td>Discovery</td><td>Needs assessment</td><td>Planned</td></tr><tr><td>Implementation</td><td>First release</td><td>Pending</td></tr></table><h2>Success criteria</h2><p>Define how the results will be evaluated.</p>',
+    }
+    return heading + content[selected.value]
+  }
   if (selected.value === 'meeting')
     return (
       heading +
@@ -96,8 +107,8 @@ onMounted(() => store.load())
         >
           <span class="template-icon"><component :is="item.icon" :size="20" /></span
           ><span
-            ><strong>{{ item.name }}</strong
-            ><small>{{ item.description }}</small></span
+            ><strong>{{ t(item.name) }}</strong
+            ><small>{{ t(item.description) }}</small></span
           ><Check v-if="selected === item.id" :size="16" />
         </button>
         <p class="template-section-label">{{ t('ŞABLONLARIM') }}</p>
@@ -107,7 +118,10 @@ onMounted(() => store.load())
         <div v-for="item in store.items" :key="item.id" class="custom-template">
           <button :aria-pressed="selected === item.id" @click="selected = item.id">
             <LayoutTemplate :size="16" />{{ item.name }}</button
-          ><button :aria-label="`${item.name} şablonunu sil`" @click="removeTemplate(item.id)">
+          ><button
+            :aria-label="t('{name} şablonunu sil', { name: item.name })"
+            @click="removeTemplate(item.id)"
+          >
             <Trash2 :size="14" />
           </button>
         </div>
@@ -125,7 +139,7 @@ onMounted(() => store.load())
           </button>
           <p v-if="saved" role="status">{{ t('Şablon kaydedildi.') }}</p>
         </form>
-        <p v-if="store.error" class="review-error" role="alert">{{ store.error }}</p>
+        <p v-if="store.error" class="review-error" role="alert">{{ t(store.error) }}</p>
       </div>
       <div class="template-preview">
         <div v-if="templates.some((t) => t.id === selected)" class="template-fields">

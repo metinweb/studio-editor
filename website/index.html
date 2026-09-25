@@ -1,33 +1,40 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#2457f5" />
     <meta
       name="description"
-      content="Studio Editor: Vue 3 için açık kaynak zengin metin editörü. Tablolar, medya, yorumlar ve yerel belge yönetimi. Tarayıcıda deneyin, kendi projenize ekleyin."
+      content="Studio Editor: an open-source rich-text editor for Vue 3. Tables, media, comments and local document management. Try it in your browser or add it to your project."
     />
-    <meta property="og:title" content="Studio Editor — Kelimelerinize kendi alanını açın." />
+    <meta property="og:title" content="Studio Editor — Give your words room to grow." />
     <meta
       property="og:description"
-      content="Açık kaynak zengin metin editörü ve kişisel yazma alanı. Vue 3 ile geliştirin, tarayıcıda kullanın."
+      content="An open-source rich-text editor and personal writing workspace. Build with Vue 3 or write in your browser."
     />
     <meta property="og:type" content="website" />
-    <title>Studio Editor — Açık kaynak yazma alanınız</title>
+    <link rel="canonical" href="https://metinweb.github.io/studio-editor/" />
+    <link rel="alternate" hreflang="en" href="https://metinweb.github.io/studio-editor/" />
+    <link rel="alternate" hreflang="tr" href="https://metinweb.github.io/studio-editor/tr/" />
+    <link rel="alternate" hreflang="x-default" href="https://metinweb.github.io/studio-editor/" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://metinweb.github.io/studio-editor/" />
+    <title>Studio Editor — Your open-source writing workspace</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./style.css" />
     <script src="./site.js" defer></script>
   </head>
   <body>
-    <a class="skip-link" href="#main">İçeriğe geç</a>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header wrap">
-      <a class="brand" href="./" aria-label="Studio Editor ana sayfa"
+      <a class="brand" href="./" aria-label="Studio Editor home"
         ><img src="./favicon.svg" alt="" width="34" height="34" />studio<span>editor</span></a
       >
-      <nav aria-label="Ana menü">
-        <a href="#features">Özellikler</a>
-        <a href="#developers">Geliştiriciler</a>
+      <nav aria-label="Main navigation">
+        <a href="./tr/" lang="tr" hreflang="tr">Türkçe</a>
+        <a href="#features">Features</a>
+        <a href="#developers">Developers</a>
         <a class="github-link" href="https://github.com/metinweb/studio-editor"
           >GitHub <span aria-hidden="true">↗</span></a
         >
@@ -39,138 +46,137 @@
           <a
             class="release-label"
             href="https://github.com/metinweb/studio-editor/blob/main/docs/CHANGELOG.md"
-            ><span>AÇIK KAYNAK</span> Geliştirmeye açık. Size ait.
+            ><span>OPEN SOURCE</span> Open to build on. Yours to make.
             <span aria-hidden="true">↗</span></a
           >
-          <h1 id="hero-title">Kelimelerinize<br />kendi alanını <em>açın.</em></h1>
+          <h1 id="hero-title">Give your words<br />room to <em>grow.</em></h1>
           <p>
-            Bir fikirden son taslağa. Yazın, biçimlendirin, görsellerle anlatın. Studio, tarayıcıda
-            çalışan yazma alanınız ve projenize ekleyebileceğiniz Vue editörünüz.
+            From first thought to final draft. Write, format and tell your story with images. Studio
+            is your browser-based writing workspace and a Vue editor you can make part of your
+            product.
           </p>
           <div class="hero-actions">
             <a class="button primary" href="./demo/"
-              >Editörü deneyin <span aria-hidden="true">↗</span></a
+              >Try the editor <span aria-hidden="true">↗</span></a
             >
             <a class="button secondary" href="https://github.com/metinweb/studio-editor"
-              >Kaynak kodunu inceleyin</a
+              >Explore the source</a
             >
           </div>
-          <p class="hero-note">Hesap gerekmez. Belgeleriniz bu tarayıcıda saklanır.</p>
+          <p class="hero-note">No account needed. Your documents stay in this browser.</p>
         </div>
-        <aside class="hero-aside" aria-label="Proje özeti">
-          <span class="aside-index">01 / YAZMAK İÇİN BİR ALAN</span>
+        <aside class="hero-aside" aria-label="About the project">
+          <span class="aside-index">01 / A SPACE TO WRITE</span>
           <div class="type-art" aria-hidden="true">Aa<span class="caret"></span></div>
-          <p>İçerik sizde.<br />Kontrol sizde.</p>
-          <span class="aside-bottom">Vue 3 + bağımsız editör motoru</span>
+          <p>Your content.<br />Your control.</p>
+          <span class="aside-bottom">Vue 3 + an independent editor engine</span>
         </aside>
       </section>
-      <section class="preview-section wrap" aria-label="Studio Editor uygulama görünümü">
+      <section class="preview-section wrap" aria-label="Studio Editor preview">
         <div class="preview-caption">
-          <span><span class="preview-dot"></span> SİZİN ÇALIŞMA ALANINIZ</span
-          ><span>Gerçek uygulama görünümü</span>
+          <span><span class="preview-dot"></span> YOUR WORKSPACE</span
+          ><span>Actual application preview</span>
         </div>
-        <a class="app-preview" href="./demo/" aria-label="Studio Editor demosunu aç"
+        <a class="app-preview" href="./demo/" aria-label="Open the Studio Editor demo"
           ><img
             src="./editor-preview.png"
-            alt="Studio Editor: solda favoriler ve etiket filtreleri, ortada biçimlendirme araçları ve açık belge."
+            alt="Studio Editor with favorites and tag filters on the left, formatting tools and an open document in the center."
             width="1440"
             height="1000"
             fetchpriority="high"
         /></a>
         <div class="preview-footer">
-          <span>Yazıdan daha fazlası için.</span><span>Metin · Tablo · Görsel · Yorum</span>
+          <span>For more than words.</span><span>Text · Tables · Images · Comments</span>
         </div>
       </section>
       <section class="features wrap section" id="features" aria-labelledby="features-title">
         <div class="section-intro">
-          <span class="eyebrow">DÜŞÜNCEDEN BELGEYE</span>
-          <h2 id="features-title">Yazarken ihtiyaç<br />duyduğunuz araçlar.</h2>
-          <p>Günlük notlardan ayrıntılı içeriklere, aynı çalışma alanında.</p>
+          <span class="eyebrow">FROM THOUGHT TO DOCUMENT</span>
+          <h2 id="features-title">The tools you need,<br />right where you write.</h2>
+          <p>From everyday notes to detailed content, all in one workspace.</p>
         </div>
         <div class="feature-grid">
           <article>
             <span class="feature-number">01</span>
-            <h3>Akıcı bir yazma deneyimi</h3>
+            <h3>Find your writing flow</h3>
             <p>
-              Başlıklar, görev listeleri, slash komutları ve Markdown kısayolları. Canlı başlık
-              gezginiyle uzun belgelerde yolunuzu bulun.
+              Headings, task lists, slash commands and Markdown shortcuts. Find your way through
+              long documents with a live outline.
             </p>
-            <span class="feature-detail">/ komutları &nbsp; · &nbsp; @ bahsetmeler</span>
+            <span class="feature-detail">/ commands · @ mentions</span>
           </article>
           <article>
             <span class="feature-number">02</span>
-            <h3>Tablolar, kontrol altında</h3>
+            <h3>Take control of tables</h3>
             <p>
-              Çoklu hücre seçimi, birleştirme, sütun boyutlandırma ve toplu biçimlendirme. Excel ve
-              Sheets’ten tablo yapıştırın.
+              Select multiple cells, merge, resize columns and format in bulk. Paste tables from
+              Excel and Google Sheets.
             </p>
-            <span class="feature-detail">Hücre biçimleri &nbsp; · &nbsp; TSV yapıştırma</span>
+            <span class="feature-detail">Cell formatting · TSV paste</span>
           </article>
           <article>
             <span class="feature-number">03</span>
-            <h3>Görsellerle anlatın</h3>
+            <h3>Tell your story visually</h3>
             <p>
-              Medya kütüphanesinden ekleyin; görseli kırpın, döndürün ve rengini ayarlayın. Video,
-              ses ve PDF dosyalarını da kullanın.
+              Add images from your media library, then crop, rotate and adjust their colors. Work
+              with video, audio and PDF files too.
             </p>
-            <span class="feature-detail">Yerleşik görsel düzenleme</span>
+            <span class="feature-detail">Built-in image editing</span>
           </article>
           <article>
             <span class="feature-number">04</span>
-            <h3>Her taslak yerli yerinde</h3>
+            <h3>A place for every draft</h3>
             <p>
-              Favoriler, etiketler ve içerikte arama. Otomatik kayıt, kalıcı sürümler ve tam çalışma
-              alanı yedeğiyle devam edin.
+              Favorites, tags and full-text search. Keep going with autosave, persistent versions
+              and full workspace backups.
             </p>
-            <span class="feature-detail">Yerel kayıt &nbsp; · &nbsp; Sürüm geçmişi</span>
+            <span class="feature-detail">Local storage · Version history</span>
           </article>
           <article>
             <span class="feature-number">05</span>
-            <h3>Birlikte düşünmenin araçları</h3>
+            <h3>Make room for feedback</h3>
             <p>
-              Metne yorum ekleyin, yanıtlayın ve çözün. Seçili metin için düzenleme önerileri
-              oluşturup kabul veya reddedin.
+              Add comments to text, reply and resolve them. Suggest edits to a selection, then
+              accept or reject each change.
             </p>
-            <span class="feature-detail">Belge içinde yorum ve öneriler</span>
+            <span class="feature-detail">In-document comments and suggestions</span>
           </article>
           <article>
             <span class="feature-number">06</span>
-            <h3>İçeriğiniz dışarıya hazır</h3>
+            <h3>Ready to share your work</h3>
             <p>
-              HTML kaynak görünümünü açın, önizleyin ve dışa aktarın. DOCX çıktısı veya tarayıcıdan
-              PDF yazdırma seçeneklerini kullanın.
+              Open the HTML source, preview and export your work. Download a DOCX file or print to
+              PDF from your browser.
             </p>
-            <span class="feature-detail"
-              >HTML &nbsp; · &nbsp; DOCX &nbsp; · &nbsp; PDF yazdırma</span
-            >
+            <span class="feature-detail">HTML · DOCX · Print to PDF</span>
           </article>
         </div>
       </section>
       <section class="developer-section" id="developers" aria-labelledby="developer-title">
         <div class="wrap developer-layout">
           <div>
-            <span class="eyebrow">GELİŞTİRİCİLER İÇİN</span>
-            <h2 id="developer-title">Kendi projenizin<br />bir parçası olsun.</h2>
+            <span class="eyebrow">FOR DEVELOPERS</span>
+            <h2 id="developer-title">Make it part<br />of your own project.</h2>
             <p>
-              Bağımsız bir uygulama olarak çalıştırın veya Vue 3 bileşenini ürününüze ekleyin. HTML
-              ve JSON API’leri, olaylar ve medya adaptörleriyle entegre edin.
+              Run the standalone app or add the Vue 3 component to your product. Connect it using
+              HTML and JSON APIs, events and media adapters.
             </p>
             <a
               class="inline-link"
               href="https://github.com/metinweb/studio-editor/blob/main/packages/editor/README.md"
-              >Vue bileşeni belgeleri <span aria-hidden="true">↗</span></a
+              >Vue component documentation <span aria-hidden="true">↗</span></a
             >
           </div>
           <div class="terminal">
             <div class="terminal-heading">
-              <span>Yerelde başlatın</span><button id="copy-install" type="button">Kopyala</button>
+              <span>Run it locally</span><button id="copy-install" type="button">Copy</button>
             </div>
             <pre><code id="install-command">git clone https://github.com/metinweb/studio-editor.git
 cd studio-editor
 npm ci
 npm run dev</code></pre>
             <div class="terminal-footer">
-              <span>Node.js 22.12+ veya 24+</span
+              <span>Node.js 22.12+ or 24+</span
               ><span id="copy-status" role="status" aria-live="polite"></span>
             </div>
           </div>
@@ -178,46 +184,44 @@ npm run dev</code></pre>
       </section>
       <section class="open-section wrap section" aria-labelledby="open-title">
         <div>
-          <span class="eyebrow">AÇIK KAYNAK, AÇIK GELİŞTİRME</span>
-          <h2 id="open-title">Birlikte daha iyi<br />bir editör yazalım.</h2>
+          <span class="eyebrow">OPEN SOURCE, OPEN DEVELOPMENT</span>
+          <h2 id="open-title">Let’s build a better<br />editor together.</h2>
         </div>
         <div class="open-copy">
           <p>
-            Studio Editor gelişmeye devam eden bir beta. Bir hata bildirimi, bir iyileştirme veya
-            iyi bir fikirle katkıda bulunabilirsiniz.
+            Studio Editor is an evolving beta. Contribute a bug report, an improvement or an idea
+            worth exploring.
           </p>
           <p class="scope-note">
-            Canlı iş birliği deneysel aşamadadır. Tam otomatik değişiklik izleme ve DOCX içe aktarma
-            henüz desteklenmez. Demo belgeleri sunucuya kaydetmez; tarayıcı verilerini temizlemeden
-            önce yedek alın.
+            Real-time collaboration is experimental. Automatic track changes and DOCX import are not
+            yet supported. The demo stores documents locally; back up your work before clearing
+            browser data.
           </p>
           <div class="open-links">
             <a
               class="inline-link"
               href="https://github.com/metinweb/studio-editor/blob/main/CONTRIBUTING.md"
-              >Katkı rehberi ↗</a
+              >Contribution guide ↗</a
             ><a class="inline-link" href="https://github.com/metinweb/studio-editor/issues"
-              >Hata bildir / fikir paylaş ↗</a
+              >Report a bug / share an idea ↗</a
             >
           </div>
         </div>
       </section>
-      <section class="closing wrap" aria-label="Editörü aç">
+      <section class="closing wrap" aria-label="Open the editor">
         <div>
-          <span>Bir sonraki fikriniz için.</span>
-          <h2>Boş bir sayfa sizi bekliyor.</h2>
+          <span>For your next idea.</span>
+          <h2>A blank page is waiting.</h2>
         </div>
-        <a class="button light" href="./demo/"
-          >Yazmaya başlayın <span aria-hidden="true">↗</span></a
-        >
+        <a class="button light" href="./demo/">Start writing <span aria-hidden="true">↗</span></a>
       </section>
     </main>
     <footer class="site-footer wrap">
       <a class="brand" href="./"
         ><img src="./favicon.svg" alt="" width="26" height="26" />studio<span>editor</span></a
       >
-      <p>metinweb tarafından geliştiriliyor.</p>
-      <a href="https://github.com/metinweb/studio-editor/blob/main/LICENSE">MIT lisansı</a
+      <p>Built by metinweb.</p>
+      <a href="https://github.com/metinweb/studio-editor/blob/main/LICENSE">MIT license</a
       ><a href="https://github.com/metinweb/studio-editor">GitHub ↗</a>
     </footer>
   </body>

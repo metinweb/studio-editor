@@ -1,4 +1,6 @@
 <script setup>
+import { useEditorLocale } from '../lib/editor-locale'
+const { t } = useEditorLocale()
 import { ref } from 'vue'
 import { Check, Pipette, RotateCcw } from '@lucide/vue'
 import EditorPopover from './EditorPopover.vue'
@@ -91,22 +93,26 @@ function applyCustom() {
         </button>
       </div>
       <button class="palette-reset" @click="emit('select', highlight ? 'transparent' : 'inherit')">
-        <RotateCcw :size="15" /> {{ highlight ? 'Vurguyu kaldır' : 'Varsayılan metin rengi' }}
+        <RotateCcw :size="15" /> {{ t(highlight ? 'Vurguyu kaldır' : 'Varsayılan metin rengi') }}
       </button>
       <form class="palette-custom" @submit.prevent="applyCustom">
-        <label class="palette-picker" title="Özel renk seç">
-          <Pipette :size="17" /><input v-model="custom" type="color" aria-label="Özel renk seç" />
+        <label class="palette-picker" :title="t('Özel renk seç')">
+          <Pipette :size="17" /><input
+            v-model="custom"
+            type="color"
+            :aria-label="t('Özel renk seç')"
+          />
         </label>
         <input
           v-model="custom"
-          aria-label="Hex renk kodu"
+          :aria-label="t('Hex renk kodu')"
           placeholder="#2563eb"
           pattern="#[a-fA-F0-9]{6}"
           required
           spellcheck="false"
           maxlength="7"
         />
-        <button type="submit" aria-label="Özel rengi uygula" title="Özel rengi uygula">
+        <button type="submit" :aria-label="t('Özel rengi uygula')" :title="t('Özel rengi uygula')">
           <Check :size="18" />
         </button>
       </form>

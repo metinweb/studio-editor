@@ -1,4 +1,6 @@
 <script setup>
+import { useEditorLocale } from '../lib/editor-locale'
+const { t } = useEditorLocale()
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import {
   Crop,
@@ -203,8 +205,8 @@ onBeforeUnmount(() => {
         v-for="corner in corners"
         :key="corner.id"
         :class="['image-resize-handle', corner.id]"
-        :aria-label="`Görseli boyutlandır: ${corner.label}`"
-        title="Sürükleyerek boyutlandır · Ok tuşları: 1 px · Shift: 10 px"
+        :aria-label="t('Görseli boyutlandır: {corner}', { corner: t(corner.label) })"
+        :title="t('Sürükleyerek boyutlandır · Ok tuşları: 1 px · Shift: 10 px')"
         @pointerdown.prevent="begin($event, corner)"
         @pointermove="move"
         @pointerup="finish(false)"
@@ -222,24 +224,24 @@ onBeforeUnmount(() => {
       ref="toolbar"
       class="image-quick-toolbar"
       role="toolbar"
-      aria-label="Görsel hızlı işlemleri"
+      :aria-label="t('Görsel hızlı işlemleri')"
       :style="{ left: `${toolbarPosition.left}px`, top: `${toolbarPosition.top}px` }"
     >
       <button
         class="image-edit-action"
-        aria-label="Resmi düzenle"
-        title="Kırp, döndür ve renkleri düzenle"
+        :aria-label="t('Resmi düzenle')"
+        :title="t('Kırp, döndür ve renkleri düzenle')"
         @pointerdown.prevent
         @click="emit('edit')"
       >
-        <Crop :size="17" /><span>Düzenle</span>
+        <Crop :size="17" /><span>{{ t('Düzenle') }}</span>
       </button>
       <span class="quick-separator" />
       <button
         v-for="item in alignments"
         :key="item.value"
-        :aria-label="item.label"
-        :title="item.label"
+        :aria-label="t(item.label)"
+        :title="t(item.label)"
         @pointerdown.prevent
         @click="emit('command', 'image', { align: item.value })"
       >
@@ -249,7 +251,7 @@ onBeforeUnmount(() => {
         v-for="width in ['25%', '50%', '100%']"
         :key="width"
         :aria-label="width"
-        :title="`Genişlik: ${width}`"
+        :title="t('Genişlik: {width}', { width })"
         @pointerdown.prevent
         @click="emit('command', 'image', { width })"
       >
@@ -257,8 +259,8 @@ onBeforeUnmount(() => {
       </button>
       <span class="quick-separator" />
       <button
-        aria-label="Oranı koru"
-        title="Oranı koru · Shift ile geçici olarak değiştir"
+        :aria-label="t('Oranı koru')"
+        :title="t('Oranı koru · Shift ile geçici olarak değiştir')"
         :aria-pressed="locked"
         @pointerdown.prevent
         @click="locked = !locked"
@@ -266,16 +268,16 @@ onBeforeUnmount(() => {
         <LockKeyhole v-if="locked" :size="16" /><UnlockKeyhole v-else :size="16" />
       </button>
       <button
-        aria-label="Görsel özellikleri"
-        title="Görsel özellikleri"
+        :aria-label="t('Görsel özellikleri')"
+        :title="t('Görsel özellikleri')"
         @pointerdown.prevent
         @click="emit('properties')"
       >
         <SlidersHorizontal :size="17" />
       </button>
       <button
-        aria-label="Görseli sil"
-        title="Görseli sil"
+        :aria-label="t('Görseli sil')"
+        :title="t('Görseli sil')"
         @pointerdown.prevent
         @click="emit('command', 'removeImage')"
       >

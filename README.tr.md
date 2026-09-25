@@ -1,5 +1,7 @@
 # Studio Editor
 
+Varsayılan dil İngilizcedir. Yan menüdeki **Interface language → Türkçe** seçimi kalıcıdır; belge içeriğini değiştirmez. [Türkçe tanıtım sayfası](https://metinweb.github.io/studio-editor/tr/).
+
 [Tanıtım sayfası](https://metinweb.github.io/studio-editor/) · [Canlı demo](https://metinweb.github.io/studio-editor/demo/) · [English](README.md) · [Katkı rehberi](CONTRIBUTING.md)
 
 Studio, **TinyMCE kullanmayan** bir Vue 3 + Pinia içerik uygulamasıdır. Görsel editörün motoru bu proje içinde yazılmıştır; TinyMCE, TipTap, ProseMirror, Lexical veya başka bir hazır görsel editöre dayanmaz. HTML kaynak kodu penceresinde CodeMirror, HTML temizlemede DOMPurify kullanılmaya devam eder. Dolayısıyla uygulamanın tamamı bağımlılıksız değildir.

@@ -30,6 +30,7 @@
     "dist",
     "index.d.ts",
     "README.md",
+    "README.tr.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.txt",
     "dependency-inventory.json"

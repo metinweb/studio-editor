@@ -31,6 +31,7 @@ export async function prepareBackup(file) {
     documents: data.documents.map((d) => ({
       id: ids.get(d.id),
       title: d.title,
+      locale: d.locale,
       content: content(d.content),
       blockIds: d.blockIds || [],
       updatedAt: d.updatedAt,
@@ -56,6 +57,7 @@ export async function prepareBackup(file) {
       id: crypto.randomUUID(),
       documentId: ids.get(v.documentId),
       title: v.title,
+      locale: v.locale,
       content: content(v.content),
       blockIds: v.blockIds || [],
       createdAt: v.createdAt,

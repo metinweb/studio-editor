@@ -291,7 +291,7 @@ defineExpose({ close })
     <div
       class="editor-menu editor-context-menu"
       role="menu"
-      aria-label="Sağ tık menüsü"
+      :aria-label="t('Sağ tık menüsü')"
       @keydown="keys"
     >
       <button

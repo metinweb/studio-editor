@@ -528,7 +528,7 @@ h2 {
     gap: 16px;
     font-size: 12px;
   }
-  .site-header nav > a:nth-child(2) {
+  .site-header nav > a[href='#developers'] {
     display: none;
   }
   .github-link {

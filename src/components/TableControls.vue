@@ -285,8 +285,8 @@ defineExpose({
         v-for="corner in ['nw', 'ne', 'sw', 'se']"
         :key="corner"
         :class="['table-resize-handle', corner]"
-        :aria-label="`Tablo genişliğini boyutlandır: ${corner}`"
-        title="Tablo genişliğini sürükleyerek değiştir"
+        :aria-label="t('Tablo genişliğini boyutlandır: {corner}', { corner })"
+        :title="t('Tablo genişliğini sürükleyerek değiştir')"
         @pointerdown.prevent="begin($event, corner)"
         @pointermove="move"
         @pointerup="finish(false)"
@@ -307,8 +307,8 @@ defineExpose({
       :key="column.index"
       class="table-column-handle"
       :style="{ left: `${column.left - 4}px`, top: `${box.top}px`, height: `${box.height}px` }"
-      :aria-label="`${column.index}. sütun sınırını boyutlandır`"
-      title="Sütun sınırını sürükleyin; ok tuşlarıyla 1 px, Shift ile 10 px"
+      :aria-label="t('{index}. sütun sınırını boyutlandır', { index: column.index })"
+      :title="t('Sütun sınırını sürükleyin; ok tuşlarıyla 1 px, Shift ile 10 px')"
       @pointerdown.prevent="beginColumn($event, column.index)"
       @pointermove="move"
       @pointerup="finish(false)"
@@ -321,27 +321,27 @@ defineExpose({
       class="table-selection-count"
       role="status"
       :style="{ left: `${box.left}px`, top: `${Math.max(0, box.top)}px` }"
-      >{{ selectedBoxes.length }} hücre seçili</span
+      >{{ selectedBoxes.length }} {{ t('hücre seçili') }}</span
     >
     <div
       ref="toolbar"
       class="table-quick-toolbar"
       role="toolbar"
-      aria-label="Tablo hızlı işlemleri"
+      :aria-label="t('Tablo hızlı işlemleri')"
       :style="{ left: `${toolbarPosition.left}px`, top: `${toolbarPosition.top}px` }"
       @keydown="keys"
     >
       <button
-        aria-label="Tablo özellikleri"
-        title="Tablo özellikleri"
+        :aria-label="t('Tablo özellikleri')"
+        :title="t('Tablo özellikleri')"
         @pointerdown.prevent
         @click="openProperties"
       >
         <TableProperties :size="18" />
       </button>
       <button
-        aria-label="Tabloyu sil"
-        title="Tabloyu sil"
+        :aria-label="t('Tabloyu sil')"
+        :title="t('Tabloyu sil')"
         @pointerdown.prevent
         @click="emit('command', 'table', 'deleteTable')"
       >
@@ -351,8 +351,8 @@ defineExpose({
       <template v-for="(action, index) in actions" :key="action.command">
         <span v-if="index === 3" class="quick-separator" />
         <button
-          :aria-label="action.label"
-          :title="action.title || action.label"
+          :aria-label="t(action.label)"
+          :title="t(action.title || action.label)"
           :disabled="!state.canEditTable"
           @pointerdown.prevent
           @click="emit('command', 'table', action.command)"
@@ -375,8 +375,8 @@ defineExpose({
         <Paintbrush :size="18" />
       </button>
       <button
-        aria-label="Seçili hücreleri birleştir"
-        title="Seçili hücreleri birleştir"
+        :aria-label="t('Seçili hücreleri birleştir')"
+        :title="t('Seçili hücreleri birleştir')"
         :disabled="!state.canMergeCells"
         @pointerdown.prevent
         @click="emit('command', 'mergeCells')"
@@ -384,8 +384,8 @@ defineExpose({
         <Merge :size="18" />
       </button>
       <button
-        aria-label="Hücreyi ayır"
-        title="Hücreyi ayır"
+        :aria-label="t('Hücreyi ayır')"
+        :title="t('Hücreyi ayır')"
         :disabled="!state.canSplitCell"
         @pointerdown.prevent
         @click="emit('command', 'splitCell')"
@@ -393,8 +393,8 @@ defineExpose({
         <Split :size="18" />
       </button>
       <button
-        aria-label="Diğer tablo işlemleri"
-        title="Sırala, hücre birleştir veya ayır"
+        :aria-label="t('Diğer tablo işlemleri')"
+        :title="t('Sırala, hücre birleştir veya ayır')"
         @pointerdown.prevent
         @click="emit('options', $event)"
       >
@@ -405,30 +405,35 @@ defineExpose({
   <EditorPopover
     v-if="properties && box"
     :anchor="propertyAnchor"
-    label="Tablo özellikleri"
+    :label="t('Tablo özellikleri')"
     @close="properties = false"
   >
     <form class="table-properties-form" @submit.prevent="apply">
-      <strong>Tablo özellikleri</strong
+      <strong>{{ t('Tablo özellikleri') }}</strong
       ><label
-        >Açıklama<input
+        >{{ t('Açıklama')
+        }}<input
           v-model="form.caption"
-          aria-label="Tablo açıklaması"
-          placeholder="İsteğe bağlı tablo başlığı" /></label
+          :aria-label="t('Tablo açıklaması')"
+          :placeholder="t('İsteğe bağlı tablo başlığı')" /></label
       ><label
-        >Genişlik<input
+        >{{ t('Genişlik')
+        }}<input
           v-model="form.width"
-          aria-label="Tablo genişliği"
+          :aria-label="t('Tablo genişliği')"
           pattern="[0-9]{1,4}(px|%)?"
           placeholder="100% veya 600px"
           required /></label
       ><label
-        >Görünüm<select v-model="form.style" aria-label="Tablo görünümü">
+        >{{ t('Görünüm')
+        }}<select v-model="form.style" :aria-label="t('Tablo görünümü')">
           <option value="plain">Klasik</option>
-          <option value="striped">Şeritli satırlar</option>
-          <option value="minimal">Sade çizgiler</option>
+          <option value="striped">{{ t('Şeritli satırlar') }}</option>
+          <option value="minimal">{{ t('Sade çizgiler') }}</option>
         </select></label
-      ><button class="button primary" type="submit"><Check :size="14" /> Tabloyu güncelle</button>
+      ><button class="button primary" type="submit">
+        <Check :size="14" /> {{ t('Tabloyu güncelle') }}
+      </button>
     </form>
   </EditorPopover>
 </template>

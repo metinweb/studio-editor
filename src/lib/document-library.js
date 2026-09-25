@@ -1,9 +1,9 @@
 export const tagLimit = 10
 export const tagLength = 32
-export const searchKey = (value) =>
+export const searchKey = (value, locale = 'tr') =>
   String(value || '')
     .normalize('NFC')
-    .toLocaleLowerCase('tr')
+    .toLocaleLowerCase(locale)
     .trim()
 
 export function normalizeTags(values) {
@@ -25,20 +25,30 @@ export function normalizeTags(values) {
 // removed documents to be collected, including their cached text.
 export function createDocumentFilter(extractText) {
   const cache = new WeakMap()
-  const collator = new Intl.Collator('tr', { numeric: true, sensitivity: 'base' })
-  return (documents, { query = '', favorite = false, tag = '', sort = 'recent' } = {}) => {
-    const terms = searchKey(query).split(/\s+/u).filter(Boolean)
+  const collators = new Map()
+  return (
+    documents,
+    { query = '', favorite = false, tag = '', sort = 'recent', locale = 'tr' } = {},
+  ) => {
+    if (!collators.has(locale))
+      collators.set(locale, new Intl.Collator(locale, { numeric: true, sensitivity: 'base' }))
+    const collator = collators.get(locale)
+    const terms = searchKey(query, locale).split(/\s+/u).filter(Boolean)
     return documents
       .filter((document) => {
         if (favorite && !document.favorite) return false
         const tags = normalizeTags(document.tags)
         if (tag && !tags.some((value) => searchKey(value) === searchKey(tag))) return false
         if (!terms.length) return true
-        const metadata = searchKey(`${document.title}\n${tags.join(' ')}`)
+        const metadata = searchKey(`${document.title}\n${tags.join(' ')}`, locale)
         if (terms.every((term) => metadata.includes(term))) return true
         let entry = cache.get(document)
-        if (!entry || entry.html !== document.content) {
-          entry = { html: document.content, text: searchKey(extractText(document.content || '')) }
+        if (!entry || entry.html !== document.content || entry.locale !== locale) {
+          entry = {
+            html: document.content,
+            locale,
+            text: searchKey(extractText(document.content || ''), locale),
+          }
           cache.set(document, entry)
         }
         const text = `${metadata}\n${entry.text}`

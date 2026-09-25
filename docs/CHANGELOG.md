@@ -1,4 +1,15 @@
-# Değişiklik günlüğü
+# Changelog
+
+## Unreleased — English-first experience
+
+- English is now the default for the public website, workspace and Vue component.
+- Persistent English/Türkçe selection preserves document content and undo history.
+- English welcome content, built-in templates, workspace dialogs and table/image controls.
+- English component API and localization guide; Turkish website retained under `/tr/`.
+- Locale-aware search and date formatting, with document language retained in backups.
+- Existing component integrations can keep Turkish by explicitly passing `locale="tr"`.
+
+Earlier release notes below are in Turkish.
 
 ## 0.1.0-beta.11 — 25 Eylül 2026
 

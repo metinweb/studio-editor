@@ -1,4 +1,6 @@
 <script setup>
+import { useEditorLocale } from '../lib/editor-locale'
+const { t, locale } = useEditorLocale()
 import { ref } from 'vue'
 import AppDialog from './AppDialog.vue'
 import { useWorkspace } from '../stores/workspace'
@@ -56,25 +58,35 @@ function restore() {
 }
 </script>
 <template>
-  <AppDialog title="Çalışma alanı yedeği" @close="!busy && emit('close')">
+  <AppDialog :title="t('Çalışma alanı yedeği')" @close="!busy && emit('close')">
     <div class="workspace-data-panel">
-      <p>Belgeler, yorumlar, medya, şablonlar ve sürüm geçmişini tek dosyada saklayın.</p>
-      <button class="button primary" :disabled="busy" @click="download">Tam yedeği indir</button>
+      <p>
+        {{ t('Belgeler, yorumlar, medya, şablonlar ve sürüm geçmişini tek dosyada saklayın.') }}
+      </p>
+      <button class="button primary" :disabled="busy" @click="download">
+        {{ t('Tam yedeği indir') }}
+      </button>
       <hr />
       <label
-        >Yedek dosyası seç <input type="file" accept=".json" :disabled="busy" @change="pick"
+        >{{ t('Yedek dosyası seç') }}
+        <input type="file" accept=".json" :disabled="busy" @change="pick"
       /></label>
-      <p class="muted">En fazla 100 MB. Geri yüklenen öğeler yeni kopyalar olarak eklenir.</p>
+      <p class="muted">
+        {{ t('En fazla 100 MB. Geri yüklenen öğeler yeni kopyalar olarak eklenir.') }}
+      </p>
       <div v-if="draft" class="backup-summary">
         <p>
-          {{ draft.documents.length }} belge · {{ draft.media.length }} medya ·
-          {{ draft.templates.length }} şablon · {{ draft.versions.length }} sürüm
+          {{ draft.documents.length }} {{ t('belge ·') }} {{ draft.media.length }}
+          {{ t('medya ·') }} {{ draft.templates.length }} {{ t('şablon ·') }}
+          {{ draft.versions.length }} {{ t('sürüm') }}
         </p>
-        <button class="button primary" :disabled="busy" @click="restore">Yedeği geri yükle</button>
+        <button class="button primary" :disabled="busy" @click="restore">
+          {{ t('Yedeği geri yükle') }}
+        </button>
       </div>
-      <p v-if="busy" role="status">İşleniyor…</p>
-      <p v-if="error" role="alert">{{ error }}</p>
-      <p v-if="status" role="status">{{ status }}</p>
+      <p v-if="busy" role="status">{{ t('İşleniyor…') }}</p>
+      <p v-if="error" role="alert">{{ t(error) }}</p>
+      <p v-if="status" role="status">{{ t(status) }}</p>
     </div>
   </AppDialog>
 </template>

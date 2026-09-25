@@ -21,6 +21,7 @@ Studio combines a standalone writing app with an embeddable Vue component. The e
 - HTML source editing, sandboxed previews, HTML/DOCX export and browser PDF printing.
 - Local documents, favorites, tags, full-text search, persistent versions and workspace backups.
 - Vue `v-model`, HTML/JSON APIs, configurable toolbars, plugin commands and media adapters.
+- English by default, with a persistent English/Türkçe selector and localized built-in templates.
 
 ## Quick start
 
@@ -47,6 +48,12 @@ Deploy `dist/` to a static HTTP server. Assets use relative paths, so subdirecto
 The source package is under [`packages/editor`](packages/editor). Build it with `npm run build:library`. The package is **not published to npm**; do not assume an npm registry package with the same name belongs to this project.
 
 Create a local installable tarball with `npm run package:release`. See the [package API and integration guide](packages/editor/README.md) and [working Vue example](examples/vue/App.vue) for `v-model`, events, options and adapters. The component's `save` event must be connected to your own persistence layer.
+
+## Languages
+
+The website, standalone workspace and Vue component default to English. Choose **Interface language → Türkçe** in the workspace sidebar to switch; the preference is saved in this browser. Language changes preserve existing document content and undo history. New documents and built-in templates use the selected language.
+
+The [Turkish website](https://metinweb.github.io/studio-editor/tr/) and [Turkish README](README.tr.md) remain available. Component integrations can set `locale="tr"`. See [localization](docs/INTERNATIONALIZATION.md) for translation contributions.
 
 ## Data and scope
 
@@ -81,7 +88,7 @@ GitHub Actions runs unit tests, all three browser projects, library builds and l
 - [Deployment](docs/DEPLOYMENT.md) and [release process](docs/RELEASE.md)
 - [Changelog](docs/CHANGELOG.md)
 
-Most detailed documentation is currently in Turkish. English documentation contributions are welcome.
+The getting-started guide, component API, contribution guide and localization guide are maintained in English. The detailed architecture and historical implementation notes linked above are currently in Turkish.
 
 ## Contributing and security
 

@@ -6,7 +6,17 @@ export default defineConfig({
   fullyParallel: true,
   workers: 4,
   timeout: 30000,
-  use: { baseURL: 'http://127.0.0.1:4173', trace: 'retain-on-failure' },
+  // Existing interaction scenarios cover Turkish; locale.spec.js covers the English default.
+  use: {
+    baseURL: 'http://127.0.0.1:4173',
+    trace: 'retain-on-failure',
+    storageState: {
+      cookies: [],
+      origins: [
+        { origin: 'http://127.0.0.1:4173', localStorage: [{ name: 'studio-locale', value: 'tr' }] },
+      ],
+    },
+  },
   projects: [
     {
       name: 'chromium',

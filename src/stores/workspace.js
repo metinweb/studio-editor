@@ -1,7 +1,8 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { repository } from '../lib/database'
-import { plainText, welcomeContent } from '../lib/content'
+import { plainText, welcomeContent, welcomeContentEn } from '../lib/content'
+import { workspaceLocale, workspaceT as t } from '../lib/workspace-locale'
 import { normalizeTags } from '../lib/document-library'
 
 export const useWorkspace = defineStore('studio-workspace', () => {
@@ -24,15 +25,19 @@ export const useWorkspace = defineStore('studio-workspace', () => {
   async function initialize() {
     try {
       documents.value = await repository.all('documents')
-      if (!documents.value.length) await create('Studio’ya hoş geldiniz', welcomeContent)
+      if (!documents.value.length)
+        await create(
+          t('Studio’ya hoş geldiniz'),
+          workspaceLocale.value === 'tr' ? welcomeContent : welcomeContentEn,
+        )
       else activeId.value = ordered.value[0].id
     } catch {
       error.value = 'Tarayıcı depolaması açılamadı. Değişikliklerinizi HTML olarak dışa aktarın.'
       if (!documents.value.length) {
         documents.value.push({
           id: crypto.randomUUID(),
-          title: 'İlk belgem',
-          content: welcomeContent,
+          title: t('İlk belgem'),
+          content: workspaceLocale.value === 'tr' ? welcomeContent : welcomeContentEn,
           updatedAt: Date.now(),
         })
         activeId.value = documents.value[0].id
@@ -94,12 +99,13 @@ export const useWorkspace = defineStore('studio-workspace', () => {
     activeId.value = id
   }
 
-  async function create(title = 'Başlıksız belge', content = '<p></p>', metadata = {}) {
+  async function create(title = t('Başlıksız belge'), content = '<p></p>', metadata = {}) {
     if (dirty.value) await save()
     if (dirty.value) return
     const document = {
       id: crypto.randomUUID(),
       title,
+      locale: workspaceLocale.value,
       content,
       updatedAt: Date.now(),
       favorite: metadata.favorite === true,

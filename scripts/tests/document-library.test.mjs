@@ -2,6 +2,14 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createDocumentFilter, normalizeTags } from '../../src/lib/document-library.js'
 
+test('English search folds ASCII I correctly and invalidates cached text when the locale changes', () => {
+  const filter = createDocumentFilter((text) => text)
+  const documents = [{ id: '1', title: 'Notes', content: 'IDEAS', tags: [] }]
+  assert.equal(filter(documents, { query: 'ideas', locale: 'en' }).length, 1)
+  assert.equal(filter(documents, { query: 'ideas', locale: 'tr' }).length, 0)
+  assert.equal(filter(documents, { query: 'ideas', locale: 'en' }).length, 1)
+})
+
 test('Turkish search combines title, content, tags and filters without mutating documents', () => {
   const documents = [
     {

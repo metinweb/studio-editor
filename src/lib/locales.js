@@ -1,7 +1,9 @@
 // Turkish source messages are the stable override keys in the beta API.
 import { panelMessages } from './panel-messages.js'
+import { workspaceMessages } from './workspace-messages.js'
 export const englishMessages = Object.freeze({
   ...panelMessages,
+  ...workspaceMessages,
   'Görev listesi': 'Task list',
   'İçerik stilleri': 'Content styles',
   'Belge başlıkları': 'Document outline',
@@ -245,7 +247,14 @@ export const englishMessages = Object.freeze({
   'Editör salt okunur veya devre dışı.': 'The editor is read only or disabled.',
 })
 
-export function translateMessage(locale, messages, key) {
-  if (Object.hasOwn(messages || {}, key) && typeof messages[key] === 'string') return messages[key]
-  return locale === 'en' && Object.hasOwn(englishMessages, key) ? englishMessages[key] : key
+export function translateMessage(locale, messages, key, values = {}) {
+  const message =
+    Object.hasOwn(messages || {}, key) && typeof messages[key] === 'string'
+      ? messages[key]
+      : locale === 'en' && Object.hasOwn(englishMessages, key)
+        ? englishMessages[key]
+        : key
+  return String(message ?? '').replace(/\{(\w+)\}/g, (match, name) =>
+    Object.hasOwn(values, name) ? String(values[name]) : match,
+  )
 }

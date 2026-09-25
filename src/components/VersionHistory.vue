@@ -1,4 +1,6 @@
 <script setup>
+import { useEditorLocale } from '../lib/editor-locale'
+const { t, locale } = useEditorLocale()
 import { computed, onMounted, ref } from 'vue'
 import AppDialog from './AppDialog.vue'
 import { useWorkspace } from '../stores/workspace'
@@ -77,13 +79,18 @@ onMounted(() =>
 )
 </script>
 <template>
-  <AppDialog title="Sürüm geçmişi" wide @close="!busy && emit('close')">
+  <AppDialog :title="t('Sürüm geçmişi')" wide @close="!busy && emit('close')">
     <div class="version-panel">
       <div class="version-list">
-        <button class="button" :disabled="busy" @click="checkpoint">Şimdi sürüm kaydet</button>
+        <button class="button" :disabled="busy" @click="checkpoint">
+          {{ t('Şimdi sürüm kaydet') }}
+        </button>
         <p class="muted">
-          Değişiklikler en az 30 saniye arayla sürümlenir. Belge başına son 30 sürüm / 20 MB
-          saklanır; son sürüm daima korunur.
+          {{
+            t(
+              'Değişiklikler en az 30 saniye arayla sürümlenir. Belge başına son 30 sürüm / 20 MB saklanır; son sürüm daima korunur.',
+            )
+          }}
         </p>
         <button
           v-for="item in items"
@@ -92,32 +99,38 @@ onMounted(() =>
           :aria-pressed="selected?.id === item.id"
           @click="selected = item"
         >
-          <strong>{{ new Date(item.createdAt).toLocaleString('tr-TR') }}</strong>
-          <span>{{ item.reason }}</span
+          <strong>{{ new Date(item.createdAt).toLocaleString(locale) }}</strong>
+          <span>{{ t(item.reason) }}</span
           ><small>{{ item.title }}</small>
         </button>
       </div>
       <div v-if="selected" class="version-detail">
-        <p><strong>Seçili sürüm:</strong> {{ selected.title }}</p>
-        <iframe title="Sürüm önizlemesi" sandbox="" :srcdoc="preview"></iframe>
+        <p>
+          <strong>{{ t('Seçili sürüm:') }}</strong> {{ selected.title }}
+        </p>
+        <iframe :title="t('Sürüm önizlemesi')" sandbox="" :srcdoc="preview"></iframe>
         <details v-if="comparison" class="version-diff">
-          <summary>Metin farkını göster</summary>
-          <p>İlk ve son değişiklik arasındaki metin. Biçim farklarını önizlemeden inceleyin.</p>
+          <summary>{{ t('Metin farkını göster') }}</summary>
+          <p>
+            {{
+              t('İlk ve son değişiklik arasındaki metin. Biçim farklarını önizlemeden inceleyin.')
+            }}
+          </p>
           <div>
-            <strong>Seçili sürüm</strong>
-            <pre>{{ comparison.before || '(Metin farkı yok)' }}</pre>
+            <strong>{{ t('Seçili sürüm') }}</strong>
+            <pre>{{ comparison.before || t('(Metin farkı yok)') }}</pre>
           </div>
           <div>
-            <strong>Şimdiki belge</strong>
-            <pre>{{ comparison.after || '(Metin farkı yok)' }}</pre>
+            <strong>{{ t('Şimdiki belge') }}</strong>
+            <pre>{{ comparison.after || t('(Metin farkı yok)') }}</pre>
           </div>
         </details>
         <button class="button primary" :disabled="busy || !changed" @click="restore">
-          Bu sürümü geri yükle
+          {{ t('Bu sürümü geri yükle') }}
         </button>
       </div>
-      <p v-if="error" role="alert">{{ error }}</p>
-      <p v-if="status" role="status">{{ status }}</p>
+      <p v-if="error" role="alert">{{ t(error) }}</p>
+      <p v-if="status" role="status">{{ t(status) }}</p>
     </div>
   </AppDialog>
 </template>

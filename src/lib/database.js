@@ -86,6 +86,7 @@ export const repository = {
         id: crypto.randomUUID(),
         documentId: value.id,
         title: value.title,
+        locale: value.locale,
         content: value.content,
         blockIds: value.blockIds || [],
         createdAt: Date.now(),
