@@ -70,6 +70,8 @@ test('search combines visible content, title and tag; sorting and creation clear
   await page.getByLabel('Belge ara', { exact: true }).fill('izmir ışık içerik proje')
   await expect(rows(page)).toHaveText(['İzmir 10'])
   await rows(page).first().click()
+  await expect(page.getByLabel('Belge başlığı', { exact: true })).toHaveValue('İzmir 10')
+  await expect(body(page)).toContainText('IŞIK ve İÇERİK araştırması')
   await body(page).fill('Değişen metin')
   await expect(rows(page)).toHaveCount(0)
   await page.getByRole('button', { name: 'Temizle', exact: true }).click()

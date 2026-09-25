@@ -45,13 +45,25 @@ jobs:
           path: site-dist
 
   browsers:
-    name: Browser tests (${{ matrix.browser }})
+    name: Browser tests (${{ matrix.browser }} ${{ matrix.shard }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        include:
+          - browser: chromium
+            shard: 1/1
+          - browser: firefox
+            shard: 1/1
+          - browser: webkit
+            shard: 1/4
+          - browser: webkit
+            shard: 2/4
+          - browser: webkit
+            shard: 3/4
+          - browser: webkit
+            shard: 4/4
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -61,12 +73,12 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npm run build
-      - run: npx playwright test --project=${{ matrix.browser }} --workers=2 --max-failures=3 --reporter=list
+      - run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }} --workers=1 --timeout=60000 --max-failures=3 --reporter=list
       - name: Upload browser failure traces
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: browser-test-results-${{ matrix.browser }}
+          name: browser-test-results-${{ strategy.job-index }}-${{ matrix.browser }}
           path: test-results/
           retention-days: 7
 

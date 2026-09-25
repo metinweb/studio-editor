@@ -1424,7 +1424,8 @@ button:disabled:hover {
   .breadcrumb {
     gap: 8px;
   }
-  .breadcrumb > svg:first-of-type {
+  .breadcrumb > span,
+  .breadcrumb > svg {
     display: none;
   }
   .topbar-right {
