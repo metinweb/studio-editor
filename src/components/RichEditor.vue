@@ -856,7 +856,12 @@ function togglePopup(name, event) {
   popup.value = popup.value === name ? null : name
 }
 function hoverMenu(name, event) {
-  if (!menus.value[popup.value] || popup.value === name || event.pointerType === 'touch') return
+  if (
+    !menus.value[popup.value] ||
+    popup.value === name ||
+    event.pointerType === 'touch' ||
+    window.innerWidth < 720
+  ) return
   popupAnchor.value = event.currentTarget
   popup.value = name
 }

@@ -151,6 +151,10 @@ test('mobile list previews and submenu navigation fit the viewport', async ({ pa
   await expect(body(page).locator('ol')).toHaveCSS('list-style-type', 'decimal-leading-zero')
   await menu(page, 'Biçim').click()
   await page.getByRole('menuitem', { name: 'Satır aralığı', exact: true }).click()
+  // Repositioning can expose another menubar item under a mouse pointer on small screens.
+  // Mobile navigation must stay click-based even when the pointer is not a touchscreen.
+  await menu(page, 'Ekle').hover()
+  await expect(page.getByRole('menu', { name: 'Satır aralığı', exact: true })).toBeVisible()
   await button(page, 'Önceki menü').click()
   await expect(page.getByRole('menuitem', { name: 'Satır aralığı', exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)

@@ -24,7 +24,7 @@ async function open(item, level, focus = true) {
   path.value = [...path.value.slice(0, level), item]
   if (focus) {
     await nextTick()
-    buttons(level + 1)[0]?.focus()
+    buttons(level + 1)[0]?.focus({ preventScroll: true })
   }
 }
 function hover(item, level, event) {
@@ -42,7 +42,7 @@ async function back(level) {
   await nextTick()
   buttons(level - 1)
     .find((button) => button.getAttribute('aria-label') === t(parent.label))
-    ?.focus()
+    ?.focus({ preventScroll: true })
 }
 function keys(event, level) {
   clearTimeout(hoverTimer)
