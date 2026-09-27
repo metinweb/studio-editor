@@ -149,6 +149,10 @@ The cell-format dialog applies only changed settings. Resets preserve structure 
 
 Limits: HTML + text up to 5 Mi UTF-16 code units; tables up to 10,000 cells; TSV also up to 1,000 rows / 100 columns. This is not full Office/RTF layout fidelity.
 
+## Math and chemistry
+
+The Insert menu and toolbar include a lazy-loaded equation, chemical formula and molecule drawing dialog. Call `editorRef.value.openScience()` or `executeCommand('studio/science')` to open it from your own UI. LaTeX/mhchem source and molecule graphs are stored with rendered PNG images; double-click to edit. HTML retains editability, while DOCX/PDF contain images. See [examples, keyboard controls and limits](../../docs/SCIENCE.md).
+
 ## Media adapters
 
 Provide `list()`, `upload(file, { signal, alt, onProgress })`, `update(asset)` and `remove(id)` as asynchronous methods. List returns assets; upload/update return the resulting asset. Asset shape:

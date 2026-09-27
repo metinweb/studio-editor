@@ -24,6 +24,7 @@ export interface StudioEditorApi {
   redo(): void
   openSource(): void
   openMedia(): void
+  openScience(): void
   getDocument(): EditorDocument | undefined
   getHistoryStats(): HistoryStats | undefined
 }

@@ -5,6 +5,23 @@ const root = path.resolve(import.meta.dirname, '..')
 const lock = JSON.parse(await readFile(path.join(root, 'package-lock.json'), 'utf8'))
 const project = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'))
 const inventory = []
+// These exact upstream releases declare Apache-2.0 but omit root license files.
+// Preserve the font-specific notices from their embedded WOFF2 metadata as well.
+const fontLicenses = {
+  '@mathjax/mathjax-tex-font@4.1.3': ['Apache-2.0.txt', 'MathJax-fonts-NOTICE.txt', 'OFL-1.1.txt'],
+  '@mathjax/mathjax-newcm-font@4.1.3': [
+    'Apache-2.0.txt',
+    'MathJax-fonts-NOTICE.txt',
+    'GUST-Font.txt',
+    'LPPL-1.3c.txt',
+  ],
+  '@mathjax/mathjax-mhchem-font-extension@4.1.3': [
+    'Apache-2.0.txt',
+    'MathJax-fonts-NOTICE.txt',
+    'GUST-Font.txt',
+    'LPPL-1.3c.txt',
+  ],
+}
 const sections = [
   'STUDIO EDITOR — THIRD-PARTY NOTICES',
   `Generated from the installed production dependency tree. Includes peer dependencies. Each component retains its own license. Studio Editor project license: ${project.license}.`,
@@ -13,10 +30,15 @@ for (const [relative, metadata] of Object.entries(lock.packages).sort()) {
   if (!relative.startsWith('node_modules/') || metadata.dev) continue
   const directory = path.join(root, relative)
   const pkg = JSON.parse(await readFile(path.join(directory, 'package.json'), 'utf8'))
-  const files = (await readdir(directory, { withFileTypes: true }))
+  let files = (await readdir(directory, { withFileTypes: true }))
     .filter((file) => file.isFile() && /^(licen[sc]e|copying|notice)([._-]|$)/i.test(file.name))
     .map((file) => file.name)
     .sort()
+  let licenseDirectory = directory
+  if (!files.length && fontLicenses[`${pkg.name}@${pkg.version}`]) {
+    files = fontLicenses[`${pkg.name}@${pkg.version}`]
+    licenseDirectory = path.join(root, 'scripts/vendor-licenses')
+  }
   if (!files.length) throw new Error(`Missing license text: ${pkg.name}`)
   const entry = {
     name: pkg.name,
@@ -29,7 +51,7 @@ for (const [relative, metadata] of Object.entries(lock.packages).sort()) {
     `\n${'='.repeat(72)}\n${pkg.name}@${pkg.version}\nDeclared license: ${entry.license}`,
   )
   for (const file of files)
-    sections.push(`\n--- ${file} ---\n${await readFile(path.join(directory, file), 'utf8')}`)
+    sections.push(`\n--- ${file} ---\n${await readFile(path.join(licenseDirectory, file), 'utf8')}`)
 }
 for (const directory of ['dist', 'packages/editor']) {
   await mkdir(path.join(root, directory), { recursive: true })

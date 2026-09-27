@@ -61,6 +61,7 @@ import {
   Split,
   Ellipsis,
   Film,
+  FlaskConical,
   ListChecks,
   Palette,
 } from '@lucide/vue'
@@ -84,6 +85,7 @@ import { documentCss, escapeHtml } from '../lib/content'
 import { useEditorMedia } from '../stores/editor-media'
 import { assetUrl } from '../lib/media-service'
 import { includesOption, menuNames } from '../lib/editor-options'
+import { readScience } from '../lib/science.js'
 import './rich-editor.css'
 import './content-tools.css'
 import './image-editor.css'
@@ -91,6 +93,7 @@ const TemplateLibrary = defineAsyncComponent(() => import('./TemplateLibrary.vue
 const ImageEditor = defineAsyncComponent(() => import('./ImageEditor.vue'))
 const PrintDialog = defineAsyncComponent(() => import('./PrintDialog.vue'))
 const MediaEmbedDialog = defineAsyncComponent(() => import('./MediaEmbedDialog.vue'))
+const ScienceDialog = defineAsyncComponent(() => import('./ScienceDialog.vue'))
 
 const props = defineProps({
   modelValue: String,
@@ -150,6 +153,14 @@ const tableControls = ref(null)
 const cellFormatSession = shallowRef(null)
 const imageTarget = shallowRef(null)
 const embedTarget = shallowRef(null)
+const scienceTarget = shallowRef(null)
+function openScience(target = null) {
+  if (locked.value || !engine.value?.editable || engine.value.destroyed) return
+  rememberSelection()
+  scienceTarget.value = target
+  popup.value = null
+  dialog.value = 'science'
+}
 function openEmbed(target = null) {
   if (locked.value) return
   rememberSelection()
@@ -328,6 +339,7 @@ const allMenus = computed(() => ({
     { label: 'İçindekiler ekle / güncelle', icon: ListTree, action: insertContents },
     { label: 'Görsel veya medya', icon: Image, action: openMedia },
     { label: 'Bağlantıdan medya ekle', icon: Film, action: () => openEmbed() },
+    { label: 'Matematik ve kimya', icon: FlaskConical, action: () => openScience() },
     { label: 'Görev listesi', icon: ListChecks, action: () => command('taskList') },
     { label: 'Bağlantı ekle', icon: Link, action: () => openDialog('link') },
     {
@@ -586,6 +598,7 @@ function slashAction(id) {
   if (id === 'table') command('insertTable', 3, 3)
   else if (id === 'media') openMedia()
   else if (id === 'embed') openEmbed()
+  else if (id === 'science') openScience()
   else if (id === 'templates') openDialog('templates')
   else if (id.startsWith('plugin:')) emit('slash-command', id.slice(7))
 }
@@ -734,6 +747,7 @@ function openImageEditor() {
   engine.value.restoreSelection()
   const target = engine.value.context()?.closest('img')
   if (!target) return
+  if (readScience(target)) return openScience(target)
   imageTarget.value = target
   openDialog('imageEdit')
 }
@@ -885,6 +899,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', escape)
 })
 defineExpose({
+  openScience: () => openScience(),
   isComposing: () => !!engine.value?.composing,
   setSharedHistory: (history) => {
     if (engine.value) {
@@ -1238,6 +1253,15 @@ defineExpose({
           >
             <Film :size="17" />
           </button>
+          <button
+            class="native-tool"
+            :aria-label="t('Matematik ve kimya')"
+            :title="t('Matematik ve kimya')"
+            @pointerdown.prevent
+            @click="openScience()"
+          >
+            <FlaskConical :size="17" />
+          </button>
         </div>
         <div v-if="tools('tools')" class="native-tool-group">
           <button
@@ -1518,6 +1542,12 @@ defineExpose({
       v-if="dialog === 'embed'"
       :engine="engine"
       :target="embedTarget"
+      @close="dialog = null"
+    />
+    <ScienceDialog
+      v-if="dialog === 'science'"
+      :engine="engine"
+      :target="scienceTarget"
       @close="dialog = null"
     />
     <div class="native-statusbar">

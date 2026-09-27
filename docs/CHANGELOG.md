@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — Math and chemistry
+
+- Lazy-loaded Math & chemistry dialog from the Insert menu, toolbar and `/science` command.
+- LaTeX equations and mhchem chemical formulas, reaction arrows, and single/double/triple bond notation, rendered locally with MathJax 4.
+- Molecule sketcher with atom placement, movement, editable elements, three bond orders, deletion, drawing undo/redo, and water/ethanol/benzene presets.
+- Source metadata retained with self-contained PNG images for reopening, document undo/redo, autosave, backups and HTML export; Word/PDF preserve the visual image.
+- English/Turkish interface, accessible descriptions and keyboard-accessible atom properties.
+- Vue component `openScience()` API and `studio/science` plugin command.
+- Dependency distribution includes MathJax and font license notices. The project remains MIT licensed.
+
+See [Math and chemistry](SCIENCE.md) for examples and current limits.
+
 ## Unreleased — English-first experience
 
 - English is now the default for the public website, workspace and Vue component.

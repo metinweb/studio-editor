@@ -143,6 +143,7 @@ const api = {
     modal.value = 'source'
   },
   openMedia,
+  openScience: () => editor.value?.openScience(),
   getDocument: () => editor.value?.getDocument(),
   getHistoryStats: () => editor.value?.getHistoryStats(),
 }
@@ -158,6 +159,7 @@ commands.register({
   commands: [
     { id: 'undo', title: 'Undo', execute: (api) => api.undo() },
     { id: 'redo', title: 'Redo', execute: (api) => api.redo() },
+    { id: 'science', title: 'Math & chemistry', execute: (api) => api.openScience() },
     {
       id: 'insert-html',
       title: 'Insert HTML',

@@ -115,6 +115,7 @@ function readState() {
   <button @click="editor?.undo()">API geri al</button>
   <button @click="editor?.setHTML(editor.getHTML())">Aynı HTML'i uygula</button>
   <button @click="editor?.openSource()">Kaynağı aç</button>
+  <button @click="editor?.openScience()">Bilimsel içerik aç</button>
   <button @click="showFirst = !showFirst">Editörü aç / kapat</button>
   <button @click="readState">Belge durumunu oku</button>
   <button @click="readModel">Şemalı belgeyi oku</button>

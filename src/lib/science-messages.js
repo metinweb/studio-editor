@@ -1,0 +1,51 @@
+export const scienceMessages = {
+  İptal: 'Cancel',
+  Sil: 'Delete',
+  'Matematik ve kimya': 'Math & chemistry',
+  Matematik: 'Mathematics',
+  'Kimyasal formül': 'Chemical formula',
+  'Molekül çizimi': 'Molecule drawing',
+  'İçerik türü': 'Content type',
+  'LaTeX denklemi': 'LaTeX equation',
+  'Kimyasal ifade': 'Chemical expression',
+  'LaTeX yazın; örneğin kesir, kök, integral veya matris. Dolar işaretlerini eklemeyin.':
+    'Enter LaTeX: fractions, roots, integrals or matrices. Omit dollar delimiters.',
+  'mhchem sözdizimi kullanın; örneğin H2O, C=C veya A -> B. İfade otomatik olarak ce içine alınır.':
+    'Use mhchem syntax, such as H2O, C=C or A -> B. The expression is automatically wrapped in ce.',
+  'Bilimsel içerik önizlemesi': 'Scientific content preview',
+  'Önizleme hazırlanıyor…': 'Preparing preview…',
+  'Erişilebilir açıklama': 'Accessible description',
+  'Düzenlemek için belgedeki öğeye çift tıklayın. Word ve PDF çıktılarında görsel olarak korunur.':
+    'Double-click an item in the document to edit it. Word and PDF exports preserve it as an image.',
+  'Önizleme oluşturulamadı. Formülü veya çizimi kontrol edin.':
+    'Could not create a preview. Check the formula or drawing.',
+  'Belge değişti. Pencereyi kapatıp yeniden açın.':
+    'The document changed. Close this dialog and open it again.',
+  'Çizim araçları': 'Drawing tools',
+  'Atom ekle': 'Add atom',
+  'Bağ çiz': 'Draw bond',
+  Taşı: 'Move',
+  Element: 'Element',
+  'Bağ derecesi': 'Bond order',
+  'Tek bağ': 'Single bond',
+  'Çift bağ': 'Double bond',
+  'Üçlü bağ': 'Triple bond',
+  'Atom eklemek için boş alana dokunun. Bağ çizmek için iki atom seçin. Taşı aracıyla atomları sürükleyin.':
+    'Tap empty space to add an atom. Select two atoms to draw a bond. Use Move to drag atoms.',
+  'Molekül çizim alanı': 'Molecule canvas',
+  'Bağ {a}–{b}': 'Bond {a}–{b}',
+  'Atom {n}: {element}': 'Atom {n}: {element}',
+  'Merkeze atom ekle': 'Add atom at center',
+  'Çizimi geri al': 'Undo drawing',
+  'Çizimi yinele': 'Redo drawing',
+  Temizle: 'Clear',
+  Su: 'Water',
+  Etanol: 'Ethanol',
+  Benzen: 'Benzene',
+  'Seçili atom': 'Selected atom',
+  'Atom elementi': 'Atom element',
+  'Atomu sil': 'Delete atom',
+  'Yapısal çizim aracıdır; değerlik kontrolü ve otomatik hidrojen tamamlama yapmaz. Karbonlara bağlı hidrojenler gösterilmez.':
+    'A structural drawing tool; valence checks and automatic hydrogen completion are not included. Carbon-bound hydrogens are implicit.',
+  Güncelle: 'Update',
+}
