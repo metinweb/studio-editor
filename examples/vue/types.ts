@@ -91,3 +91,17 @@ async function collaborationTypes(api: StudioEditorApi) {
 void collaborationTypes
 void createDocumentSession
 void createHttpMediaAdapter
+async function mountTypes() {
+  const { mountStudioEditor } = await import('studio-editor')
+  const editor = await mountStudioEditor('#content', {
+    locale: 'en',
+    onSave: (_html, api) => api?.markClean(),
+  })
+  editor.setOptions({ readonly: true, height: 400 })
+  const dirty: boolean = editor.isDirty()
+  void dirty
+  // @ts-expect-error no application or routing configuration in an editor
+  editor.setOptions({ routes: [] })
+  editor.destroy()
+}
+void mountTypes

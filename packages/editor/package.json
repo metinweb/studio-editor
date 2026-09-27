@@ -24,6 +24,11 @@
       "import": "./dist/studio-editor.js"
     },
     "./style.css": "./dist/studio-editor.css",
+    "./browser": {
+      "types": "./index.d.ts",
+      "import": "./dist/browser/studio-editor.js"
+    },
+    "./browser/style.css": "./dist/browser/studio-editor.css",
     "./package.json": "./package.json"
   },
   "files": [

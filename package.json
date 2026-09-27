@@ -21,7 +21,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "node scripts/build.mjs",
     "build:library": "node scripts/build-library.mjs",
-    "build:site": "npm run build && npm run licenses && node scripts/build-site.mjs",
+    "build:site": "npm run build && npm run build:library && npm run licenses && node scripts/build-site.mjs",
     "preview:site": "vite preview --outDir site-dist --host 127.0.0.1",
     "test:site": "playwright test --config playwright.site.config.js",
     "licenses": "node scripts/licenses.mjs",

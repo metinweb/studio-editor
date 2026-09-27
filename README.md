@@ -1,5 +1,7 @@
 # Studio Editor
 
+New: native HTML form integration with `mountStudioEditor`, Vue `v-model`, and external content stylesheet settings. Setup, configurable features and examples: [CMS integration guide](docs/CMS-INTEGRATION.md) · [Live HTML example](https://metinweb.github.io/studio-editor/integration/).
+
 New: context-aware search, section organization and exportable review reports. [Navigation and review guide](docs/NAVIGATION-AND-REVIEW.md).
 
 New: calculated table cells, conditional template fields and reusable writing profiles. [Usage and limits](docs/ADVANCED-DOCUMENTS.md).

@@ -37,8 +37,26 @@ import { cleanHtml, downloadHtml, renderDocument, plainText } from './lib/conten
 import { createDocumentFilter, normalizeTags, searchKey } from './lib/document-library'
 import { provideEditorLocale } from './lib/editor-locale'
 import { workspaceLocale } from './lib/workspace-locale'
+import { normalizeContentCss } from './lib/content-css.js'
 
 const locale = workspaceLocale
+const contentCss = ref([])
+try {
+  contentCss.value = normalizeContentCss(
+    JSON.parse(localStorage.getItem('studio-content-css') || '[]'),
+    document.baseURI,
+  )
+} catch {
+  /* Invalid or unavailable local preferences use the default stylesheet. */
+}
+function saveContentCss(urls) {
+  contentCss.value = urls
+  try {
+    localStorage.setItem('studio-content-css', JSON.stringify(urls))
+  } catch {
+    /* Session-only when storage is unavailable. */
+  }
+}
 const { t } = provideEditorLocale({
   get locale() {
     return locale.value
@@ -489,6 +507,8 @@ onBeforeUnmount(() => {
           <section class="editor-card" :aria-label="t('Belge düzenleyici')">
             <div class="editor-surface">
               <RichEditor
+                :content-css="contentCss"
+                @update:content-css="saveContentCss"
                 :locale="locale"
                 :key="workspace.activeId"
                 ref="editor"

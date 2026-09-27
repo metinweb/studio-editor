@@ -1,5 +1,12 @@
 # Changelog
 
+## September 28, 2026 — CMS embedding and content styles
+
+- Added `mountStudioEditor` for existing HTML textareas: native form data, validation, reset, readonly/disabled modes, dirty tracking and cleanup. Added a self-hosted browser module with its own Vue/Pinia runtime and a working HTML form example.
+- Added **View → Content style settings** for ordered external stylesheets, per-file loading/error status and restoring defaults. Vue/JavaScript integrations expose `contentCss`, `allowContentCss` and update/status events; styles stay inside the content iframe and document preview.
+- Prevented embedded toolbar/dialog buttons from accidentally submitting their host form.
+- Documented Vue/HTML setup, toolbar/menu groups, actual enable/disable boundaries, media/persistence responsibilities and CSS limitations in [English](CMS-INTEGRATION.md) and [Turkish](CMS-INTEGRATION.tr.md).
+
 ## September 28, 2026 — Navigation and review quality
 
 - Added whole-word/accent-insensitive search, context previews, view-only highlights, replacement counts and locale-correct Unicode matching. Protected widgets and structural boundaries cannot be overwritten by search.

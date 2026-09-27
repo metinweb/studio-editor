@@ -120,10 +120,10 @@ test('table paste style v-model is reactive, menu changes emit and instances sta
     .locator('.studio-editor-embed')
     .nth(1)
     .locator('.native-menubar')
-    .getByRole('button', { name: 'Tablo', exact: true })
+    .getByRole('button', { name: 'Table', exact: true })
     .click()
   await page
-    .getByRole('menuitem', { name: 'Tablo yapıştır: kaynak hücre biçimini kullan', exact: true })
+    .getByRole('menuitem', { name: 'Table paste: use source cell formatting', exact: true })
     .click()
   await expect(page.getByLabel('Tablo yapıştırma biçimi', { exact: true })).toHaveValue('target')
   await expect(body(page, 1)).toHaveText('İkinci belge')

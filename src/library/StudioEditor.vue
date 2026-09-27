@@ -33,6 +33,8 @@ const props = defineProps({
   messages: Object,
   pasteMode: { type: String, default: 'keep' },
   tablePasteStyle: { type: String, default: 'target' },
+  contentCss: { type: [String, Array], default: () => [] },
+  allowContentCss: { type: Boolean, default: true },
 })
 const emit = defineEmits([
   'update:modelValue',
@@ -45,6 +47,8 @@ const emit = defineEmits([
   'update:tablePasteStyle',
   'upload-progress',
   'upload-error',
+  'update:contentCss',
+  'content-css-status',
 ])
 const editor = ref(null)
 const commandVersion = ref(0)
@@ -144,6 +148,7 @@ const api = {
   },
   openMedia,
   openScience: () => editor.value?.openScience(),
+  openContentStyles: () => editor.value?.openContentStyles(),
   getDocument: () => editor.value?.getDocument(),
   getHistoryStats: () => editor.value?.getHistoryStats(),
 }
@@ -173,7 +178,16 @@ defineExpose(api)
 </script>
 
 <template>
-  <div class="studio-editor-scope studio-editor-embed" :style="{ height }">
+  <div
+    class="studio-editor-scope studio-editor-embed"
+    :style="{ height }"
+    @submit.stop
+    @click.capture="
+      (event) => {
+        if (event.target.closest('button')?.getAttribute('type') === null) event.preventDefault()
+      }
+    "
+  >
     <RichEditor
       ref="editor"
       :model-value="modelValue"
@@ -191,6 +205,10 @@ defineExpose(api)
       :messages="messages"
       :paste-mode="pasteMode"
       :table-paste-style="tablePasteStyle"
+      :content-css="contentCss"
+      :allow-content-css="allowContentCss"
+      @update:content-css="emit('update:contentCss', $event)"
+      @content-css-status="emit('content-css-status', $event)"
       @update:table-paste-style="emit('update:tablePasteStyle', $event)"
       @update:paste-mode="emit('update:pasteMode', $event)"
       @paste="emit('paste', $event)"

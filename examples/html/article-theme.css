@@ -1,0 +1,23 @@
+/* Example website content theme. Load this URL in View > Content style settings. */
+body {
+  background: #fffdf7;
+  color: #293746;
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.8;
+}
+h1,
+h2,
+h3 {
+  color: #245977;
+  font-family: system-ui, sans-serif;
+  letter-spacing: -0.025em;
+}
+a {
+  color: #245977;
+  text-decoration-thickness: 2px;
+}
+blockquote {
+  border-left: 4px solid #d5b677;
+  padding-left: 1.25em;
+  font-style: italic;
+}

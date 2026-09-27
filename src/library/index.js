@@ -2,6 +2,7 @@ import '../style.css'
 import './library.css'
 
 export { default as StudioEditor } from './StudioEditor.vue'
+export { mountStudioEditor } from './mount.js'
 export { cleanHtml, publicHtml, renderDocument, documentCss } from '../lib/content'
 export { mapSelection, mapOffset } from '../editor/operations.js'
 export { englishMessages } from '../lib/locales.js'

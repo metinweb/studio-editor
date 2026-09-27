@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile, writeFile, mkdir, copyFile, access, readdir } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, copyFile, access, readdir, cp } from 'node:fs/promises'
 import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
@@ -110,6 +110,14 @@ async function compareInstalled(relative = 'dist') {
   }
 }
 await compareInstalled()
+await cp(path.join(root, 'examples/html'), path.join(consumer, 'public/integration'), {
+  recursive: true,
+})
+await cp(
+  path.join(consumer, 'node_modules/studio-editor/dist/browser'),
+  path.join(consumer, 'public/integration/editor'),
+  { recursive: true },
+)
 // Import from the installed tarball without window: SSR-safe import, not SSR rendering.
 run(
   '--input-type=module',

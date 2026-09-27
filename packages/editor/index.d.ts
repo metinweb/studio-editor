@@ -25,6 +25,7 @@ export interface StudioEditorApi {
   openSource(): void
   openMedia(): void
   openScience(): void
+  openContentStyles(): void
   getDocument(): EditorDocument | undefined
   getHistoryStats(): HistoryStats | undefined
 }
@@ -230,6 +231,12 @@ export function mapOffset(
   affinity?: -1 | 1,
 ): number
 export interface StudioEditorProps {
+  /** Trusted stylesheet URLs, applied only to the content iframe and its preview. */
+  contentCss?: string | string[]
+  /** Show content CSS settings; does not prevent host-provided styles. Defaults true. */
+  allowContentCss?: boolean
+  'onUpdate:contentCss'?: (urls: string[]) => void
+  onContentCssStatus?: (status: ContentCssStatus) => void
   /** Suggestions for @mention completion. IDs are stored in the document. */
   mentions?: { id: string; label: string }[]
   /** Allow new local mention labels; false by default in the Vue component. No notifications are sent. */
@@ -287,6 +294,49 @@ export const englishMessages: Readonly<Record<string, string>>
 export const StudioEditor: DefineComponent<StudioEditorProps> & {
   new (): ComponentPublicInstance<StudioEditorProps> & StudioEditorApi
 }
+export interface ContentCssStatus {
+  url: string
+  status: 'loading' | 'loaded' | 'error'
+  message?: string
+}
+export type MountedEditorOptions = Pick<
+  StudioEditorProps,
+  | 'direction'
+  | 'height'
+  | 'mentions'
+  | 'allowCreateMention'
+  | 'readonly'
+  | 'disabled'
+  | 'placeholder'
+  | 'toolbar'
+  | 'menubar'
+  | 'locale'
+  | 'messages'
+  | 'pasteMode'
+  | 'tablePasteStyle'
+  | 'contentCss'
+  | 'allowContentCss'
+>
+export interface MountedEditor extends StudioEditorApi {
+  isDirty(): boolean
+  /** Call only after your server confirms a successful save. */
+  markClean(): void
+  setOptions(options: MountedEditorOptions): void
+  /** Restores the textarea with its latest HTML. Safe to call more than once. */
+  destroy(): void
+}
+export interface MountStudioEditorOptions extends MountedEditorOptions {
+  onContentCssChange?: (urls: string[]) => void
+  onContentCssStatus?: (status: ContentCssStatus) => void
+  mediaAdapter?: MediaAdapter
+  onChange?: (html: string, editor: MountedEditor | undefined) => void
+  onSave?: (html: string, editor: MountedEditor | undefined) => void
+}
+/** Browser only. Resolves when one existing textarea has become an editor. */
+export function mountStudioEditor(
+  target: string | HTMLTextAreaElement,
+  options?: MountStudioEditorOptions,
+): Promise<MountedEditor>
 export function cleanHtml(html: string): string
 export interface PrintOptions {
   size?: 'A4' | 'Letter'

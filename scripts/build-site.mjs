@@ -11,6 +11,10 @@ await rm(output, { recursive: true, force: true })
 await mkdir(output, { recursive: true })
 await cp(path.join(root, 'website'), output, { recursive: true })
 await cp(path.join(root, 'dist'), path.join(output, 'demo'), { recursive: true })
+await cp(path.join(root, 'examples/html'), path.join(output, 'integration'), { recursive: true })
+await cp(path.join(root, 'packages/editor/dist/browser'), path.join(output, 'integration/editor'), {
+  recursive: true,
+})
 const pkg = JSON.parse(await readFile(path.join(root, 'packages/editor/package.json'), 'utf8'))
 if (pkg.license !== 'MIT') throw new Error('Site metadata must declare the MIT license')
 const licenseFile = 'LICENSE'

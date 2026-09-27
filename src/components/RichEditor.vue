@@ -103,6 +103,7 @@ import { documentCss, escapeHtml, renderDocument } from '../lib/content'
 import { useEditorMedia } from '../stores/editor-media'
 import { assetUrl } from '../lib/media-service'
 import { includesOption, menuNames } from '../lib/editor-options'
+import { normalizeContentCss, installContentCss } from '../lib/content-css.js'
 import { readScience } from '../lib/science.js'
 import { defaultWritingPreferences, defaultPen } from '../lib/writing-preferences.js'
 import './rich-editor.css'
@@ -119,6 +120,7 @@ const MarkdownDialog = defineAsyncComponent(() => import('./MarkdownDialog.vue')
 const WritingSettingsDialog = defineAsyncComponent(() => import('./WritingSettingsDialog.vue'))
 const TableFormulaDialog = defineAsyncComponent(() => import('./TableFormulaDialog.vue'))
 const ConditionalFieldDialog = defineAsyncComponent(() => import('./ConditionalFieldDialog.vue'))
+const ContentStylesDialog = defineAsyncComponent(() => import('./ContentStylesDialog.vue'))
 
 const props = defineProps({
   modelValue: String,
@@ -136,12 +138,14 @@ const props = defineProps({
   messages: Object,
   pasteMode: { type: String, default: 'keep' },
   tablePasteStyle: { type: String, default: 'target' },
+  contentCss: { type: [String, Array], default: () => [] },
+  allowContentCss: { type: Boolean, default: true },
 })
 const { t, locale: activeLocale } = provideEditorLocale(props)
 const locked = computed(() => props.readonly || props.disabled)
 let editEpoch = 0
 const tools = (group) => !locked.value && includesOption(props.toolbar, group)
-const firstRow = computed(() => ['history', 'typography', 'format', 'color'].some(tools))
+const firstRow = computed(() => ['history', 'typography', 'format', 'color', 'insert'].some(tools))
 const secondRow = computed(() => ['align', 'lists', 'insert', 'tools', 'review'].some(tools))
 const emit = defineEmits([
   'update:modelValue',
@@ -154,7 +158,36 @@ const emit = defineEmits([
   'save',
   'transaction',
   'slash-command',
+  'update:contentCss',
+  'content-css-status',
 ])
+const cssUrls = ref([])
+const cssStatus = ref([])
+let removeContentCss = () => {}
+function syncContentCss() {
+  removeContentCss()
+  cssStatus.value = []
+  if (!frame.value?.contentDocument?.head) return
+  removeContentCss = installContentCss(frame.value.contentDocument, cssUrls.value, (item) => {
+    cssStatus.value = [...cssStatus.value.filter((old) => old.url !== item.url), item]
+    emit('content-css-status', item)
+  })
+}
+function setContentCss(value) {
+  try {
+    cssUrls.value = normalizeContentCss(value, document.baseURI)
+    syncContentCss()
+  } catch (error) {
+    emit('content-css-status', { url: '', status: 'error', message: error.message })
+  }
+}
+function applyContentCss(value) {
+  if (!props.allowContentCss || props.disabled) return
+  setContentCss(value)
+  emit('update:contentCss', [...cssUrls.value])
+}
+watch(() => props.contentCss, setContentCss, { deep: true })
+onBeforeUnmount(() => removeContentCss())
 const pasteMode = ref(props.pasteMode)
 function setPasteMode(mode) {
   pasteMode.value = ['keep', 'clean', 'text'].includes(mode) ? mode : 'keep'
@@ -241,7 +274,14 @@ function openPreview() {
     title: 'Studio',
     content: engine.value?.getHTML() || '',
     locale: activeLocale.value,
-  })
+  }).replace(
+    '</head>',
+    cssUrls.value
+      .map(
+        (url) => `<link rel="stylesheet" href="${escapeHtml(url)}" referrerpolicy="no-referrer">`,
+      )
+      .join('') + '</head>',
+  )
   dialog.value = 'preview'
 }
 function openMetrics() {
@@ -274,6 +314,12 @@ watch(
   },
 )
 const dialog = ref(null)
+watch(
+  () => props.allowContentCss,
+  (allowed) => {
+    if (!allowed && dialog.value === 'content-styles') dialog.value = null
+  },
+)
 const listForm = ref({ start: 1, reversed: false })
 const symbolGroup = ref('Simgeler')
 const commandQuery = ref('')
@@ -486,6 +532,17 @@ const allMenus = computed(() => ({
     { label: 'Tümünü seç', shortcut: 'Ctrl A', action: selectAll },
   ],
   Görünüm: [
+    ...(props.allowContentCss
+      ? [
+          {
+            label: 'İçerik stili ayarları',
+            icon: Palette,
+            action: () => {
+              dialog.value = 'content-styles'
+            },
+          },
+        ]
+      : []),
     { label: 'Belge önizlemesi', icon: Eye, action: openPreview },
     {
       label: 'Blok sınırlarını göster',
@@ -1082,6 +1139,7 @@ function initialize() {
     }
   })
   updateFrameOptions()
+  setContentCss(props.contentCss)
   emit('ready')
 }
 function updateFrameOptions() {
@@ -1368,6 +1426,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', escape)
 })
 defineExpose({
+  openContentStyles: () => {
+    if (props.allowContentCss && !props.disabled) dialog.value = 'content-styles'
+  },
   openScience: () => openScience(),
   isComposing: () => !!engine.value?.composing,
   setSharedHistory: (history) => {
@@ -2283,6 +2344,13 @@ defineExpose({
       v-if="dialog === 'markdownImport' || dialog === 'markdownExport'"
       :engine="engine"
       :mode="dialog === 'markdownExport' ? 'export' : 'import'"
+      @close="dialog = null"
+    />
+    <ContentStylesDialog
+      v-if="dialog === 'content-styles' && allowContentCss"
+      :urls="cssUrls"
+      :status="cssStatus"
+      @apply="applyContentCss"
       @close="dialog = null"
     />
     <WritingSettingsDialog

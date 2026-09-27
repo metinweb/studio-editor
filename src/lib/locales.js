@@ -8,6 +8,18 @@ import { writingMessages } from './writing-messages.js'
 import { advancedDocumentMessages } from './advanced-document-messages.js'
 import { navigationReviewMessages } from './navigation-review-messages.js'
 export const englishMessages = Object.freeze({
+  'İçerik stili ayarları': 'Content style settings',
+  'Harici CSS adresleri': 'External CSS URLs',
+  'Sitenizin CSS dosyalarını içerik alanında kullanın. Her satıra bir adres girin; dosyalar listedeki sırayla uygulanır.':
+    'Use your website stylesheets in the content area. Enter one URL per line; files apply in the listed order.',
+  'Yalnızca güvendiğiniz stil dosyalarını ekleyin. CSS bu içerik alanına ve önizlemeye uygulanır; kaydedilen HTML veya sitenin arayüzü değişmez.':
+    'Only add stylesheets you trust. CSS applies to this content area and its preview; saved HTML and the host interface stay unchanged.',
+  'En fazla 10 CSS dosyası ekleyebilirsiniz.': 'You can add up to 10 CSS files.',
+  'Geçerli bir HTTP veya HTTPS CSS adresi girin.': 'Enter a valid HTTP or HTTPS stylesheet URL.',
+  'CSS yüklenemedi': 'Could not load CSS',
+  'Varsayılan stile dön': 'Restore default styles',
+  'Stilleri uygula': 'Apply styles',
+  Yüklendi: 'Loaded',
   ...panelMessages,
   ...workspaceMessages,
   ...scienceMessages,

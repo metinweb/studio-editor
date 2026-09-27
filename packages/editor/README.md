@@ -1,5 +1,7 @@
 # Studio Editor for Vue 3
 
+For embedding in an existing CMS, see the [HTML and Vue integration guide](https://github.com/metinweb/studio-editor/blob/main/docs/CMS-INTEGRATION.md). `mountStudioEditor(textarea, options)` provides native form integration. The self-contained `dist/browser/` build can be copied to a static server; Vue consumers should use the regular package entry to share their Vue runtime.
+
 New: whole-word/accent-aware search, section organization and review reports. [Usage and limits](../../docs/NAVIGATION-AND-REVIEW.md).
 
 New: calculated table cells, conditional template fields and reusable writing profiles. [Usage and limits](../../docs/ADVANCED-DOCUMENTS.md).

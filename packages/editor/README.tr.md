@@ -1,5 +1,7 @@
 # Studio Editor — Vue 3
 
+Mevcut CMS içinde kullanım, açılabilen/gizlenebilen özellikler ve harici CSS ayarları için [Türkçe HTML ve Vue entegrasyon rehberine](https://github.com/metinweb/studio-editor/blob/main/docs/CMS-INTEGRATION.tr.md) bakın. `mountStudioEditor(textarea, options)` normal HTML formlarına bağlanır. `dist/browser/` klasörü doğrudan sunucuda barındırılabilir; Vue projelerinde mevcut Vue çalışma zamanını paylaşan normal paket girişini kullanın.
+
 Gelişmiş arama, bölüm düzenleme ve inceleme raporları eklendi. [Kullanım ve sınırlar](../../docs/NAVIGATION-AND-REVIEW.md).
 
 Hesaplanan tablo hücreleri, koşullu alanlar ve kalıcı yazma profilleri eklendi. [Kullanım ve sınırlar](../../docs/ADVANCED-DOCUMENTS.md).
