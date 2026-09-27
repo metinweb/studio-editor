@@ -1,5 +1,7 @@
 # Sıralı geliştirme çalışması
 
+27 Eylül 2026 güncellemesi: Word içe aktarma, dipnotlar, bağlantı hedefleri, değişken alanları ve yeni düzenleme araçları eklendi. Güncel kapsam ve kalan farklar [TinyMCE karşılaştırmasında](TINYMCE-COMPARISON.md) açıklanır. Aşağıdaki kayıtlar önceki geliştirme tarihlerini yansıtır.
+
 24 Eylül 2026'daki geliştirme sırası aşağıdadır. 25 Eylül 2026'da proje sahibi MIT lisansını ve `metinweb/studio-editor` herkese açık GitHub deposu ile GitHub Pages yayımını seçti. npm yayımı bu kapsamda değildir.
 
 1. Performans: ilk iyileştirme uygulandı; tam çalışma alanı üç tarayıcı ölçümü `workspace-performance-before.json` / `workspace-performance-after.json`. Hücre ölçümleri yaklaşık %99 azaldı; WebKit büyük belge seçim p95 225→47 ms. Fiziksel gecikme değildir.

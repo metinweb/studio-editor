@@ -8,6 +8,7 @@ Studio, **TinyMCE kullanmayan** bir Vue 3 + Pinia içerik uygulamasıdır. Görs
 
 İki dağıtım hazırlanır: bağımsız web uygulaması ve Vue bileşeni. Proje [MIT lisansıyla](LICENSE) açık kaynaktır. Vue paketi henüz npm'ye yayımlanmadı; kaynak veya yerel `.tgz` üzerinden kullanılabilir.
 
+- [TinyMCE karşılaştırması ve güncel özellik kapsamı](docs/TINYMCE-COMPARISON.md)
 - [Araştırma ve öncelikli yol haritası](docs/ROADMAP.md)
 - [Beta.10 yenilikleri ve kullanım](docs/BETA10.md)
 - [Favoriler, etiketler ve belge arama](docs/DOCUMENT-LIBRARY.md)

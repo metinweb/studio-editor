@@ -4,6 +4,10 @@
 
 Varsayılan arayüz İngilizcedir. Türkçe için `locale="tr"` kullanın.
 
+## Yeni belge araçları
+
+Önizlemeli DOCX içe aktarma, otomatik numaralanan dipnotlar, bağlantı hedefleri, doldurulabilir değişken alanları ve seçim araç çubuğu desteklenir. Görünüm menüsünde blok sınırları, boşluk işaretleri ve yakınlaştırma; biçimlendirmede H1–H6 ve özel yazı boyutu bulunur. Ayrıntılar ve sınırlar için [İngilizce paket belgesine](README.md) bakın.
+
 ## Yapıştırma seçenekleri (beta.4)
 
 `pasteMode`: `keep` (varsayılan), `clean` veya `text`; dinamik değiştirilebilir.

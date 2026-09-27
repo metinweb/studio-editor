@@ -1,5 +1,7 @@
 # CKEditor 5 / Studio özellik farkları
 
+27 Eylül 2026 güncellemesi: Word içe aktarma, dipnotlar, bağlantı hedefleri, değişken alanları ve yeni düzenleme araçları eklendi. Güncel kapsam ve kalan farklar [TinyMCE karşılaştırmasında](TINYMCE-COMPARISON.md) açıklanır. Aşağıdaki kayıtlar önceki geliştirme tarihlerini yansıtır.
+
 Araştırma sonrası güncelleme: Zengin medya gömme [MEDIA-EMBED.md](MEDIA-EMBED.md) kapsamında geliştirildi. Ardından canlı başlık gezgini, görev listeleri, bahsetmeler, içerik stilleri ve genişletilmiş slash menüsü eklendi: [DAILY-WRITING.md](DAILY-WRITING.md). Aşağıdaki tablo araştırma anının durumunu kaydeder; güncel uygulama kapsamı bu iki belgede açıklanır.
 
 Araştırma tarihi: 24 Eylül 2026. Studio: beta.10 kaynak ağacı ve sonraki renk göstergesi düzeltmesi. Karşılaştırma CKEditor **5** resmi güncel belgeleriyle yapılmıştır; CKEditor 4 değildir. Bu bir kaynak kodu ve belge incelemesidir; iki ürün arasında performans, erişilebilirlik veya çıktı doğruluğu testi yapılmamıştır.

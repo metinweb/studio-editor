@@ -70,10 +70,20 @@ import {
   Smile,
   Pilcrow,
   CircleHelp,
+  FileUp,
+  Bookmark,
+  Braces,
+  Eye,
+  Printer,
+  WholeWord,
+  SquareDashed,
+  TextCursorInput,
 } from '@lucide/vue'
 import AppDialog from './AppDialog.vue'
 import EditorPopover from './EditorPopover.vue'
 import EditorMenu from './EditorMenu.vue'
+import SelectionToolbar from './SelectionToolbar.vue'
+import EditingGuides from './EditingGuides.vue'
 import { listStyles, lineHeights, symbolGroups } from '../lib/menu-options.js'
 import TablePicker from './TablePicker.vue'
 import ImageControls from './ImageControls.vue'
@@ -89,7 +99,7 @@ import MentionMenu from './MentionMenu.vue'
 import DocumentOutline from './DocumentOutline.vue'
 import { contentStyles } from '../editor/writing-widgets.js'
 import { StudioEditor } from '../editor/engine'
-import { documentCss, escapeHtml } from '../lib/content'
+import { documentCss, escapeHtml, renderDocument } from '../lib/content'
 import { useEditorMedia } from '../stores/editor-media'
 import { assetUrl } from '../lib/media-service'
 import { includesOption, menuNames } from '../lib/editor-options'
@@ -102,6 +112,8 @@ const ImageEditor = defineAsyncComponent(() => import('./ImageEditor.vue'))
 const PrintDialog = defineAsyncComponent(() => import('./PrintDialog.vue'))
 const MediaEmbedDialog = defineAsyncComponent(() => import('./MediaEmbedDialog.vue'))
 const ScienceDialog = defineAsyncComponent(() => import('./ScienceDialog.vue'))
+const WordImportDialog = defineAsyncComponent(() => import('./WordImportDialog.vue'))
+const DocumentFieldsDialog = defineAsyncComponent(() => import('./DocumentFieldsDialog.vue'))
 
 const props = defineProps({
   modelValue: String,
@@ -188,6 +200,57 @@ const commentCount = computed(() => {
 const state = ref({ block: 'p', align: 'left' })
 const fullscreen = ref(false)
 const toolbarExpanded = ref(false)
+const visualBlocks = ref(false),
+  invisibleCharacters = ref(false),
+  quickToolbar = ref(true),
+  editorZoom = ref(100)
+const fontSizeInput = ref(16)
+const previewHtml = ref('')
+const metrics = ref(null)
+const anchorOptions = computed(() => {
+  state.value
+  return [...(engine.value?.root.querySelectorAll('[id]') || [])]
+    .filter((node) => !node.closest('[data-studio-footnotes],[data-studio-footnote-ref]'))
+    .map((node) => ({ id: node.id, label: node.textContent.trim().slice(0, 60) || node.id }))
+})
+function openPreview() {
+  popup.value = null
+  previewHtml.value = renderDocument({
+    title: 'Studio',
+    content: engine.value?.getHTML() || '',
+    locale: activeLocale.value,
+  })
+  dialog.value = 'preview'
+}
+function openMetrics() {
+  const count = (text) => ({
+    words: [
+      ...new Intl.Segmenter(activeLocale.value, { granularity: 'word' }).segment(text),
+    ].filter((part) => part.isWordLike).length,
+    characters: [...text].length,
+    noSpaces: [...text.replace(/\s/gu, '')].length,
+  })
+  metrics.value = {
+    document: count(engine.value?.root.innerText || ''),
+    selection: count(engine.value?.doc.getSelection()?.toString() || ''),
+  }
+  popup.value = null
+  dialog.value = 'metrics'
+}
+function applyFontSize() {
+  const size = Number(fontSizeInput.value)
+  if (!Number.isFinite(size) || size < 8 || size > 200) return
+  popup.value = null
+  command('inline', null, { fontSize: `${size}px` })
+}
+watch(
+  () => [visualBlocks.value, editorZoom.value],
+  () => {
+    if (!engine.value) return
+    engine.value.root.dataset.visualBlocks = String(visualBlocks.value)
+    engine.value.root.style.zoom = `${editorZoom.value}%`
+  },
+)
 const dialog = ref(null)
 const listForm = ref({ start: 1, reversed: false })
 const symbolGroup = ref('Simgeler')
@@ -288,6 +351,8 @@ const blocks = [
   { label: 'Başlık 2', value: 'h2', size: '22px' },
   { label: 'Başlık 3', value: 'h3', size: '18px' },
   { label: 'Başlık 4', value: 'h4', size: '16px' },
+  { label: 'Başlık 5', value: 'h5', size: '14px' },
+  { label: 'Başlık 6', value: 'h6', size: '12px' },
   { label: 'Alıntı', value: 'blockquote', size: '14px' },
   { label: 'Ön biçimlendirilmiş', value: 'pre', size: '13px' },
 ]
@@ -337,6 +402,8 @@ function applyNamedStyle(id) {
 }
 const allMenus = computed(() => ({
   Dosya: [
+    { label: 'Word dosyası içe aktar', icon: FileUp, action: () => openDialog('importWord') },
+    { label: 'Belge önizlemesi', icon: Eye, action: openPreview },
     {
       label: 'Sayfa düzeni ve dışa aktarım',
       icon: FileText,
@@ -383,6 +450,42 @@ const allMenus = computed(() => ({
     { label: 'Tümünü seç', shortcut: 'Ctrl A', action: selectAll },
   ],
   Görünüm: [
+    { label: 'Belge önizlemesi', icon: Eye, action: openPreview },
+    {
+      label: 'Blok sınırlarını göster',
+      icon: SquareDashed,
+      active: visualBlocks.value,
+      action: () => {
+        visualBlocks.value = !visualBlocks.value
+      },
+    },
+    {
+      label: 'Görünmeyen karakterleri göster',
+      icon: Pilcrow,
+      active: invisibleCharacters.value,
+      action: () => {
+        invisibleCharacters.value = !invisibleCharacters.value
+      },
+    },
+    {
+      label: 'Seçili metin araçları',
+      icon: TextCursorInput,
+      active: quickToolbar.value,
+      action: () => {
+        quickToolbar.value = !quickToolbar.value
+      },
+    },
+    {
+      label: 'Yakınlaştırma',
+      icon: Search,
+      children: [75, 100, 125, 150, 200].map((value) => ({
+        label: `${value}%`,
+        active: editorZoom.value === value,
+        action: () => {
+          editorZoom.value = value
+        },
+      })),
+    },
     {
       label: 'Belge başlıkları',
       icon: ListTree,
@@ -398,6 +501,14 @@ const allMenus = computed(() => ({
     { label: 'HTML kaynak kodu', icon: Code2, action: () => emit('source') },
   ],
   Ekle: [
+    {
+      label: 'Bağlantı hedefleri',
+      icon: Bookmark,
+      section: 'Belge öğeleri',
+      action: () => openDialog('anchor'),
+    },
+    { label: 'Dipnotlar', icon: Superscript, action: () => openDialog('footnote') },
+    { label: 'Şablon değişkenleri', icon: Braces, action: () => openDialog('fields') },
     { label: 'Şablon kütüphanesi', icon: LayoutTemplate, action: () => openDialog('templates') },
     { label: 'Yorum ekle', icon: MessageSquare, action: () => openReview('comments') },
     { label: 'İçindekiler ekle / güncelle', icon: ListTree, action: insertContents },
@@ -520,6 +631,18 @@ const allMenus = computed(() => ({
       disabled: !state.value.selectedText,
       action: () => command('changeCase', 'lower'),
     },
+    {
+      label: 'Başlık biçiminde harfler',
+      icon: ALargeSmall,
+      disabled: !state.value.selectedText,
+      action: () => command('changeCase', 'title'),
+    },
+    {
+      label: 'Cümle biçiminde harfler',
+      icon: ALargeSmall,
+      disabled: !state.value.selectedText,
+      action: () => command('changeCase', 'sentence'),
+    },
     ...markButtons.map((tool) => ({
       label: tool.title,
       icon: tool.icon,
@@ -617,6 +740,8 @@ const allMenus = computed(() => ({
     },
   ],
   Araçlar: [
+    { label: 'Sözcük sayımı', icon: WholeWord, action: openMetrics },
+    { label: 'Tipografiyi iyileştir', icon: ALargeSmall, action: () => command('typography') },
     { label: 'Belge yorumları', icon: MessageSquare, action: () => openReview('comments') },
     { label: 'Erişilebilirlik denetimi', icon: ScanEye, action: () => openReview('check') },
     { label: 'Şablon kütüphanesi', icon: LayoutTemplate, action: () => openDialog('templates') },
@@ -666,6 +791,11 @@ const menus = computed(() =>
                 'Belge başlıkları',
                 'Komut bul',
                 'Klavye kısayolları',
+                'Belge önizlemesi',
+                'Sözcük sayımı',
+                'Yakınlaştırma',
+                'Blok sınırlarını göster',
+                'Görünmeyen karakterleri göster',
               ].includes(item.label),
           )
           .map((item) => ({ ...item, section: item.section || menuSections[item.label] })),
@@ -722,6 +852,7 @@ function togglePopup(name, event) {
   contextMenu.value?.close()
   rememberSelection()
   popupAnchor.value = event.currentTarget
+  if (name === 'sizes') fontSizeInput.value = parseFloat(state.value.fontSize) || 16
   popup.value = popup.value === name ? null : name
 }
 function hoverMenu(name, event) {
@@ -747,6 +878,7 @@ function runMenu(item) {
   item.action()
 }
 function menuKeys(event) {
+  if (['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return
   if (
     ['fonts', 'sizes', 'blocks'].includes(popup.value) &&
     event.key.length === 1 &&
@@ -854,6 +986,14 @@ function initialize() {
   })
   engine.value.listen(engine.value.root, 'dblclick', (event) => {
     if (locked.value) return
+    if (event.target.closest?.('[data-studio-footnote-ref], [data-studio-footnote]')) {
+      openDialog('footnote')
+      return
+    }
+    if (event.target.closest?.('[data-studio-field]')) {
+      openDialog('fields')
+      return
+    }
     if (event.target.tagName === 'IMG') {
       engine.value.selectImage(event.target)
       openImageEditor()
@@ -867,6 +1007,8 @@ function updateFrameOptions() {
   if (!root) return
   root.dataset.placeholder = props.placeholder
   root.ownerDocument.documentElement.lang = activeLocale.value
+  root.dataset.visualBlocks = String(visualBlocks.value)
+  root.style.zoom = `${editorZoom.value}%`
   root.dir = ['ltr', 'rtl', 'auto'].includes(props.direction) ? props.direction : 'ltr'
   root.setAttribute('aria-label', t('Belge içeriği'))
   root.setAttribute('aria-placeholder', props.placeholder)
@@ -1181,6 +1323,18 @@ defineExpose({
       "
       @close="popup = null"
     >
+      <form v-if="popup === 'sizes'" class="font-size-form" @submit.prevent="applyFontSize">
+        <input
+          v-model="fontSizeInput"
+          type="number"
+          min="8"
+          max="200"
+          step="0.5"
+          required
+          :aria-label="t('Özel yazı boyutu')"
+        /><span>px</span
+        ><button type="submit" :aria-label="t('Yazı boyutunu uygula')"><Check :size="16" /></button>
+      </form>
       <div class="typography-menu" :class="`typography-${popup}`" role="menu" @keydown="menuKeys">
         <button
           v-for="item in typeOptions"
@@ -1305,6 +1459,35 @@ defineExpose({
             @click="command('redo')"
           >
             <Redo2 :size="17" />
+          </button>
+        </div>
+        <div v-if="tools('insert')" class="native-tool-group native-document-tools">
+          <button
+            class="native-tool"
+            :aria-label="t('Word dosyası içe aktar')"
+            :title="t('Word dosyası içe aktar')"
+            @pointerdown.prevent
+            @click="openDialog('importWord')"
+          >
+            <FileUp :size="17" />
+          </button>
+          <button
+            class="native-tool"
+            :aria-label="t('Belge önizlemesi')"
+            :title="t('Belge önizlemesi')"
+            @pointerdown.prevent
+            @click="openPreview"
+          >
+            <Eye :size="17" />
+          </button>
+          <button
+            class="native-tool"
+            :aria-label="t('Yazdır / PDF')"
+            :title="t('Yazdır / PDF')"
+            @pointerdown.prevent
+            @click="dialog = 'print'"
+          >
+            <Printer :size="17" />
           </button>
         </div>
         <div v-if="tools('typography')" class="native-tool-group">
@@ -1432,7 +1615,7 @@ defineExpose({
             class="native-tool"
             :aria-label="t('Girintiyi artır')"
             :title="t('Liste girintisini artır · Tab')"
-            :disabled="!state.list"
+            :disabled="!state.block"
             @pointerdown.prevent
             @click="command('indent')"
           >
@@ -1442,7 +1625,7 @@ defineExpose({
             class="native-tool"
             :aria-label="t('Girintiyi azalt')"
             :title="t('Liste girintisini azalt · Shift + Tab')"
-            :disabled="!state.list"
+            :disabled="!state.block"
             @pointerdown.prevent
             @click="command('indent', true)"
           >
@@ -1496,6 +1679,35 @@ defineExpose({
             @click="openScience()"
           >
             <FlaskConical :size="17" />
+          </button>
+        </div>
+        <div v-if="tools('insert')" class="native-tool-group">
+          <button
+            class="native-tool"
+            :aria-label="t('Bağlantı hedefleri')"
+            :title="t('Bağlantı hedefleri')"
+            @pointerdown.prevent
+            @click="openDialog('anchor')"
+          >
+            <Bookmark :size="17" />
+          </button>
+          <button
+            class="native-tool"
+            :aria-label="t('Dipnotlar')"
+            :title="t('Dipnotlar')"
+            @pointerdown.prevent
+            @click="openDialog('footnote')"
+          >
+            <Superscript :size="17" />
+          </button>
+          <button
+            class="native-tool"
+            :aria-label="t('Şablon değişkenleri')"
+            :title="t('Şablon değişkenleri')"
+            @pointerdown.prevent
+            @click="openDialog('fields')"
+          >
+            <Braces :size="17" />
           </button>
         </div>
         <div v-if="tools('tools')" class="native-tool-group">
@@ -1764,6 +1976,77 @@ defineExpose({
         @tab="reviewTab = $event"
       />
     </div>
+    <EditingGuides :engine="engine" :state="state" :visible="invisibleCharacters" />
+    <SelectionToolbar
+      v-if="
+        engine && !locked && quickToolbar && (tools('format') || tools('insert') || tools('review'))
+      "
+      :engine="engine"
+      :format-enabled="tools('format')"
+      :insert-enabled="tools('insert')"
+      :review-enabled="tools('review')"
+      :state="state"
+      :frame="frame"
+      :suspended="
+        !!dialog || !!popup || !!reviewTab || !!state.table || !!state.image || !!state.mediaEmbed
+      "
+      @command="command"
+      @link="openDialog('link')"
+      @comment="openReview('comments')"
+    />
+    <WordImportDialog v-if="dialog === 'importWord'" :engine="engine" @close="dialog = null" />
+    <DocumentFieldsDialog
+      v-if="['anchor', 'footnote', 'fields'].includes(dialog)"
+      :kind="dialog"
+      :engine="engine"
+      @close="dialog = null"
+    />
+    <AppDialog
+      v-if="dialog === 'preview'"
+      :title="t('Belge önizlemesi')"
+      wide
+      @close="dialog = null"
+      ><iframe
+        class="document-preview-frame"
+        sandbox=""
+        :title="t('Belge önizleme içeriği')"
+        :srcdoc="previewHtml"
+      ></iframe
+      ><template #footer
+        ><button class="button" @click="dialog = null">{{ t('Kapat') }}</button
+        ><button class="button primary" @click="dialog = 'print'">
+          {{ t('Yazdır / PDF') }}
+        </button></template
+      ></AppDialog
+    >
+    <AppDialog
+      v-if="dialog === 'metrics' && metrics"
+      :title="t('Sözcük sayımı')"
+      @close="dialog = null"
+      ><table class="document-metrics">
+        <thead>
+          <tr>
+            <th></th>
+            <th>{{ t('Belgenin tamamı') }}</th>
+            <th>{{ t('Seçili metin') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="[key, label] in [
+              ['words', 'Sözcükler'],
+              ['characters', 'Karakterler'],
+              ['noSpaces', 'Boşluksuz karakterler'],
+            ]"
+            :key="key"
+          >
+            <th>{{ t(label) }}</th>
+            <td>{{ metrics.document[key] }}</td>
+            <td>{{ metrics.selection[key] }}</td>
+          </tr>
+        </tbody>
+      </table></AppDialog
+    >
     <EditorContextMenu
       ref="contextMenu"
       :engine="engine"
@@ -1786,6 +2069,9 @@ defineExpose({
       @close="dialog = null"
     />
     <div class="native-statusbar">
+      <button :aria-label="t('Sözcük sayımı')" @pointerdown.prevent @click="openMetrics">
+        <WholeWord :size="14" />{{ t('Sözcük sayımı') }}
+      </button>
       <span v-if="disabled">{{ t('Devre dışı') }}</span
       ><span v-else-if="readonly">{{ t('Salt okunur') }}</span
       ><span v-else-if="state.image">{{ t('Görselin köşelerini sürükleyerek boyutlandırın') }}</span
@@ -1944,6 +2230,19 @@ defineExpose({
           >{{ t('Görünen metin')
           }}<input v-model="linkForm.text" class="text-input" :aria-label="t('Görünen metin')"
         /></label>
+        <label v-if="anchorOptions.length" class="field-label"
+          >{{ t('Belge içindeki hedef')
+          }}<select
+            class="text-input"
+            :aria-label="t('Belge içindeki hedef')"
+            @change="linkForm.href = $event.target.value"
+          >
+            <option value="">{{ t('Hedef seçin') }}</option>
+            <option v-for="anchor in anchorOptions" :key="anchor.id" :value="'#' + anchor.id">
+              #{{ anchor.id }} — {{ anchor.label }}
+            </option>
+          </select></label
+        >
         <p class="muted">{{ t('Seçili metin varsa biçimlendirmesi korunur.') }}</p>
         <label class="native-checkbox"
           ><input v-model="linkForm.blank" type="checkbox" /> {{ t('Yeni sekmede aç') }}</label

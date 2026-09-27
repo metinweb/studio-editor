@@ -20,4 +20,4 @@ Menus group related commands and provide submenus for paragraph formats, alignme
 
 ## Reference comparison
 
-The [TinyMCE full-featured premium demo](https://www.tiny.cloud/docs/tinymce/latest/full-featured-premium-demo/) informed the menu organization and list controls. Studio already provides tables, media, math/chemistry, templates, comments, suggestions, document history, source editing, search/replace and export. This update adds the local writing/navigation tools described above. It does not claim parity with TinyMCE's premium services: AI assistance, professional spelling/grammar services, advanced Word import and remote file hosting are separate work.
+The [TinyMCE full-featured premium demo](https://www.tiny.cloud/docs/tinymce/latest/full-featured-premium-demo/) informed the menu organization and list controls. See the [current feature comparison](TINYMCE-COMPARISON.md) for implemented tools, partial support and remaining gaps, including DOCX import, footnotes and merge fields added after this update.

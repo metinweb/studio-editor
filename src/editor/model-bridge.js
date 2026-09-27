@@ -17,7 +17,13 @@ export function modelFromDOM(root, revision) {
       attrs: Object.fromEntries(
         [...value.attributes]
           .filter(
-            (a) => !(a.name === 'contenteditable' && value.hasAttribute('data-studio-mention')),
+            (a) =>
+              !(
+                a.name === 'contenteditable' &&
+                value.matches(
+                  '[data-studio-mention],[data-studio-field],[data-studio-footnote-ref]',
+                )
+              ),
           )
           .map((a) => [a.name, a.value]),
       ),

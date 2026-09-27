@@ -35,6 +35,8 @@ for (const [relative, metadata] of Object.entries(lock.packages).sort()) {
     .map((file) => file.name)
     .sort()
   let licenseDirectory = directory
+  // isarray 1.0.0 includes the complete MIT grant at the end of its README.
+  if (!files.length && pkg.name === 'isarray' && pkg.version === '1.0.0') files = ['README.md']
   if (!files.length && fontLicenses[`${pkg.name}@${pkg.version}`]) {
     files = fontLicenses[`${pkg.name}@${pkg.version}`]
     licenseDirectory = path.join(root, 'scripts/vendor-licenses')

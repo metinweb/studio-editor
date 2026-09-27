@@ -141,14 +141,30 @@ export const features = {
     this.selectionChanged()
   },
   changeCase(mode) {
+    if (!['upper', 'lower', 'title', 'sentence'].includes(mode)) return
     this.transaction((range) => {
       if (range.collapsed) return
+      const locale = this.doc.documentElement.lang === 'tr' ? 'tr' : 'en'
+      let boundary = true
       const selection = markRange(this.root, range, true)
       for (const node of textNodes(this.root, selection.range)) {
-        node.textContent =
-          mode === 'upper'
-            ? node.textContent.toLocaleUpperCase('tr')
-            : node.textContent.toLocaleLowerCase('tr')
+        if (mode === 'upper') node.data = node.data.toLocaleUpperCase(locale)
+        else if (mode === 'lower') node.data = node.data.toLocaleLowerCase(locale)
+        else
+          node.data = [...node.data]
+            .map((character) => {
+              if (/\p{L}/u.test(character)) {
+                const value = boundary
+                  ? character.toLocaleUpperCase(locale)
+                  : character.toLocaleLowerCase(locale)
+                boundary = false
+                return value
+              }
+              if (mode === 'title' ? /\s/u.test(character) : /[.!?\n]/.test(character))
+                boundary = true
+              return character
+            })
+            .join('')
       }
       selection.restore()
     })

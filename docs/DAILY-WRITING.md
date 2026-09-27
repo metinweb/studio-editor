@@ -1,5 +1,7 @@
 # Günlük yazma araçları
 
+27 Eylül 2026 güncellemesi: Word içe aktarma, dipnotlar, bağlantı hedefleri, değişken alanları ve yeni düzenleme araçları eklendi. Güncel kapsam ve kalan farklar [TinyMCE karşılaştırmasında](TINYMCE-COMPARISON.md) açıklanır. Aşağıdaki kayıtlar önceki geliştirme tarihlerini yansıtır.
+
 25 Eylül 2026: kullanıcının beş aşamalı sırasının ilk aşaması uygulandı. Kaynak ve yerel web/Vue derlemeleri güncel; eski beta.10 dağıtım arşivleri yeniden paketlenmedi.
 
 ## Kullanım

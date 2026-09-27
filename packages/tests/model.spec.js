@@ -19,3 +19,28 @@ test('schema operations integrate with HTML, identity, undo and stale revisions'
   const after = JSON.parse(await page.locator('#schema-model').textContent())
   expect(after.blocks[0].id).toBe(before.blocks[0].id)
 })
+
+test('footnotes and merge fields expose portable schema data without editing attributes', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await expect(body(page)).toHaveText('Birinci belge')
+  const editor = page.locator('.studio-editor-embed').first()
+  await body(page).locator('p').selectText()
+  await editor.getByRole('button', { name: 'Dipnotlar', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Dipnot metni' }).fill('Package footnote')
+  await page.getByRole('dialog').getByRole('button', { name: 'Ekle', exact: true }).click()
+  await editor.getByRole('button', { name: 'Şablon değişkenleri', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Değişken adı' }).fill('Customer.Name')
+  await page.getByRole('dialog').getByRole('button', { name: 'Ekle', exact: true }).click()
+  await page.getByRole('button', { name: 'Şemalı belgeyi oku' }).click()
+  const json = await page.locator('#schema-model').textContent()
+  expect(JSON.parse(json).schemaVersion).toBe(2)
+  expect(json).toContain('data-studio-footnote-ref')
+  expect(json).toContain('data-studio-field')
+  expect(json).not.toContain('contenteditable')
+  await expect(page.locator('#model-error')).toBeEmpty()
+  await expect(page.frameLocator('.studio-editor-frame').nth(1).locator('body')).toHaveText(
+    'İkinci belge',
+  )
+})

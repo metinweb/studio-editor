@@ -15,6 +15,8 @@ import { selectionColors } from './selection-colors.js'
 import { mediaEmbeds } from './media-embeds.js'
 import { dailyWriting } from './daily-writing.js'
 import { normalizeWritingWidgets } from './writing-widgets.js'
+import { normalizeDocumentFields } from './document-fields.js'
+import { documentTools } from './document-tools.js'
 import { readMediaEmbed, parseMediaEmbed } from '../lib/media-embed.js'
 import { modelFromDOM } from './model-bridge.js'
 import { renderModel, applyModelOperations } from './document-model.js'
@@ -407,7 +409,7 @@ export class StudioEditor {
       canRedo: this.sharedHistory ? this.sharedHistory.canRedo : this.history?.canRedo || false,
       block: element?.closest('blockquote')
         ? 'blockquote'
-        : /^(P|H[1-4]|PRE)$/.test(block?.tagName)
+        : /^(P|H[1-6]|PRE)$/.test(block?.tagName)
           ? block.tagName.toLowerCase()
           : 'p',
       align: block?.style.textAlign || 'left',
@@ -451,6 +453,7 @@ export class StudioEditor {
     if (!this.root.childNodes.length) this.root.innerHTML = '<p><br></p>'
     this.normalizeRoot()
     normalizeWritingWidgets(this.root)
+    normalizeDocumentFields(this.root, true)
     const caret = currentRange(this.root)
     if (
       caret?.collapsed &&
@@ -808,7 +811,7 @@ export class StudioEditor {
     })
   }
   block(tag) {
-    if (!['p', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'pre'].includes(tag)) return
+    if (!['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'].includes(tag)) return
     this.transaction((range) => {
       const blocks = selectedBlocks(this.root, range)
       const selection = markRange(this.root, range)
@@ -990,8 +993,18 @@ export class StudioEditor {
   }
   indent(outdent = false) {
     this.transaction((range) => {
+      this.formattingRange(range)
       const item = elementAt(range.startContainer)?.closest('li')
-      if (!item) return
+      if (!item) {
+        for (const block of selectedBlocks(this.root, range)) {
+          const value = Math.max(
+            0,
+            Math.min(240, (parseFloat(block.style.marginInlineStart) || 0) + (outdent ? -24 : 24)),
+          )
+          block.style.marginInlineStart = value ? `${value}px` : ''
+        }
+        return
+      }
       const selection = markRange(this.root, range)
       const list = item.parentElement
       if (outdent) {
@@ -1504,3 +1517,5 @@ Object.assign(StudioEditor.prototype, productivity)
 Object.assign(StudioEditor.prototype, suggestionTools)
 Object.assign(StudioEditor.prototype, mediaEmbeds)
 Object.assign(StudioEditor.prototype, dailyWriting)
+
+Object.assign(StudioEditor.prototype, documentTools)

@@ -13,6 +13,7 @@ Studio combines a standalone writing app with an embeddable Vue component. The e
 ## Features
 
 - Rich text, headings, lists, links, colors, alignment and undo/redo.
+- [Word import, footnotes, anchors and merge fields](docs/TINYMCE-COMPARISON.md), plus selection tools, view guides, zoom and detailed word counts.
 - Preview galleries for bullet/numbered list styles, numbering properties, line spacing and text direction.
 - Grouped menus, keyboard-accessible submenus, command search, special characters, emoji, dates and page breaks. See [Menus and lists](docs/MENUS-AND-LISTS.md).
 - [Math and chemistry](docs/SCIENCE.md): LaTeX equations, chemical reactions and an editable molecule sketcher.
@@ -64,7 +65,7 @@ The standalone app stores documents and media in IndexedDB, in the current brows
 
 - Collaboration uses an optional Yjs binding and example server. Concurrent structural editing and live cursors are not production-ready.
 - Suggestions apply to selected text; this is not automatic tracking of every change.
-- DOCX import and exact Word layout fidelity are not implemented.
+- DOCX import preserves semantic content with a preview and conversion notes; exact Word layout fidelity is not implemented.
 - Accessibility checks are basic content checks, not a WCAG compliance certification.
 - Real device, mobile keyboard and screen-reader testing remains necessary.
 

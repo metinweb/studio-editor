@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Document tools and reference audit
+
+- Local DOCX import with preview, conversion notes, embedded raster images, sanitization, bounded ZIP preflight and one-step undo. Mammoth is lazy-loaded and its BSD-2-Clause notices are bundled.
+- Anchors with a link target picker, automatic footnote numbering/editing/removal, and merge fields with safe value substitution. DOCX export now produces real footnotes and internal bookmarks.
+- Desktop flyout menus, mobile submenu back navigation, a selection toolbar, view-only block/whitespace guides, zoom and detailed document/selection counts.
+- Custom font sizes, H5/H6, paragraph indentation, title/sentence case and typography cleanup. Upper/lower case now follows the editor locale.
+- Added a capability-by-capability [TinyMCE comparison](TINYMCE-COMPARISON.md) identifying remaining gaps rather than claiming full premium parity.
+
 ## Unreleased — Menus, list galleries and writing tools
 
 - Split buttons for bullet and numbered lists with nine visual style choices, start/reverse numbering and removal. Nested lists and split segments preserve styling and numbering.

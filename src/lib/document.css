@@ -6,6 +6,41 @@ body {
   margin: 32px auto;
   padding: 0 32px 60px;
 }
+[data-studio-field] {
+  background: #eff0ff;
+  color: #5d41c4;
+  border: 1px solid #d9d5f5;
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+[data-studio-footnotes] {
+  margin-top: 36px;
+  font-size: 0.875em;
+  color: #5b677a;
+}
+[data-studio-footnotes] li > p {
+  display: inline;
+}
+[data-studio-footnote-ref] {
+  font-size: 0.75em;
+  vertical-align: super;
+}
+[data-studio-footnote-ref] a {
+  text-decoration: none;
+}
+body[data-visual-blocks='true'] :is(p, h1, h2, h3, h4, h5, h6, blockquote, pre, ul, ol, td, th) {
+  outline: 1px dashed #a7b9d2;
+  outline-offset: 2px;
+}
+body[data-visual-blocks='true'] [data-studio-anchor] {
+  background: #fff5da;
+}
+body[data-visual-blocks='true'] [data-studio-anchor]::before {
+  content: '⚑ ' attr(id) ' ';
+  font: 10px Arial;
+  color: #946b23;
+}
 h1 {
   font-size: 32px;
   font-weight: 600;

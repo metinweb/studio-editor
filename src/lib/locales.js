@@ -3,11 +3,13 @@ import { panelMessages } from './panel-messages.js'
 import { workspaceMessages } from './workspace-messages.js'
 import { scienceMessages } from './science-messages.js'
 import { menuMessages } from './menu-messages.js'
+import { documentToolMessages } from './document-tool-messages.js'
 export const englishMessages = Object.freeze({
   ...panelMessages,
   ...workspaceMessages,
   ...scienceMessages,
   ...menuMessages,
+  ...documentToolMessages,
   'Görev listesi': 'Task list',
   'İçerik stilleri': 'Content styles',
   'Belge başlıkları': 'Document outline',

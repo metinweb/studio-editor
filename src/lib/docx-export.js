@@ -15,6 +15,13 @@ export async function exportDocx(html, options = {}) {
     files = {},
     rels = [],
     numbers = []
+  const footnotes = [...doc.querySelectorAll('li[data-studio-footnote]')]
+  const footnoteIds = new Map(footnotes.map((node, index) => [node.id, index + 1]))
+  const bookmarks = new Map(
+    [...doc.querySelectorAll('[id]')]
+      .filter((node) => !node.closest('[data-studio-footnotes],[data-studio-footnote-ref]'))
+      .map((node, index) => [node.id, { id: index + 1, name: `studio_${index + 1}` }]),
+  )
   let imageIndex = 0,
     totalBytes = 0
   const relation = (type, target, external = false) => {
@@ -67,6 +74,12 @@ export async function exportDocx(html, options = {}) {
         ? `<w:r><w:rPr>${format}</w:rPr><w:t xml:space="preserve">${xml(node.data)}</w:t></w:r>`
         : ''
     if (node.nodeType !== 1) return ''
+    if (node.hasAttribute('data-studio-footnote-back')) return ''
+    if (
+      node.hasAttribute('data-studio-footnote-ref') &&
+      footnoteIds.has(node.dataset.studioFootnoteRef)
+    )
+      return `<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:footnoteReference w:id="${footnoteIds.get(node.dataset.studioFootnoteRef)}"/></w:r>`
     if (node.tagName === 'IMG') return image(node)
     if (node.tagName === 'BR') return '<w:r><w:br/></w:r>'
     if (['VIDEO', 'AUDIO'].includes(node.tagName))
@@ -82,6 +95,8 @@ export async function exportDocx(html, options = {}) {
     if (node.matches('u') || node.style.textDecoration.includes('underline'))
       style += '<w:u w:val="single"/>'
     if (node.matches('s,strike,del')) style += '<w:strike/>'
+    if (node.tagName === 'SUP') style += '<w:vertAlign w:val="superscript"/>'
+    if (node.tagName === 'SUB') style += '<w:vertAlign w:val="subscript"/>'
     if (node.matches('code,pre')) style += '<w:rFonts w:ascii="Courier New" w:hAnsi="Courier New"/>'
     const color = node.style.color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/)
     if (color)
@@ -96,6 +111,10 @@ export async function exportDocx(html, options = {}) {
     ).join('')
     if (node.tagName === 'A' && /^(https?:|mailto:|tel:)/i.test(node.getAttribute('href') || ''))
       return `<w:hyperlink r:id="${relation('hyperlink', node.getAttribute('href'), true)}">${content}</w:hyperlink>`
+    if (node.tagName === 'A' && node.getAttribute('href')?.startsWith('#')) {
+      const target = bookmarks.get(node.getAttribute('href').slice(1))
+      if (target) return `<w:hyperlink w:anchor="${target.name}">${content}</w:hyperlink>`
+    }
     return content
   }
   async function paragraph(node, number = null, depth = 0) {
@@ -107,7 +126,8 @@ export async function exportDocx(html, options = {}) {
       props += `<w:spacing w:line="${Math.round(Number(node.style.lineHeight) * 240)}" w:lineRule="auto"/>`
     if (number)
       props += `<w:numPr><w:ilvl w:val="${Math.min(8, depth)}"/><w:numId w:val="${number}"/></w:numPr>`
-    return `<w:p><w:pPr>${props}</w:pPr>${await runs(node)}</w:p>`
+    const target = bookmarks.get(node.id)
+    return `<w:p><w:pPr>${props}</w:pPr>${target ? `<w:bookmarkStart w:id="${target.id}" w:name="${target.name}"/>` : ''}${await runs(node)}${target ? `<w:bookmarkEnd w:id="${target.id}"/>` : ''}</w:p>`
   }
   async function blocks(parent, depth = 0) {
     let result = ''
@@ -117,6 +137,7 @@ export async function exportDocx(html, options = {}) {
         continue
       }
       if (node.nodeType !== 1) continue
+      if (node.hasAttribute('data-studio-footnotes')) continue
       if (node.hasAttribute('data-studio-page-break')) {
         result += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>'
         continue
@@ -238,6 +259,21 @@ export async function exportDocx(html, options = {}) {
     )
     relation('numbering', 'numbering.xml')
   }
+  if (footnotes.length) {
+    const content = await Promise.all(
+      footnotes.map(
+        async (note) =>
+          `<w:footnote w:id="${footnoteIds.get(note.id)}"><w:p><w:r><w:footnoteRef/></w:r>${await runs(note)}</w:p></w:footnote>`,
+      ),
+    )
+    files['word/footnotes.xml'] = strToU8(
+      wrap(
+        'w:footnotes',
+        `<w:footnote w:type="separator" w:id="-1"><w:p><w:r><w:separator/></w:r></w:p></w:footnote><w:footnote w:type="continuationSeparator" w:id="0"><w:p><w:r><w:continuationSeparator/></w:r></w:p></w:footnote>${content.join('')}`,
+      ),
+    )
+    relation('footnotes', 'footnotes.xml')
+  }
   files['word/_rels/document.xml.rels'] = strToU8(
     `<?xml version="1.0"?><Relationships xmlns="${relationships}">${rels.join('')}</Relationships>`,
   )
@@ -245,6 +281,14 @@ export async function exportDocx(html, options = {}) {
     `<?xml version="1.0"?><Relationships xmlns="${relationships}"><Relationship Id="rId1" Type="${office}/officeDocument" Target="word/document.xml"/></Relationships>`,
   )
   const parts = [
+    ...(footnotes.length
+      ? [
+          [
+            'footnotes',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml',
+          ],
+        ]
+      : []),
     [
       'document',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml',
