@@ -279,6 +279,26 @@ span[data-studio-mention] {
   border-radius: 0 8px 8px 0;
   padding: 14px 18px;
 }
+[data-studio-condition] {
+  display: inline;
+  border: 1px dashed #b69ae0;
+  border-radius: 4px;
+  padding: 2px 5px;
+  background: #f5efff;
+  color: #653a94;
+  font: 0.9em monospace;
+  white-space: normal;
+}
+[data-studio-formula] {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+body[contenteditable='true'] [data-studio-formula] {
+  background: #eff6ff;
+  border-bottom: 1px dotted #60a5fa;
+  padding: 1px 4px;
+  cursor: pointer;
+}
 [data-studio-style='info'] {
   background: #edf4ff;
   border-color: #5084d6;

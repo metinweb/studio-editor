@@ -1,5 +1,7 @@
 # Studio Editor
 
+New: calculated table cells, conditional template fields and reusable writing profiles. [Usage and limits](docs/ADVANCED-DOCUMENTS.md).
+
 New writing tools: previewed Markdown import/export, personal autocorrection and multiline text shortcuts, plus a configurable permanent pen. [Usage and limits](docs/WRITING-POWER-TOOLS.md).
 
 **An open-source rich-text editor and local writing workspace, built with Vue 3.**

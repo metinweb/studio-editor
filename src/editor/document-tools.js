@@ -1,6 +1,7 @@
 import { closestBlock, selectRange, markRange, textNodes } from './selection'
 import { validAnchor, validField, normalizeDocumentFields } from './document-fields.js'
 import { escapeHtml } from '../lib/content'
+import { readCondition, conditionResult } from '../lib/conditional-fields.js'
 
 export const documentTools = {
   setAnchor(id, previous = '') {
@@ -89,6 +90,13 @@ export const documentTools = {
   },
   fillFields(values) {
     this.transaction(() => {
+      for (const field of this.root.querySelectorAll('[data-studio-condition]')) {
+        const condition = readCondition(field.dataset.studioCondition)
+        if (condition && Object.hasOwn(values, condition.key))
+          field.replaceWith(
+            this.doc.createTextNode(conditionResult(condition, values[condition.key])),
+          )
+      }
       for (const field of this.root.querySelectorAll('[data-studio-field]')) {
         const key = field.dataset.studioField
         if (Object.hasOwn(values, key))

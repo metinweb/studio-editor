@@ -117,6 +117,8 @@ const WordImportDialog = defineAsyncComponent(() => import('./WordImportDialog.v
 const DocumentFieldsDialog = defineAsyncComponent(() => import('./DocumentFieldsDialog.vue'))
 const MarkdownDialog = defineAsyncComponent(() => import('./MarkdownDialog.vue'))
 const WritingSettingsDialog = defineAsyncComponent(() => import('./WritingSettingsDialog.vue'))
+const TableFormulaDialog = defineAsyncComponent(() => import('./TableFormulaDialog.vue'))
+const ConditionalFieldDialog = defineAsyncComponent(() => import('./ConditionalFieldDialog.vue'))
 
 const props = defineProps({
   modelValue: String,
@@ -190,6 +192,7 @@ const frame = ref(null)
 const contextMenu = ref(null)
 const tableControls = ref(null)
 const cellFormatSession = shallowRef(null)
+const conditionalTarget = shallowRef(null)
 const imageTarget = shallowRef(null)
 const embedTarget = shallowRef(null)
 const scienceTarget = shallowRef(null)
@@ -537,6 +540,14 @@ const allMenus = computed(() => ({
     },
     { label: 'Dipnotlar', icon: Superscript, action: () => openDialog('footnote') },
     { label: 'Şablon değişkenleri', icon: Braces, action: () => openDialog('fields') },
+    {
+      label: 'Koşullu alan',
+      icon: Braces,
+      action: () => {
+        conditionalTarget.value = null
+        openDialog('condition')
+      },
+    },
     { label: 'Şablon kütüphanesi', icon: LayoutTemplate, action: () => openDialog('templates') },
     { label: 'Yorum ekle', icon: MessageSquare, action: () => openReview('comments') },
     { label: 'İçindekiler ekle / güncelle', icon: ListTree, action: insertContents },
@@ -694,6 +705,12 @@ const allMenus = computed(() => ({
     },
   ],
   Tablo: [
+    {
+      label: 'Tablo formülü',
+      icon: Table2,
+      disabled: !state.value.table,
+      action: () => openDialog('formula'),
+    },
     ...[
       ['target', 'Tablo yapıştır: hedef biçimini koru'],
       ['source', 'Tablo yapıştır: kaynak hücre biçimini kullan'],
@@ -1036,6 +1053,16 @@ function initialize() {
   })
   engine.value.listen(engine.value.root, 'dblclick', (event) => {
     if (locked.value) return
+    const conditional = event.target.closest?.('[data-studio-condition]')
+    if (conditional) {
+      conditionalTarget.value = conditional
+      openDialog('condition')
+      return
+    }
+    if (event.target.closest?.('[data-studio-formula]')) {
+      openDialog('formula')
+      return
+    }
     if (event.target.closest?.('[data-studio-footnote-ref], [data-studio-footnote]')) {
       openDialog('footnote')
       return
@@ -2146,6 +2173,13 @@ defineExpose({
     </div>
 
     <TemplateLibrary v-if="dialog === 'templates'" :engine="engine" @close="dialog = null" />
+    <TableFormulaDialog v-if="dialog === 'formula'" :engine="engine" @close="dialog = null" />
+    <ConditionalFieldDialog
+      v-if="dialog === 'condition'"
+      :engine="engine"
+      :target="conditionalTarget"
+      @close="dialog = null"
+    />
     <MarkdownDialog
       v-if="dialog === 'markdownImport' || dialog === 'markdownExport'"
       :engine="engine"

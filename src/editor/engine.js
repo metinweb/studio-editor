@@ -18,6 +18,7 @@ import { normalizeWritingWidgets } from './writing-widgets.js'
 import { normalizeDocumentFields } from './document-fields.js'
 import { documentTools } from './document-tools.js'
 import { writingAssistance } from './writing-assistance.js'
+import { normalizeTableFormulas } from '../lib/table-formulas.js'
 import { readMediaEmbed, parseMediaEmbed } from '../lib/media-embed.js'
 import { modelFromDOM } from './model-bridge.js'
 import { renderModel, applyModelOperations } from './document-model.js'
@@ -455,6 +456,7 @@ export class StudioEditor {
     this.normalizeRoot()
     normalizeWritingWidgets(this.root)
     normalizeDocumentFields(this.root, true)
+    normalizeTableFormulas(this.root)
     const caret = currentRange(this.root)
     if (
       caret?.collapsed &&

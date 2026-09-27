@@ -583,6 +583,73 @@
   align-items: center;
   gap: 9px;
 }
+.writing-profiles {
+  border: 1px solid #dce1e9;
+  border-radius: 8px;
+  padding: 12px;
+}
+.writing-profiles summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1d4ed8;
+}
+.profile-body {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+}
+.profile-body label {
+  display: grid;
+  gap: 6px;
+}
+.profile-actions,
+.formula-functions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.formula-grid {
+  overflow: auto;
+  max-height: 260px;
+  border: 1px solid #dce1e9;
+  border-radius: 8px;
+}
+.formula-grid table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.formula-grid td {
+  border: 1px solid #e2e8f0;
+  padding: 0;
+  min-width: 90px;
+}
+.formula-grid button {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  width: 100%;
+  text-align: left;
+  color: #334155;
+}
+.formula-grid strong {
+  font-size: 11px;
+  color: #64748b;
+}
+.formula-grid button:hover {
+  background: #eff6ff;
+}
+.formula-grid button:disabled {
+  opacity: 0.45;
+  background: #f1f5f9;
+}
+.formula-result {
+  padding: 16px;
+  background: #eff6ff;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 22px;
+  font-weight: 600;
+}
 .writing-check input {
   width: auto;
 }

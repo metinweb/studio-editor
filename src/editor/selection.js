@@ -95,7 +95,7 @@ export function textNodes(root, range, limit = Infinity) {
     return common.length &&
       range.endOffset > range.startOffset &&
       !common.parentElement.closest(
-        'figure[data-studio-embed],[data-studio-mention],[data-studio-task-control],[data-studio-field],[data-studio-footnote-ref]',
+        'figure[data-studio-embed],[data-studio-mention],[data-studio-task-control],[data-studio-field],[data-studio-condition],[data-studio-formula],[data-studio-footnote-ref]',
       )
       ? [common]
       : []
@@ -106,7 +106,7 @@ export function textNodes(root, range, limit = Infinity) {
       !node.length ||
       !range.intersectsNode(node) ||
       node.parentElement.closest(
-        'figure[data-studio-embed],[data-studio-mention],[data-studio-task-control],[data-studio-field],[data-studio-footnote-ref]',
+        'figure[data-studio-embed],[data-studio-mention],[data-studio-task-control],[data-studio-field],[data-studio-condition],[data-studio-formula],[data-studio-footnote-ref]',
       )
     )
       continue

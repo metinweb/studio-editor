@@ -1,7 +1,20 @@
+import { readCondition } from '../lib/conditional-fields.js'
 export const validField = (value) => /^[A-Za-z][A-Za-z0-9_.-]{0,79}$/.test(value || '')
 export const validAnchor = (value) => /^[A-Za-z][A-Za-z0-9_.:-]{0,119}$/.test(value || '')
 
 export function normalizeDocumentFields(root, prune = false) {
+  for (const node of root.querySelectorAll('[data-studio-condition]')) {
+    const condition = readCondition(node.dataset.studioCondition)
+    if (!node.matches('span') || !condition) {
+      node.removeAttribute('data-studio-condition')
+      node.removeAttribute('contenteditable')
+      continue
+    }
+    node.contentEditable = 'false'
+    const label = `{{IF ${condition.key}${condition.operator === 'equals' ? ' = ' + condition.match : ''}}}`
+    if (node.textContent !== label) node.textContent = label
+    node.title = `${condition.yes} / ${condition.no}`
+  }
   for (const node of root.querySelectorAll('[data-studio-field]')) {
     const key = node.dataset.studioField
     if (!node.matches('span') || !validField(key)) {

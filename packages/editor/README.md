@@ -1,5 +1,7 @@
 # Studio Editor for Vue 3
 
+New: calculated table cells, conditional template fields and reusable writing profiles. [Usage and limits](../../docs/ADVANCED-DOCUMENTS.md).
+
 New writing tools: previewed Markdown import/export, personal autocorrection and multiline text shortcuts, plus a configurable permanent pen. [Usage and limits](../../docs/WRITING-POWER-TOOLS.md).
 
 An MIT-licensed rich-text editor with an independent editing engine, tables, media management, image editing, comments and HTML source editing.

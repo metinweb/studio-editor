@@ -27,7 +27,7 @@ The status bar shows when the pen is active. Click that indicator or press Escap
 
 ## Settings, dependencies and validation
 
-Settings belong to the current editor instance/session and are not saved in document HTML or shared between active editor instances. Reopening the page resets them. Disabled/read-only editors reject edits.
+Settings belong to the current editor instance/session and are not saved in document HTML or shared between active editor instances. Reopening the page resets active settings. Named profiles can now be saved in this browser or transferred as JSON; load a profile and apply it explicitly. See [advanced documents](ADVANCED-DOCUMENTS.md#named-writing-profiles). Disabled/read-only editors reject edits.
 
 Markdown uses lazy-loaded [Marked](https://marked.js.org/), [Turndown](https://github.com/mixmark-io/turndown) and its GFM plugin, with DOMPurify sanitization before rendering or insertion. Third-party license notices ship with distributions.
 

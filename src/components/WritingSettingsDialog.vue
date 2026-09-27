@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, toRaw } from 'vue'
 import AppDialog from './AppDialog.vue'
+import WritingProfiles from './WritingProfiles.vue'
 import { useEditorLocale } from '../lib/editor-locale'
 import {
   defaultWritingPreferences,
@@ -50,6 +51,7 @@ function apply() {
 <template>
   <AppDialog class="writing-tool-dialog" :title="t(title)" wide @close="emit('close')">
     <div class="native-form writing-settings">
+      <WritingProfiles :kind="kind" :value="settings" @load="settings = $event" />
       <label class="writing-check"
         ><input type="checkbox" v-model="settings.enabled" :aria-label="t('Etkinleştir')" />{{
           t('Etkinleştir')

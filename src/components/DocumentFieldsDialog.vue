@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import AppDialog from './AppDialog.vue'
 import { useEditorLocale } from '../lib/editor-locale'
+import { readCondition } from '../lib/conditional-fields.js'
 const props = defineProps({ engine: Object, kind: String })
 const emit = defineEmits(['close'])
 const { t } = useEditorLocale()
@@ -24,12 +25,16 @@ const existing = computed(() =>
 const selected = ref(''),
   value = ref(''),
   error = ref(''),
-  fieldValues = ref({})
+  fieldValues = ref(Object.create(null))
 const keys = [
   ...new Set(
-    [...props.engine.root.querySelectorAll('[data-studio-field]')].map(
-      (node) => node.dataset.studioField,
-    ),
+    [...props.engine.root.querySelectorAll('[data-studio-field]')]
+      .map((node) => node.dataset.studioField)
+      .concat(
+        [...props.engine.root.querySelectorAll('[data-studio-condition]')]
+          .map((node) => readCondition(node.dataset.studioCondition)?.key)
+          .filter(Boolean),
+      ),
   ),
 ]
 const revision = props.engine.revision

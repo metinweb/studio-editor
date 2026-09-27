@@ -1,5 +1,12 @@
 # Changelog
 
+## September 28, 2026 — Advanced document tools
+
+- Added calculated table cells with seven functions, dependencies, precision, cycle/error handling, undo and explicit reconfirmation after structure changes.
+- Added conditional template fields, literal true/false branches and integration with merge-field filling.
+- Added named pen/autocorrect profiles with local persistence and JSON import/export.
+- Added English/Turkish UI, mobile layouts, portable schema support and automated coverage. See [usage and limits](ADVANCED-DOCUMENTS.md).
+
 ## September 28, 2026 — Writing power tools
 
 - Added previewed Markdown file/text import and copy/download export, with GFM tables, checklists and fenced code. Complex tables and special Studio widgets use sanitized HTML islands.

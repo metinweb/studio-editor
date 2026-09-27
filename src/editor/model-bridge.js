@@ -21,7 +21,7 @@ export function modelFromDOM(root, revision) {
               !(
                 a.name === 'contenteditable' &&
                 value.matches(
-                  '[data-studio-mention],[data-studio-field],[data-studio-footnote-ref]',
+                  '[data-studio-mention],[data-studio-field],[data-studio-condition],[data-studio-formula],[data-studio-footnote-ref]',
                 )
               ),
           )

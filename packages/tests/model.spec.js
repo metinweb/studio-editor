@@ -1,5 +1,35 @@
 import { test, expect } from '@playwright/test'
 const body = (page) => page.frameLocator('.studio-editor-frame').first().locator('body')
+
+test('calculated cells and conditional fields expose portable model data', async ({ page }) => {
+  await page.goto('/')
+  await expect(body(page)).toHaveText('Birinci belge')
+  const editor = page.locator('.studio-editor-embed').first()
+  await body(page).locator('p').click()
+  await page.keyboard.press('End')
+  await editor.getByRole('button', { name: 'Tablo ekle', exact: true }).click()
+  await page.getByRole('button', { name: '2 sütun, 2 satır', exact: true }).click()
+  await body(page).locator('td').first().click()
+  await editor
+    .locator('.native-menubar')
+    .getByRole('button', { name: 'Tablo', exact: true })
+    .click()
+  await page.getByRole('menuitem', { name: 'Tablo formülü', exact: true }).click()
+  await page.getByRole('textbox', { name: 'Formül', exact: true }).fill('=SUM(10,20)')
+  await page.getByRole('button', { name: 'Formülü uygula', exact: true }).click()
+  await expect(body(page).locator('[data-studio-formula]')).toHaveText('30')
+  await body(page).focus()
+  await page.keyboard.press('Control+End')
+  await editor.locator('.native-menubar').getByRole('button', { name: 'Ekle', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Koşullu alan', exact: true }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Ekle', exact: true }).click()
+  await page.getByRole('button', { name: 'Şemalı belgeyi oku', exact: true }).click()
+  const json = await page.locator('#schema-model').textContent()
+  expect(json).toContain('data-studio-formula')
+  expect(json).toContain('data-studio-condition')
+  expect(json).not.toContain('contenteditable')
+  await expect(page.locator('#model-error')).toBeEmpty()
+})
 test('schema operations integrate with HTML, identity, undo and stale revisions', async ({
   page,
 }) => {

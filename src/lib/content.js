@@ -2,6 +2,7 @@ import createDOMPurify from 'dompurify'
 import documentCss from './document.css?inline'
 import { readMediaEmbed, mediaEmbedHtml } from './media-embed.js'
 import { normalizeDocumentFields } from '../editor/document-fields.js'
+import { normalizeTableFormulas } from './table-formulas.js'
 import { normalizeWritingWidgets } from '../editor/writing-widgets.js'
 
 export { documentCss }
@@ -45,7 +46,11 @@ export const cleanHtml = (html) => {
     ],
     FORBID_ATTR: ['contenteditable', 'autofocus', 'srcdoc'],
   })
-  if (!/data-studio-(embed|task|checked|mention|style|field|footnote)/.test(sanitized))
+  if (
+    !/data-studio-(embed|task|checked|mention|style|field|footnote|condition|formula)/.test(
+      sanitized,
+    )
+  )
     return sanitized
   const template = window.document.createElement('template')
   template.innerHTML = sanitized
@@ -58,6 +63,7 @@ export const cleanHtml = (html) => {
   }
   normalizeWritingWidgets(template.content)
   normalizeDocumentFields(template.content)
+  normalizeTableFormulas(template.content)
   return template.innerHTML
 }
 

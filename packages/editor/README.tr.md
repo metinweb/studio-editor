@@ -1,5 +1,7 @@
 # Studio Editor — Vue 3
 
+Hesaplanan tablo hücreleri, koşullu alanlar ve kalıcı yazma profilleri eklendi. [Kullanım ve sınırlar](../../docs/ADVANCED-DOCUMENTS.md).
+
 Markdown içe/dışa aktarma, otomatik düzeltme kuralları, metin kısayolları ve kalıcı kalem bileşen içinde kullanılabilir. Ayarlar her editör oturumuna özeldir. [Kullanım ve sınırlar](../../docs/WRITING-POWER-TOOLS.md).
 
 [English](README.md) · Türkçe
