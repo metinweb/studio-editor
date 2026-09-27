@@ -266,7 +266,9 @@ onBeforeUnmount(() => {
   white-space: normal;
 }
 .science-molecule .science-preview {
-  min-height: 54px;
+  height: 84px;
+  min-height: 84px;
+  box-sizing: border-box;
   padding: 8px 14px;
   justify-content: space-between;
   margin: 12px 0;

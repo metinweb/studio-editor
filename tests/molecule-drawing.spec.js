@@ -7,6 +7,7 @@ async function start(page) {
   await page.getByRole('button', { name: 'Math & chemistry', exact: true }).click()
   await page.getByRole('button', { name: 'Molecule drawing', exact: true }).click()
   await page.getByRole('button', { name: 'Clear', exact: true }).click()
+  await page.getByRole('button', { name: 'Draw bond', exact: true }).click()
   return page.locator('.molecule-canvas')
 }
 async function position(canvas, x, y) {
@@ -35,6 +36,123 @@ async function save(page) {
       .getAttribute('data-studio-source'),
   )
 }
+
+async function dragTray(page, canvas, name, x, y) {
+  const button = page.getByRole('button', { name, exact: true })
+  await button.scrollIntoViewIfNeeded()
+  const box = await button.boundingBox(),
+    target = await position(canvas, x, y)
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(target.x, target.y, { steps: 12 })
+  await page.mouse.up()
+}
+
+test('palette and ring drag-and-drop, default atom movement and whole molecule movement', async ({
+  page,
+}) => {
+  const canvas = await start(page)
+  await dragTray(page, canvas, 'Benzene ring', 300, 180)
+  await expect(canvas.locator('.molecule-atom')).toHaveCount(6)
+  await expect(page.getByRole('button', { name: 'Move', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  // A bond moves its entire connected component, retaining all relative coordinates.
+  await drag(page, canvas, [323.383, 139.5], [353.383, 159.5])
+  await expect(canvas.locator('.molecule-atom').first().locator('circle').first()).toHaveAttribute(
+    'cx',
+    /329|330/,
+  )
+  await dragTray(page, canvas, 'Element O', 140, 240)
+  await expect(canvas.locator('.molecule-atom')).toHaveCount(7)
+  await drag(page, canvas, [140, 240], [180, 260])
+  await expect(page.getByLabel('X', { exact: true })).toHaveValue('180')
+  const graph = await save(page)
+  expect(graph.atoms[6].element).toBe('O')
+  expect(graph.atoms[6].x).toBeCloseTo(180, 0)
+  for (let i = 0; i < 6; i++)
+    expect(
+      Math.hypot(
+        graph.atoms[i].x - graph.atoms[(i + 1) % 6].x,
+        graph.atoms[i].y - graph.atoms[(i + 1) % 6].y,
+      ),
+    ).toBeCloseTo(54)
+})
+
+test('drag cancellation and outside drops leave the graph unchanged; branch handle extends a moved atom', async ({
+  page,
+}) => {
+  const canvas = await start(page)
+  await dragTray(page, canvas, 'Element N', 250, 180)
+  const button = page.getByRole('button', { name: 'Six-membered ring', exact: true })
+  let box = await button.boundingBox(),
+    target = await position(canvas, 400, 180)
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(target.x, target.y, { steps: 8 })
+  await page.keyboard.press('Escape')
+  await page.mouse.up()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(canvas.locator('.molecule-atom')).toHaveCount(1)
+  box = await button.boundingBox()
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(10, 10, { steps: 8 })
+  await page.mouse.up()
+  await expect(canvas.locator('.molecule-atom')).toHaveCount(1)
+  await drag(page, canvas, [250, 180], [280, 200])
+  const handle = canvas.getByRole('button', { name: 'Draw bond from selected atom' })
+  box = await handle.boundingBox()
+  target = await position(canvas, 334, 200)
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(target.x, target.y, { steps: 8 })
+  await page.mouse.up()
+  await expect(canvas.locator('.molecule-atom')).toHaveCount(2)
+  await expect(canvas.locator('.molecule-bond')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Undo drawing', exact: true }).click()
+  await expect(canvas.locator('.molecule-atom')).toHaveCount(1)
+  await expect(page.getByRole('button', { name: 'Element O', exact: true })).toBeVisible()
+  await page.mouse.click(10, 10)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('real touch pointer drags an atom from palette then moves it on the canvas', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'CDP touch input is Chromium-specific')
+  await page.setViewportSize({ width: 390, height: 844 })
+  const canvas = await start(page)
+  const session = await page.context().newCDPSession(page)
+  async function touchDrag(from, to) {
+    await session.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: from.x, y: from.y }],
+    })
+    for (let i = 1; i <= 10; i++)
+      await session.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [
+          { x: from.x + ((to.x - from.x) * i) / 10, y: from.y + ((to.y - from.y) * i) / 10 },
+        ],
+      })
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  }
+  const box = await page.getByRole('button', { name: 'Element O', exact: true }).boundingBox()
+  await touchDrag(
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+    await position(canvas, 220, 180),
+  )
+  await expect(canvas.locator('.molecule-atom')).toHaveCount(1)
+  await touchDrag(await position(canvas, 220, 180), await position(canvas, 300, 220))
+  await expect(page.getByLabel('X', { exact: true })).toHaveValue('300')
+  await expect(page.getByLabel('Y', { exact: true })).toHaveValue('220')
+  expect(await page.getByRole('dialog').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  )
+})
 
 test('dragging creates snapped chains, connects existing atoms and commits one undo per gesture', async ({
   page,

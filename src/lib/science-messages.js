@@ -1,4 +1,16 @@
 export const scienceMessages = {
+  Halka: 'Ring',
+  'Molekül stüdyosu': 'Molecule studio',
+  'Tut. Sürükle. Bırak.': 'Pick it up. Make it yours.',
+  'Düzenlenebilir çizim': 'Editable structure',
+  'Sürükle ve bırak': 'Drag & drop',
+  'Halkayı tuvale bırakın. Atomları üstteki paletten sürükleyin.':
+    'Drop a ring onto the canvas. Drag atoms from the palette above.',
+  'Tuvale sürükleyin veya seçili atomu değiştirmek için tıklayın.':
+    'Drag onto the canvas, or click to replace the selected atom.',
+  'Atomu taşıyın; molekülün tamamını taşımak için bir bağdan tutun.':
+    'Drag an atom to move it. Grab a bond to move the whole molecule.',
+  'Seçili atomdan bağ çiz': 'Draw bond from selected atom',
   'Çizimi ortala': 'Center drawing',
   'Element {element}': 'Element {element}',
   'Bir atomdan sürükleyerek zinciri uzatın. İki atoma tıklayarak da bağlayabilirsiniz.':

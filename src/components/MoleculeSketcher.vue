@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, useId } from 'vue'
+import { computed, ref, useId, onBeforeUnmount } from 'vue'
 import {
   MousePointer2,
   Pencil,
@@ -10,7 +10,6 @@ import {
   Plus,
   Trash2,
   Hexagon,
-  Pentagon,
 } from '@lucide/vue'
 import { elements, bondLines, moleculePreset } from '../lib/science.js'
 import {
@@ -27,7 +26,7 @@ import { useEditorLocale } from '../lib/editor-locale'
 const { t } = useEditorLocale()
 const props = defineProps({ modelValue: Object })
 const emit = defineEmits(['update:modelValue'])
-const tool = ref('bond'),
+const tool = ref('move'),
   element = ref('C'),
   order = ref(1),
   selected = ref(-1)
@@ -39,17 +38,30 @@ const canvas = ref(null),
 const graph = computed(() => props.modelValue)
 const atom = computed(() => graph.value.atoms[selected.value])
 const instructionId = useId()
+const trayDrag = ref(null)
+const rings = [
+  { id: 'ring5', label: 'Beşli halka', count: 5 },
+  { id: 'ring6', label: 'Altılı halka', count: 6 },
+  { id: 'ringB', label: 'Benzen halkası', count: 6 },
+]
+const dropGraph = computed(() => {
+  const g = { atoms: [], bonds: [], skeletal: true }
+  const d = trayDrag.value
+  if (d?.inside && d.kind.startsWith('ring'))
+    addRing(g, d.point, d.kind === 'ring5' ? 5 : 6, d.kind === 'ringB')
+  return g
+})
 const tools = [
+  { id: 'move', label: 'Taşı', icon: MousePointer2 },
   { id: 'bond', label: 'Bağ çiz', icon: Pencil },
   { id: 'atom', label: 'Atom ekle', icon: Plus },
-  { id: 'move', label: 'Taşı', icon: MousePointer2 },
   { id: 'erase', label: 'Sil', icon: Eraser },
 ]
 const hint = computed(() =>
   tool.value === 'bond'
     ? 'Bir atomdan sürükleyerek zinciri uzatın. İki atoma tıklayarak da bağlayabilirsiniz.'
     : tool.value === 'move'
-      ? 'Atomları sürükleyin. Ok tuşlarıyla hassas taşıyın.'
+      ? 'Atomu taşıyın; molekülün tamamını taşımak için bir bağdan tutun.'
       : tool.value.startsWith('ring')
         ? 'Halka eklemek için boş alana tıklayın.'
         : tool.value === 'erase'
@@ -88,6 +100,89 @@ function point(event) {
   )
   return { x: Math.max(20, Math.min(580, p.x)), y: Math.max(20, Math.min(340, p.y)) }
 }
+function stopTray() {
+  const d = trayDrag.value
+  trayDrag.value = null
+  if (d?.source.hasPointerCapture(d.pointer)) d.source.releasePointerCapture(d.pointer)
+  window.removeEventListener('pointermove', moveTray)
+  window.removeEventListener('pointerup', finishTray)
+  window.removeEventListener('pointercancel', stopTray)
+  window.removeEventListener('keydown', trayKey, true)
+  window.removeEventListener('blur', stopTray)
+}
+function trayKey(event) {
+  if (event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopImmediatePropagation()
+  stopTray()
+}
+function startTray(event, kind) {
+  if (event.button !== 0) return
+  cancelGesture()
+  stopTray()
+  event.preventDefault()
+  event.currentTarget.setPointerCapture(event.pointerId)
+  trayDrag.value = {
+    source: event.currentTarget,
+    kind,
+    pointer: event.pointerId,
+    x: event.clientX,
+    y: event.clientY,
+    startX: event.clientX,
+    startY: event.clientY,
+    moved: false,
+    inside: false,
+  }
+  window.addEventListener('pointermove', moveTray)
+  window.addEventListener('pointerup', finishTray)
+  window.addEventListener('pointercancel', stopTray)
+  window.addEventListener('keydown', trayKey, true)
+  window.addEventListener('blur', stopTray)
+}
+function moveTray(event) {
+  const d = trayDrag.value
+  if (!d || d.pointer !== event.pointerId) return
+  d.x = event.clientX
+  d.y = event.clientY
+  if (Math.hypot(d.x - d.startX, d.y - d.startY) > 5) d.moved = true
+  const rect = canvas.value.getBoundingClientRect()
+  d.inside = d.x >= rect.left && d.x <= rect.right && d.y >= rect.top && d.y <= rect.bottom
+  d.point = point(event)
+  if (d.moved) event.preventDefault()
+}
+function finishTray(event) {
+  if (trayDrag.value?.pointer !== event.pointerId) return
+  moveTray(event)
+  const d = trayDrag.value
+  if (!d.moved) {
+    if (d.kind.startsWith('ring')) chooseTool(d.kind)
+    else palette(d.kind)
+  }
+  if (d.moved && d.inside) {
+    if (d.kind.startsWith('ring')) placeRing(d.kind, d.point)
+    else {
+      const index = closestAtom(graph.value, d.point)
+      element.value = d.kind
+      if (index >= 0) {
+        selected.value = index
+        edit((g) => (g.atoms[index].element = d.kind))
+      } else addAtom(d.point)
+    }
+    tool.value = 'move'
+  }
+  stopTray()
+}
+function trayClick(kind) {
+  if (kind.startsWith('ring')) chooseTool(kind)
+  else palette(kind)
+}
+function placeRing(kind, p) {
+  const next = cloneMolecule(graph.value)
+  if (addRing(next, p, kind === 'ring5' ? 5 : 6, kind === 'ringB')) update(next)
+  else notice.value = t('Çizim sınırına ulaşıldı.')
+  selected.value = -1
+}
+onBeforeUnmount(stopTray)
 function addAtom(position) {
   if (graph.value.atoms.length >= 100) {
     notice.value = t('Çizim sınırına ulaşıldı.')
@@ -133,14 +228,11 @@ function pick(index) {
   }
   selected.value = index
 }
-function begin(event, index = -1) {
+function begin(event, index = -1, forceMode = null, members = null) {
   if (event.button !== 0 || gesture.value) return
   const p = point(event)
   if (index < 0 && tool.value.startsWith('ring')) {
-    const next = cloneMolecule(graph.value)
-    if (addRing(next, p, tool.value === 'ring5' ? 5 : 6, tool.value === 'ringB')) update(next)
-    else notice.value = t('Çizim sınırına ulaşıldı.')
-    selected.value = -1
+    placeRing(tool.value, p)
     return
   }
   if (tool.value === 'erase') {
@@ -165,10 +257,12 @@ function begin(event, index = -1) {
     target: -1,
     moved: false,
     before: JSON.stringify(graph.value),
-    mode: tool.value,
+    mode: forceMode || (tool.value === 'move' && index < 0 && !members ? 'bond' : tool.value),
+    members,
     pointer: event.pointerId,
   }
   canvas.value.setPointerCapture(event.pointerId)
+  canvas.value.focus({ preventScroll: true })
   event.preventDefault()
 }
 function move(event) {
@@ -177,9 +271,17 @@ function move(event) {
   const p = point(event)
   if (Math.hypot(p.x - session.raw.x, p.y - session.raw.y) > 5) session.moved = true
   if (!session.moved) return
-  if (session.mode === 'move' && session.index >= 0) {
-    const next = cloneMolecule(graph.value)
-    Object.assign(next.atoms[session.index], p)
+  if (session.mode === 'move' && (session.index >= 0 || session.members)) {
+    const next = JSON.parse(session.before)
+    const indices = session.members || [session.index]
+    const xs = indices.map((i) => next.atoms[i].x),
+      ys = indices.map((i) => next.atoms[i].y)
+    const dx = Math.max(20 - Math.min(...xs), Math.min(580 - Math.max(...xs), p.x - session.raw.x))
+    const dy = Math.max(20 - Math.min(...ys), Math.min(340 - Math.max(...ys), p.y - session.raw.y))
+    indices.forEach((i) => {
+      next.atoms[i].x += dx
+      next.atoms[i].y += dy
+    })
     update(next, false)
   } else if (session.mode === 'bond') {
     session.target = closestAtom(graph.value, p, session.index)
@@ -239,6 +341,22 @@ function cancelGesture() {
 function bondAction(index) {
   if (tool.value === 'erase') edit((g) => g.bonds.splice(index, 1))
   else if (tool.value === 'bond') edit((g) => (g.bonds[index].order = order.value))
+}
+function beginBond(event, index) {
+  if (tool.value !== 'move') return bondAction(index)
+  const members = new Set([graph.value.bonds[index].a])
+  let changed = true
+  while (changed) {
+    changed = false
+    for (const b of graph.value.bonds) {
+      if (members.has(b.a) !== members.has(b.b)) {
+        members.add(b.a)
+        members.add(b.b)
+        changed = true
+      }
+    }
+  }
+  begin(event, -1, 'move', [...members])
 }
 function choosePreset(name) {
   cancelGesture()
@@ -303,6 +421,23 @@ function key(event) {
 </script>
 <template>
   <section class="molecule-editor" @keydown="key">
+    <div class="molecule-heading">
+      <div>
+        <strong>{{ t('Molekül stüdyosu') }}</strong>
+      </div>
+      <span class="molecule-live-dot">{{ t('Düzenlenebilir çizim') }}</span>
+    </div>
+    <div class="molecule-modebar" role="group" :aria-label="t('Çizim araçları')">
+      <button
+        v-for="item in tools"
+        :key="item.id"
+        :aria-label="t(item.label)"
+        :aria-pressed="tool === item.id"
+        @click="chooseTool(item.id)"
+      >
+        <component :is="item.icon" :size="17" /><span>{{ t(item.label) }}</span>
+      </button>
+    </div>
     <div class="molecule-topbar">
       <div class="molecule-elements" role="group" :aria-label="t('Element')">
         <button
@@ -311,7 +446,10 @@ function key(event) {
           :style="{ '--atom-color': atomColors[e] }"
           :aria-label="t('Element {element}', { element: e })"
           :aria-pressed="element === e"
-          @click="palette(e)"
+          class="molecule-draggable"
+          :title="t('Tuvale sürükleyin veya seçili atomu değiştirmek için tıklayın.')"
+          @pointerdown="startTray($event, e)"
+          @click="$event.detail === 0 && trayClick(e)"
         >
           {{ e }}
         </button>
@@ -348,17 +486,6 @@ function key(event) {
     <div class="molecule-workbench">
       <div class="molecule-rail" role="group" :aria-label="t('Çizim araçları')">
         <button
-          v-for="item in tools"
-          :key="item.id"
-          :title="t(item.label)"
-          :aria-label="t(item.label)"
-          :aria-pressed="tool === item.id"
-          @click="chooseTool(item.id)"
-        >
-          <component :is="item.icon" :size="19" />
-        </button>
-        <span class="molecule-divider" />
-        <button
           v-for="n in [1, 2, 3]"
           :key="n"
           :title="t(['Tek bağ', 'Çift bağ', 'Üçlü bağ'][n - 1])"
@@ -379,45 +506,16 @@ function key(event) {
             />
           </svg>
         </button>
-        <span class="molecule-divider" />
-        <button
-          :title="t('Beşli halka')"
-          :aria-label="t('Beşli halka')"
-          :aria-pressed="tool === 'ring5'"
-          @click="chooseTool('ring5')"
-        >
-          <Pentagon :size="20" />
-        </button>
-        <button
-          :title="t('Altılı halka')"
-          :aria-label="t('Altılı halka')"
-          :aria-pressed="tool === 'ring6'"
-          @click="chooseTool('ring6')"
-        >
-          <Hexagon :size="20" />
-        </button>
-        <button
-          :title="t('Benzen halkası')"
-          :aria-label="t('Benzen halkası')"
-          :aria-pressed="tool === 'ringB'"
-          @click="chooseTool('ringB')"
-        >
-          <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true">
-            <path
-              d="M12 2 21 7v10l-9 5-9-5V7Z"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.6"
-            />
-            <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.4" />
-          </svg>
-        </button>
       </div>
       <div class="molecule-stage">
         <svg
           ref="canvas"
           class="molecule-canvas"
-          :class="{ 'molecule-erasing': tool === 'erase' }"
+          :class="{
+            'molecule-erasing': tool === 'erase',
+            'molecule-moving': tool === 'move',
+            'molecule-active-drag': !!gesture?.moved,
+          }"
           viewBox="0 0 600 360"
           role="group"
           tabindex="0"
@@ -436,7 +534,7 @@ function key(event) {
             role="button"
             tabindex="0"
             :aria-label="t('Bağ {a}–{b}', { a: bond.a + 1, b: bond.b + 1 })"
-            @pointerdown.stop="bondAction(index)"
+            @pointerdown.stop="beginBond($event, index)"
             @keydown.enter.stop.prevent="bondAction(index)"
             @keydown.delete.stop.prevent="edit((g) => g.bonds.splice(index, 1))"
           >
@@ -481,7 +579,7 @@ function key(event) {
             @keydown.space.stop.prevent="pick(index)"
             @keydown.delete.stop.prevent="remove(index)"
           >
-            <circle class="molecule-atom-hit" :cx="a.x" :cy="a.y" r="16" />
+            <circle class="molecule-atom-hit" :cx="a.x" :cy="a.y" r="20" />
             <text
               v-if="atomLabel(graph, index)"
               :x="a.x"
@@ -494,6 +592,37 @@ function key(event) {
               {{ atomLabel(graph, index) }}
             </text>
             <circle v-else class="molecule-carbon-point" :cx="a.x" :cy="a.y" r="2.5" />
+          </g>
+          <g
+            v-if="atom && tool === 'move' && !gesture"
+            class="molecule-branch"
+            role="button"
+            tabindex="0"
+            :aria-label="t('Seçili atomdan bağ çiz')"
+            @pointerdown.stop="begin($event, selected, 'bond')"
+            @keydown.enter.stop.prevent="tool = 'bond'"
+          >
+            <circle :cx="atom.x + (atom.x > 530 ? -32 : 32)" :cy="atom.y" r="11" />
+            <path
+              :d="`M ${atom.x + (atom.x > 530 ? -32 : 32) - 4} ${atom.y} h 8 M ${atom.x + (atom.x > 530 ? -32 : 32)} ${atom.y - 4} v 8`"
+            />
+          </g>
+          <g
+            v-if="trayDrag?.inside && trayDrag.moved"
+            class="molecule-drop-preview"
+            pointer-events="none"
+          >
+            <template v-if="dropGraph.atoms.length">
+              <g v-for="(b, i) in dropGraph.bonds" :key="i">
+                <line v-for="(line, j) in bondLines(dropGraph, b)" :key="j" v-bind="line" />
+              </g>
+            </template>
+            <g v-else>
+              <circle :cx="trayDrag.point.x" :cy="trayDrag.point.y" r="20" />
+              <text :x="trayDrag.point.x" :y="trayDrag.point.y + 6" text-anchor="middle">
+                {{ trayDrag.kind }}
+              </text>
+            </g>
           </g>
         </svg>
         <div v-if="!graph.atoms.length" class="molecule-empty" aria-hidden="true">
@@ -517,6 +646,27 @@ function key(event) {
         </div>
       </div>
       <aside class="molecule-inspector">
+        <span class="molecule-section-title">{{ t('Sürükle ve bırak') }}</span>
+        <p class="molecule-tray-help">
+          {{ t('Halkayı tuvale bırakın. Atomları üstteki paletten sürükleyin.') }}
+        </p>
+        <div class="molecule-ring-tray">
+          <button
+            v-for="r in rings"
+            :key="r.id"
+            class="molecule-draggable"
+            :aria-label="t(r.label)"
+            :aria-pressed="tool === r.id"
+            @pointerdown="startTray($event, r.id)"
+            @click="$event.detail === 0 && trayClick(r.id)"
+          >
+            <svg viewBox="0 0 64 56" aria-hidden="true">
+              <path v-if="r.count === 5" d="M32 5 55 22 46 49 18 49 9 22Z" />
+              <path v-else d="M20 7h24l12 21-12 21H20L8 28Z" />
+              <circle v-if="r.id === 'ringB'" cx="32" cy="28" r="13" /></svg
+            ><span>{{ r.id === 'ringB' ? t('Benzen') : r.count + ' ' + t('Halka') }}</span>
+          </button>
+        </div>
         <span class="molecule-section-title">{{ t('Başlangıç yapıları') }}</span>
         <div class="molecule-presets">
           <button
@@ -533,7 +683,7 @@ function key(event) {
             ><span>{{ t(p[1]) }}</span>
           </button>
         </div>
-        <div class="molecule-properties">
+        <div v-if="atom" class="molecule-properties">
           <span class="molecule-section-title">{{
             atom ? t('Seçili atom') + ' ' + (selected + 1) : t('Atom özellikleri')
           }}</span>
@@ -585,6 +735,13 @@ function key(event) {
       ><kbd>{{ t('Alt: serbest açı') }}</kbd>
     </div>
     <p v-if="notice" role="status" class="science-help">{{ notice }}</p>
+    <div
+      v-if="trayDrag?.moved && !trayDrag.inside"
+      class="molecule-drag-badge"
+      :style="{ left: trayDrag.x + 'px', top: trayDrag.y + 'px' }"
+    >
+      {{ trayDrag.kind.startsWith('ring') ? '⬡' : trayDrag.kind }}
+    </div>
   </section>
 </template>
 <style>
@@ -594,6 +751,77 @@ function key(event) {
   overflow: hidden;
   background: #fff;
   color: #27364c;
+}
+.molecule-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px 12px;
+  background: linear-gradient(120deg, #f7f9ff, #fff);
+}
+.molecule-heading strong {
+  display: block;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  color: #202d45;
+}
+.molecule-heading span {
+  display: block;
+  color: #8190a7;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.molecule-heading .molecule-live-dot {
+  font-size: 10px;
+  border: 1px solid #dce8e5;
+  background: #f1faf6;
+  color: #37866b;
+  border-radius: 20px;
+  padding: 6px 10px;
+}
+.molecule-modebar {
+  display: flex;
+  gap: 6px;
+  padding: 4px 16px 12px;
+  background: #fff;
+}
+.molecule-modebar button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 9px;
+  padding: 9px 14px;
+  color: #64748b;
+  font-size: 12px;
+}
+.molecule-modebar button[aria-pressed='true'] {
+  color: #fff;
+  background: #5364d9;
+  box-shadow: 0 3px 9px #5364d92a;
+}
+.molecule-draggable {
+  touch-action: none;
+  user-select: none;
+  cursor: grab !important;
+}
+.molecule-draggable:active {
+  cursor: grabbing !important;
+}
+.molecule-drag-badge {
+  position: fixed;
+  z-index: 100000;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border: 2px solid #6877df;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px #22335533;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  font: 600 23px Arial;
+  color: #5364d9;
 }
 .molecule-editor button {
   font: inherit;
@@ -649,17 +877,24 @@ function key(event) {
   border-radius: 6px;
 }
 .molecule-workbench {
+  position: relative;
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) 168px;
+  grid-template-columns: minmax(0, 1fr) 200px;
 }
 .molecule-rail {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   padding: 8px 4px;
   gap: 2px;
-  background: #f8fafc;
-  border-right: 1px solid #e5eaf1;
+  background: #fff;
+  border: 1px solid #e5eaf1;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px #2636570d;
 }
 .molecule-rail button {
   display: grid;
@@ -696,6 +931,7 @@ function key(event) {
   border-radius: 0;
   background: transparent;
   touch-action: none;
+  user-select: none;
   font-family: Arial, sans-serif;
   cursor: crosshair;
   display: block;
@@ -715,6 +951,42 @@ function key(event) {
 .molecule-carbon-point {
   fill: #6f51ac;
   opacity: 0;
+}
+.molecule-moving .molecule-carbon-point {
+  opacity: 0.65;
+  fill: #97a7c4;
+}
+.molecule-canvas.molecule-moving [role='button'] {
+  cursor: grab;
+}
+.molecule-canvas.molecule-active-drag,
+.molecule-canvas.molecule-active-drag [role='button'] {
+  cursor: grabbing;
+}
+.molecule-canvas .molecule-branch {
+  cursor: crosshair !important;
+}
+.molecule-branch circle {
+  fill: #5364d9;
+  stroke: white;
+  stroke-width: 2;
+}
+.molecule-branch path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.7;
+  pointer-events: none;
+}
+.molecule-drop-preview {
+  stroke: #6377de;
+  stroke-width: 2;
+  fill: #eef1ff;
+  opacity: 0.8;
+}
+.molecule-drop-preview text {
+  stroke: none;
+  fill: #5364d9;
+  font-size: 20px;
 }
 .molecule-atom:hover .molecule-carbon-point,
 .molecule-atom.selected .molecule-carbon-point,
@@ -791,9 +1063,48 @@ function key(event) {
   gap: 5px;
 }
 .molecule-inspector {
+  height: 400px;
+  box-sizing: border-box;
+  overflow: auto;
   padding: 14px 12px;
   background: #f8fafc;
   border-left: 1px solid #e5eaf1;
+}
+.molecule-tray-help {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #8290a5;
+  margin: -3px 0 12px;
+}
+.molecule-ring-tray {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 20px;
+}
+.molecule-ring-tray button {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #dfe5f0;
+  border-radius: 10px;
+  padding: 6px 3px;
+}
+.molecule-ring-tray button[aria-pressed='true'] {
+  border-color: #7080dc;
+  background: #eff2ff;
+}
+.molecule-ring-tray svg {
+  width: 100%;
+  height: 44px;
+  fill: none;
+  stroke: #4a5c7a;
+  stroke-width: 2;
+}
+.molecule-ring-tray span {
+  display: block;
+  font-size: 9px;
+  line-height: 1.4;
+  color: #687b98;
 }
 .molecule-section-title {
   font-size: 10px;
@@ -823,8 +1134,8 @@ function key(event) {
   font-weight: 500;
 }
 .molecule-properties {
-  margin-top: 20px;
-  min-height: 143px;
+  margin-top: 12px;
+  min-height: 0;
   font-size: 11px;
 }
 .molecule-properties p {
@@ -885,33 +1196,80 @@ function key(event) {
   color: #8c98aa;
 }
 @media (max-width: 680px) {
+  .molecule-heading {
+    padding: 14px 12px 10px;
+  }
+  .molecule-heading .molecule-live-dot {
+    display: none;
+  }
+  .molecule-modebar {
+    gap: 3px;
+    padding: 3px 8px 10px;
+  }
+  .molecule-modebar button {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 4px;
+    gap: 4px;
+    font-size: 10px;
+  }
   .molecule-workbench {
-    grid-template-columns: 40px minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
   }
   .molecule-inspector {
-    grid-column: 1/-1;
-    border-left: 0;
-    border-top: 1px solid #e5eaf1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 16px;
-    padding: 12px;
+    display: contents;
+  }
+  .molecule-stage {
+    order: 2;
+  }
+  .molecule-rail {
+    top: 82px;
   }
   .molecule-inspector > .molecule-section-title {
     display: none;
   }
-  .molecule-properties {
+  .molecule-tray-help {
+    display: none;
+  }
+  .molecule-ring-tray {
+    order: 1;
     margin: 0;
-    min-height: 110px;
+    padding: 8px;
+    background: #f7f9fc;
+  }
+  .molecule-ring-tray button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .molecule-ring-tray svg {
+    width: 36px;
+    flex: none;
+  }
+  .molecule-properties {
+    order: 3;
+    margin: 12px;
+    min-height: 0;
   }
   .molecule-presets {
+    order: 3;
+    display: flex;
+    margin: 8px;
+    gap: 4px;
     align-content: start;
   }
+  .molecule-presets button {
+    flex: 1;
+    gap: 4px;
+    font-size: 10px;
+  }
   .molecule-keyboard-add {
-    grid-column: 1/-1;
+    order: 3;
+    margin: 8px;
   }
   .molecule-stage .molecule-canvas {
-    height: 330px;
+    height: 260px;
     min-height: 240px;
   }
   .molecule-rail button {

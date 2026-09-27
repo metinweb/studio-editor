@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Direct molecule manipulation
+
+- Drag atoms and ring cards from the palette onto the canvas, with placement previews and touch support.
+- Move is now the default: drag individual atoms or grab a bond to move its entire connected molecule. Selected atoms expose a + handle for drawing a branch.
+- Labeled drawing tools, visible carbon handles and a mobile ring tray above the canvas.
+- Cancelled/outside drops preserve the drawing; dragging out of a dialog no longer closes it accidentally. Normal backdrop clicks still close dialogs.
+
 ## Unreleased — Molecule drawing workspace
 
 - Rebuilt the sketcher around a drawing canvas, element palette, icon tools and a stable atom inspector.

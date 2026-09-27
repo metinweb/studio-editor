@@ -7,6 +7,7 @@ defineProps({ title: String, wide: Boolean })
 const { t } = useEditorLocale()
 const emit = defineEmits(['close'])
 const dialog = ref(null)
+const backdropPress = ref(false)
 const titleId = useId()
 onMounted(() => dialog.value.showModal())
 onBeforeUnmount(() => dialog.value?.close())
@@ -19,9 +20,10 @@ onBeforeUnmount(() => dialog.value?.close())
     :class="{ 'dialog-wide': wide }"
     :aria-labelledby="titleId"
     @cancel.prevent="emit('close')"
+    @pointerdown.capture="backdropPress = $event.target === dialog"
     @click="
       (event) => {
-        if (event.target === dialog) emit('close')
+        if (event.target === dialog && backdropPress) emit('close')
       }
     "
   >
