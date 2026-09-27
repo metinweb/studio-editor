@@ -1665,3 +1665,62 @@
     flex: 1;
   }
 }
+.native-find .search-options {
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #657389;
+}
+.search-feedback {
+  margin: 6px 0;
+  font-size: 12px;
+  color: #40536f;
+}
+.search-previews {
+  margin-top: 8px;
+  font-size: 12px;
+}
+.search-previews summary {
+  cursor: pointer;
+  padding: 4px;
+}
+.search-preview-list {
+  max-height: 170px;
+  overflow: auto;
+  display: grid;
+  gap: 3px;
+  padding-top: 6px;
+}
+.search-preview-list button {
+  display: flex;
+  gap: 12px;
+  text-align: start;
+  padding: 8px;
+  border: 1px solid #e3e7ee;
+  border-radius: 6px;
+  background: white;
+  color: #40536f;
+  cursor: pointer;
+}
+.search-preview-list button[aria-current] {
+  border-color: #8c69d6;
+  background: #f5f0ff;
+}
+.search-preview-list small {
+  color: #8993a1;
+}
+.search-preview-list span {
+  overflow-wrap: anywhere;
+}
+.search-preview-list mark {
+  background: #ffe693;
+  color: #302400;
+}
+@media (max-width: 700px) {
+  .native-find > div {
+    flex-wrap: wrap;
+  }
+  .native-find {
+    max-height: 45vh;
+    overflow: auto;
+  }
+}

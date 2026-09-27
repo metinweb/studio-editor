@@ -522,3 +522,23 @@
     padding: 6px;
   }
 }
+.review-utilities {
+  padding: 10px 14px;
+  display: grid;
+  gap: 8px;
+  border-bottom: 1px solid #e7e4ed;
+}
+.review-utilities .button {
+  font-size: 11px;
+}
+.review-utilities .text-input {
+  width: 100%;
+  min-width: 0;
+  font-size: 11px;
+}
+.review-issue-filter {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}

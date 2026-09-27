@@ -6,6 +6,7 @@ import { menuMessages } from './menu-messages.js'
 import { documentToolMessages } from './document-tool-messages.js'
 import { writingMessages } from './writing-messages.js'
 import { advancedDocumentMessages } from './advanced-document-messages.js'
+import { navigationReviewMessages } from './navigation-review-messages.js'
 export const englishMessages = Object.freeze({
   ...panelMessages,
   ...workspaceMessages,
@@ -14,6 +15,7 @@ export const englishMessages = Object.freeze({
   ...documentToolMessages,
   ...writingMessages,
   ...advancedDocumentMessages,
+  ...navigationReviewMessages,
   'Görev listesi': 'Task list',
   'İçerik stilleri': 'Content styles',
   'Belge başlıkları': 'Document outline',

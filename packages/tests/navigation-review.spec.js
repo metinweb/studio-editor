@@ -1,0 +1,38 @@
+import { test, expect } from '@playwright/test'
+const body = (page) => page.frameLocator('.studio-editor-frame').first().locator('body')
+test('section editing preserves model identity, undo and read-only boundaries', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Kaynağı aç', exact: true }).click()
+  await page
+    .getByRole('textbox', { name: 'HTML kaynak kodu' })
+    .fill('<h1>Guide</h1><h2>Alpha</h2><p>Alpha text</p><h2>Beta</h2><p>Beta text</p>')
+  await page.getByRole('button', { name: 'Değişiklikleri uygula' }).click()
+  const editor = page.locator('.studio-editor-embed').first()
+  await page.getByRole('button', { name: 'Şemalı belgeyi oku' }).click()
+  const before = JSON.parse(await page.locator('#schema-model').textContent())
+  await editor.getByRole('button', { name: 'Belge başlıkları', exact: true }).click()
+  const outline = editor.getByRole('complementary', { name: 'Belge başlıkları' })
+  await outline.getByRole('button', { name: 'H2 Alpha', exact: true }).click()
+  await outline.getByRole('button', { name: 'Başlık düzeyini düşür' }).click()
+  await expect(body(page).locator('h3')).toHaveText('Alpha')
+  await page.getByRole('button', { name: 'Şemalı belgeyi oku' }).click()
+  const after = JSON.parse(await page.locator('#schema-model').textContent())
+  expect(after.blocks[1].id).toBe(before.blocks[1].id)
+  await page.getByRole('button', { name: 'API geri al', exact: true }).click()
+  await expect(body(page).locator('h2')).toHaveText(['Alpha', 'Beta'])
+  await page.getByLabel('Salt okunur örnek').check()
+  await expect(outline.getByRole('button', { name: 'Bölümü aşağı taşı' })).toHaveCount(0)
+  await outline.getByRole('button', { name: 'H2 Alpha', exact: true }).press('Alt+ArrowDown')
+  await expect(body(page).locator('h2')).toHaveText(['Alpha', 'Beta'])
+  await editor
+    .locator('.native-menubar')
+    .getByRole('button', { name: 'Düzenle', exact: true })
+    .click()
+  await page.getByRole('menuitem', { name: 'Bul ve değiştir', exact: true }).click()
+  await editor.getByRole('textbox', { name: 'Aranacak metin' }).fill('Alpha')
+  await editor.getByRole('checkbox', { name: 'Tam sözcük' }).check()
+  await expect(editor.locator('.find-count')).toHaveText('0 / 2')
+  await expect(editor.getByRole('button', { name: 'Tümünü değiştir', exact: true })).toHaveCount(0)
+})

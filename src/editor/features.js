@@ -1,5 +1,6 @@
 import { markRange, textNodes, selectRange, caretInside, unwrap } from './selection'
 import { escapeHtml } from '../lib/content'
+import { inheritBlockId } from './identity.js'
 
 const annotation = '[data-studio-thread]'
 function readThread(node) {
@@ -233,7 +234,7 @@ export const features = {
   },
   contents() {
     this.transaction((range) => {
-      const headings = [...this.root.querySelectorAll('h1,h2,h3')].filter(
+      const headings = [...this.root.querySelectorAll('h1,h2,h3,h4,h5,h6')].filter(
         (h) => !h.closest('[data-studio-toc]'),
       )
       if (!headings.length) return
@@ -245,7 +246,8 @@ export const features = {
         if (!heading.id || idCounts.get(heading.id) > 1)
           heading.id = `heading-${crypto.randomUUID()}`
       }
-      const html = `<div data-studio-toc="true" class="studio-toc"><p><strong>İçindekiler</strong></p><ul>${headings.map((h) => `<li style="margin-left:${(Number(h.tagName[1]) - 1) * 16}px"><a href="#${escapeHtml(h.id)}">${escapeHtml(h.textContent)}</a></li>`).join('')}</ul></div>`
+      const title = this.doc.documentElement.lang === 'tr' ? 'İçindekiler' : 'Contents'
+      const html = `<div data-studio-toc="true" class="studio-toc"><p><strong>${title}</strong></p><ul>${headings.map((h) => `<li style="margin-left:${(Number(h.tagName[1]) - 1) * 16}px"><a href="#${escapeHtml(h.id)}">${escapeHtml(h.textContent)}</a></li>`).join('')}</ul></div>`
       const existing = this.root.querySelector('[data-studio-toc]')
       if (existing) {
         const holder = this.doc.createElement('div')
@@ -258,6 +260,7 @@ export const features = {
   },
   accessibilityIssues() {
     const issues = []
+    const targetIds = new Set([...this.root.querySelectorAll('[id]')].map((node) => node.id))
     const add = (node, type, title, help) => issues.push({ node, type, title, help })
     this.root.querySelectorAll('img').forEach((node) => {
       if (!node.hasAttribute('alt'))
@@ -269,6 +272,22 @@ export const features = {
         )
     })
     this.root.querySelectorAll('a').forEach((node) => {
+      const href = node.getAttribute('href') || ''
+      if (href.startsWith('#') && href.length > 1) {
+        let id
+        try {
+          id = decodeURIComponent(href.slice(1))
+        } catch {
+          id = href.slice(1)
+        }
+        if (!targetIds.has(id))
+          add(
+            node,
+            'anchor',
+            'İç bağlantının hedefi yok',
+            'Bağlantıyı var olan bir başlığa veya çapaya yönlendirin.',
+          )
+      }
       if (
         !node.textContent.trim() &&
         !node.querySelector('img[alt]:not([alt=""])') &&
@@ -284,18 +303,21 @@ export const features = {
     this.root.querySelectorAll('table').forEach((node) => {
       if (!node.querySelector('th'))
         add(node, 'header', 'Tabloda başlık hücresi yok', 'İlk satırı başlık olarak işaretleyin.')
+      if (!node.caption?.textContent.trim())
+        add(
+          node,
+          'caption',
+          'Tablo açıklaması öneriliyor',
+          'Tablonun amacını anlatan kısa bir açıklama ekleyin.',
+        )
     })
     let level = 0
     this.root.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach((node) => {
       if (node.closest('[data-studio-toc]')) return
       const current = Number(node.tagName[1])
       if (level && current > level + 1)
-        add(
-          node,
-          'heading',
-          'Başlık düzeyi atlanmış',
-          `Önceki başlık H${level}; bu başlığı H${level + 1} yapın.`,
-        )
+        add(node, 'heading', 'Başlık düzeyi atlanmış', 'Başlık sırasındaki atlamayı düzeltin.')
+      if (level && current > level + 1) issues.at(-1).level = level + 1
       if (!node.textContent.trim())
         add(
           node,
@@ -315,9 +337,14 @@ export const features = {
     this.selectionChanged()
   },
   fixIssue(issue, value) {
-    if (!this.root.contains(issue.node)) return
+    if (!this.editable || !this.root.contains(issue.node)) return false
+    const current = this.accessibilityIssues().find(
+      (item) => item.node === issue.node && item.type === issue.type,
+    )
+    if (!current) return false
+    if (['link', 'caption'].includes(issue.type) && !value.trim()) return false
     this.transaction(() => {
-      const node = issue.node
+      let node = issue.node
       if (issue.type === 'alt') node.setAttribute('alt', value.trim())
       if (issue.type === 'link' && value.trim()) {
         if (node.children.length) node.setAttribute('aria-label', value.trim())
@@ -332,8 +359,18 @@ export const features = {
           cell.replaceWith(th)
         }
       }
+      if (issue.type === 'caption') node.createCaption().textContent = value.trim().slice(0, 2000)
+      if (issue.type === 'heading') {
+        const replacement = this.doc.createElement(`h${current.level}`)
+        inheritBlockId(node, replacement)
+        for (const attr of node.attributes) replacement.setAttribute(attr.name, attr.value)
+        replacement.append(...node.childNodes)
+        node.replaceWith(replacement)
+        node = replacement
+      }
       this.root.focus({ preventScroll: true })
       caretInside(this.root, node)
     })
+    return true
   },
 }

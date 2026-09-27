@@ -340,6 +340,11 @@ const searchInput = ref(null)
 const query = ref('')
 const replacement = ref('')
 const caseSensitive = ref(false)
+const wholeWord = ref(false)
+const ignoreAccents = ref(false)
+const matchPreviews = ref([])
+const replaceNotice = ref('')
+const searchOptions = () => ({ wholeWord: wholeWord.value, ignoreAccents: ignoreAccents.value })
 const searchResults = ref({ index: -1, count: 0 })
 const foreground = computed(() => state.value.color || '#253343')
 const background = computed(() => state.value.backgroundColor || 'transparent')
@@ -898,7 +903,7 @@ function pasteFormat() {
   toolNotice.value = ''
 }
 function insertContents() {
-  if (!engine.value.root.querySelector('h1,h2,h3')) {
+  if (!engine.value.root.querySelector('h1,h2,h3,h4,h5,h6')) {
     toolNotice.value = 'İçindekiler oluşturmak için önce belgeye başlık ekleyin.'
     return
   }
@@ -1264,24 +1269,72 @@ async function uploadFiles(files, position, prepared = null) {
   if (media.error) error.value = media.error
   busy.value = false
 }
+function changeSearchQuery() {
+  replaceNotice.value = ''
+  refreshSearch()
+}
 function refreshSearch() {
+  const matches = engine.value?.matches(query.value, caseSensitive.value, searchOptions()) || []
   searchResults.value = {
     index: -1,
-    count: engine.value?.matches(query.value, caseSensitive.value).length || 0,
+    count: matches.length,
+  }
+  matchPreviews.value = matches.slice(0, 100).map((range) => {
+    const block = range.startContainer.parentElement.closest('p,h1,h2,h3,h4,h5,h6,li,td,th,pre,div')
+    const prefix = range.cloneRange()
+    prefix.selectNodeContents(block || range.startContainer.parentElement)
+    prefix.setEnd(range.startContainer, range.startOffset)
+    const before = prefix.toString()
+    const text = (block || range.startContainer.parentElement).textContent
+    return {
+      before: before.slice(-45),
+      match: range.toString(),
+      after: text.slice(
+        before.length + range.toString().length,
+        before.length + range.toString().length + 65,
+      ),
+    }
+  })
+  const win = engine.value?.doc.defaultView
+  if (win?.CSS?.highlights && win.Highlight) {
+    win.CSS.highlights.delete('studio-search')
+    if (searchOpen.value && matches.length)
+      win.CSS.highlights.set('studio-search', new win.Highlight(...matches.slice(0, 1000)))
   }
 }
-function find(direction = 1) {
+function find(direction = 1, index = null) {
   searchResults.value = engine.value.find(
     query.value,
-    searchResults.value.index + direction,
+    index ??
+      (searchResults.value.index < 0 && direction < 0 ? -1 : searchResults.value.index + direction),
     caseSensitive.value,
+    searchOptions(),
   )
 }
 function replaceFound(all = false) {
   if (locked.value) return
-  engine.value.replaceMatches(query.value, replacement.value, all, caseSensitive.value)
+  const count = engine.value.replaceMatches(
+    query.value,
+    replacement.value,
+    all,
+    caseSensitive.value,
+    searchOptions(),
+  )
   refreshSearch()
+  replaceNotice.value = t('{count} eşleşme değiştirildi.', { count })
 }
+watch(searchOpen, (open) => {
+  if (open) {
+    refreshSearch()
+    nextTick(() => searchInput.value?.focus())
+  } else engine.value?.doc.defaultView.CSS?.highlights?.delete('studio-search')
+})
+watch(
+  () => props.locale,
+  () => {
+    if (searchOpen.value) refreshSearch()
+  },
+)
 function toolbarKeys(event) {
   if (
     !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) ||
@@ -1921,10 +1974,12 @@ defineExpose({
           ><Search :size="15" /><input
             ref="searchInput"
             v-model="query"
+            maxlength="2000"
             :aria-label="t('Aranacak metin')"
             :placeholder="t('Belgede ara…')"
-            @input="refreshSearch"
-            @keydown.enter.prevent="find(1)" /></label
+            @input="changeSearchQuery"
+            @keydown.enter.prevent="find($event.shiftKey ? -1 : 1)"
+            @keydown.escape.prevent="searchOpen = false" /></label
         ><span class="find-count">{{
           searchResults.count
             ? `${Math.max(0, searchResults.index + 1)} / ${searchResults.count}`
@@ -1951,6 +2006,19 @@ defineExpose({
           <X :size="16" />
         </button>
       </div>
+      <div class="search-options">
+        <label class="case-check"
+          ><input v-model="wholeWord" type="checkbox" @change="refreshSearch" />{{
+            t('Tam sözcük')
+          }}</label
+        >
+        <label class="case-check"
+          ><input v-model="ignoreAccents" type="checkbox" @change="refreshSearch" />{{
+            t('Aksanları yok say')
+          }}</label
+        >
+        <span>{{ t('Korumalı alanlar aramaya dahil edilmez.') }}</span>
+      </div>
       <div v-if="!locked">
         <input
           v-model="replacement"
@@ -1963,6 +2031,29 @@ defineExpose({
           {{ t('Tümünü değiştir') }}
         </button>
       </div>
+      <p v-if="replaceNotice" class="search-feedback" role="status">{{ replaceNotice }}</p>
+      <p v-if="searchResults.count >= 10000" class="search-feedback" role="status">
+        {{ t('İlk 10.000 eşleşme gösteriliyor. Aramayı daraltın.') }}
+      </p>
+      <details v-if="matchPreviews.length" class="search-previews">
+        <summary>
+          {{ t('Eşleşme önizlemeleri') }} ({{ matchPreviews.length }} / {{ searchResults.count }})
+        </summary>
+        <div class="search-preview-list">
+          <button
+            v-for="(item, index) in matchPreviews"
+            :key="index"
+            :aria-current="searchResults.index === index ? 'location' : undefined"
+            @click="find(0, index)"
+          >
+            <small>{{ index + 1 }}</small
+            ><span
+              >{{ item.before }}<mark>{{ item.match }}</mark
+              >{{ item.after }}</span
+            >
+          </button>
+        </div>
+      </details>
     </div>
     <div v-if="error && !dialog" class="native-message" role="alert">
       {{ t(error)
@@ -1978,6 +2069,7 @@ defineExpose({
         v-if="outlineOpen && engine"
         :engine="engine"
         :frame="frame"
+        :readonly="locked"
         @close="outlineOpen = false"
       />
       <MentionMenu
@@ -2038,7 +2130,7 @@ defineExpose({
           :engine="engine"
           :state="state"
           :frame="frame"
-          :suspended="!!dialog || !!popup"
+          :suspended="!!dialog || !!popup || outlineOpen || searchOpen || !!reviewTab"
           @command="command"
           @cell-format="openCellFormat"
           @options="togglePopup('Tablo', $event)"
@@ -2065,7 +2157,14 @@ defineExpose({
       :state="state"
       :frame="frame"
       :suspended="
-        !!dialog || !!popup || !!reviewTab || !!state.table || !!state.image || !!state.mediaEmbed
+        !!dialog ||
+        !!popup ||
+        !!reviewTab ||
+        outlineOpen ||
+        searchOpen ||
+        !!state.table ||
+        !!state.image ||
+        !!state.mediaEmbed
       "
       @command="command"
       @link="openDialog('link')"

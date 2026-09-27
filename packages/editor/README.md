@@ -1,5 +1,7 @@
 # Studio Editor for Vue 3
 
+New: whole-word/accent-aware search, section organization and review reports. [Usage and limits](../../docs/NAVIGATION-AND-REVIEW.md).
+
 New: calculated table cells, conditional template fields and reusable writing profiles. [Usage and limits](../../docs/ADVANCED-DOCUMENTS.md).
 
 New writing tools: previewed Markdown import/export, personal autocorrection and multiline text shortcuts, plus a configurable permanent pen. [Usage and limits](../../docs/WRITING-POWER-TOOLS.md).

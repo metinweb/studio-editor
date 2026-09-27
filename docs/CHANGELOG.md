@@ -1,5 +1,12 @@
 # Changelog
 
+## September 28, 2026 — Navigation and review quality
+
+- Added whole-word/accent-insensitive search, context previews, view-only highlights, replacement counts and locale-correct Unicode matching. Protected widgets and structural boundaries cannot be overwritten by search.
+- Added heading filtering/collapse, whole-section movement, descendant heading promotion/demotion and keyboard actions with undo and stable model identities.
+- Added review categories, comment/suggestion search, JSON review reports, broken internal-link checks and direct caption/heading fixes.
+- Fixed mobile selection-toolbar overlap with outline/search panels, H4–H6 and English contents generation, and caption loss in Markdown/DOCX export. See [usage and limits](NAVIGATION-AND-REVIEW.md).
+
 ## September 28, 2026 — Advanced document tools
 
 - Added calculated table cells with seven functions, dependencies, precision, cycle/error handling, undo and explicit reconfirmation after structure changes.

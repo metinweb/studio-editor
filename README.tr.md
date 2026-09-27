@@ -1,5 +1,7 @@
 # Studio Editor
 
+Yeni: gelişmiş belge araması, bölümleri içerikleriyle taşıma ve indirilebilir inceleme raporları. [Gezinme ve inceleme rehberi](docs/NAVIGATION-AND-REVIEW.md).
+
 Yeni belge araçları: otomatik hesaplanan tablo hücreleri, koşullu şablon alanları ve tarayıcıda saklanabilen/JSON ile taşınabilen yazma profilleri. [Kullanım ve sınırlar](docs/ADVANCED-DOCUMENTS.md).
 
 Yeni yazma araçları: önizlemeli Markdown içe/dışa aktarma, kişisel otomatik düzeltme kuralları, çok satırlı metin kısayolları ve yapılandırılabilir kalıcı kalem. [Kullanım ve sınırlar](docs/WRITING-POWER-TOOLS.md).

@@ -19,6 +19,16 @@ const replies = ref({})
 const fixes = ref({})
 const showResolved = ref(false)
 const proposed = ref('')
+const issueFilter = ref('all')
+const reviewQuery = ref('')
+const issueKeys = new WeakMap()
+let keySequence = 0
+function issueKey(issue) {
+  if (!issueKeys.has(issue.node)) issueKeys.set(issue.node, ++keySequence)
+  return `${issueKeys.get(issue.node)}-${issue.type}`
+}
+const matchesQuery = (value) =>
+  value.toLocaleLowerCase(locale.value).includes(reviewQuery.value.toLocaleLowerCase(locale.value))
 const suggestions = computed(() => {
   props.state
   return props.engine?.suggestions() || []
@@ -39,12 +49,62 @@ const threads = computed(() => {
   return props.engine?.threads() || []
 })
 const visibleThreads = computed(() =>
-  threads.value.filter((t) => showResolved.value || !t.resolved),
+  threads.value.filter(
+    (t) =>
+      (showResolved.value || !t.resolved) &&
+      matchesQuery(t.quote + ' ' + t.messages.map((m) => m.text).join(' ')),
+  ),
+)
+const visibleSuggestions = computed(() =>
+  suggestions.value.filter((item) =>
+    matchesQuery(item.before + ' ' + item.after + ' ' + item.author),
+  ),
 )
 const issues = computed(() => {
   props.state
   return props.engine?.accessibilityIssues() || []
 })
+const category = (type) =>
+  ({
+    alt: 'images',
+    link: 'links',
+    anchor: 'links',
+    header: 'tables',
+    caption: 'tables',
+    heading: 'headings',
+    'empty-heading': 'headings',
+  })[type]
+const visibleIssues = computed(() =>
+  issues.value.filter(
+    (issue) => issueFilter.value === 'all' || category(issue.type) === issueFilter.value,
+  ),
+)
+function exportReport() {
+  const report = {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    locale: locale.value,
+    scope: t(
+      'Bu rapor otomatik içerik kontrollerini, yorumları ve önerileri içerir; tam erişilebilirlik sertifikası değildir.',
+    ),
+    issues: issues.value.map((issue) => ({
+      type: issue.type,
+      title: t(issue.title),
+      help: t(issue.help),
+      excerpt: (issue.node.textContent || issue.node.getAttribute('src') || '').slice(0, 300),
+    })),
+    comments: threads.value,
+    suggestions: suggestions.value,
+  }
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }),
+  )
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'studio-review-report.json'
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
 function add() {
   if (!props.engine.addComment(draft.value)) {
     error.value =
@@ -59,7 +119,9 @@ function reply(thread) {
   replies.value[thread.id] = ''
 }
 function fix(issue, index) {
-  props.engine.fixIssue(issue, fixes.value[index] || '')
+  error.value = props.engine.fixIssue(issue, fixes.value[issueKey(issue)] || '')
+    ? ''
+    : t('Belge değişti. Denetim sonuçlarını yeniden inceleyin.')
   fixes.value = {}
 }
 </script>
@@ -85,6 +147,16 @@ function fix(issue, index) {
         <ScanEye :size="15" /> {{ t('Denetim') }} <b>{{ issues.length }}</b>
       </button>
     </div>
+    <div class="review-utilities">
+      <button class="button" @click="exportReport">{{ t('İnceleme raporunu indir') }}</button>
+      <input
+        v-if="tab !== 'check'"
+        class="text-input"
+        v-model="reviewQuery"
+        :aria-label="t('Yorum ve önerilerde ara')"
+        :placeholder="t('Yorum ve önerilerde ara')"
+      />
+    </div>
     <div class="review-scroll" v-if="tab === 'comments'">
       <p class="review-note">{{ t('Bu belgedeki notlar tarayıcınıza kaydedilir.') }}</p>
       <form class="comment-compose" @submit.prevent="add">
@@ -109,7 +181,11 @@ function fix(issue, index) {
       </label>
       <div v-if="!visibleThreads.length" class="review-empty">
         <MessageSquare :size="28" /><strong>{{
-          threads.length ? t('Açık yorum kalmadı') : t('İlk notu siz ekleyin')
+          reviewQuery
+            ? t('Sonuç yok')
+            : threads.length
+              ? t('Açık yorum kalmadı')
+              : t('İlk notu siz ekleyin')
         }}</strong>
         <p>
           {{
@@ -178,7 +254,7 @@ function fix(issue, index) {
         <button class="button primary" type="submit">{{ t('Değişiklik öner') }}</button>
         <p v-if="error" role="alert">{{ error }}</p>
       </form>
-      <article v-for="item in suggestions" :key="item.id" class="comment-card">
+      <article v-for="item in visibleSuggestions" :key="item.id" class="comment-card">
         <div class="comment-author">
           {{ item.author }} · {{ new Date(item.date).toLocaleDateString(locale) }}
         </div>
@@ -203,7 +279,9 @@ function fix(issue, index) {
         <ScanEye :size="24" />
         <div>
           <strong>{{
-            issues.length ? `${issues.length} öneri` : t('Kontrol edilen alanlar temiz')
+            issues.length
+              ? t('{count} öneri', { count: issues.length })
+              : t('Kontrol edilen alanlar temiz')
           }}</strong>
           <p>{{ t('Görsel açıklamaları, bağlantı adları, tablo başlıkları ve başlık sırası.') }}</p>
         </div>
@@ -215,7 +293,21 @@ function fix(issue, index) {
           )
         }}
       </p>
-      <article v-for="(issue, index) in issues" :key="`${index}-${issue.type}`" class="check-card">
+      <label class="review-issue-filter"
+        >{{ t('Denetim kategorisi')
+        }}<select v-model="issueFilter" class="text-input" :aria-label="t('Denetim kategorisi')">
+          <option value="all">{{ t('Tüm kontroller') }}</option>
+          <option value="images">{{ t('Görseller') }}</option>
+          <option value="links">{{ t('Bağlantılar') }}</option>
+          <option value="tables">{{ t('Tablolar') }}</option>
+          <option value="headings">{{ t('Başlıklar') }}</option>
+        </select></label
+      >
+      <p v-if="error" role="alert">{{ error }}</p>
+      <p v-if="issues.length && !visibleIssues.length" role="status">
+        {{ t('Bu kategoride öneri yok.') }}
+      </p>
+      <article v-for="(issue, index) in visibleIssues" :key="issueKey(issue)" class="check-card">
         <span class="check-number">{{ index + 1 }}</span>
         <h4>{{ t(issue.title) }}</h4>
         <p>{{ t(issue.help) }}</p>
@@ -223,21 +315,38 @@ function fix(issue, index) {
           {{ t('Belgede göster') }} <ArrowUpRight :size="13" />
         </button>
         <form
-          v-if="['alt', 'link', 'header'].includes(issue.type)"
+          v-if="
+            engine.editable && ['alt', 'link', 'header', 'caption', 'heading'].includes(issue.type)
+          "
           @submit.prevent="fix(issue, index)"
         >
           <input
-            v-if="issue.type !== 'header'"
-            v-model="fixes[index]"
-            :required="issue.type === 'link'"
-            :aria-label="issue.type === 'alt' ? t('Görsel açıklaması') : t('Bağlantı metni')"
+            v-if="!['header', 'heading'].includes(issue.type)"
+            v-model="fixes[issueKey(issue)]"
+            maxlength="2000"
+            :required="issue.type !== 'alt'"
+            :aria-label="
+              issue.type === 'alt'
+                ? t('Görsel açıklaması')
+                : issue.type === 'caption'
+                  ? t('Tablo açıklaması')
+                  : t('Bağlantı metni')
+            "
             :placeholder="
-              issue.type === 'alt' ? t('Açıklama (dekoratifse boş)') : t('Bağlantının amacı')
+              issue.type === 'alt'
+                ? t('Açıklama (dekoratifse boş)')
+                : issue.type === 'caption'
+                  ? t('Tablo açıklaması')
+                  : t('Bağlantının amacı')
             "
           />
           <button class="button" type="submit">
             <Check :size="13" />{{
-              issue.type === 'header' ? t('İlk satırı başlık yap') : t('Düzeltmeyi uygula')
+              issue.type === 'header'
+                ? t('İlk satırı başlık yap')
+                : issue.type === 'heading'
+                  ? t('H{level} düzeyine getir', { level: issue.level })
+                  : t('Düzeltmeyi uygula')
             }}
           </button>
         </form>

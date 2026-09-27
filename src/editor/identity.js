@@ -4,6 +4,9 @@ export function blockId(node) {
   if (!ids.has(node)) ids.set(node, crypto.randomUUID())
   return ids.get(node)
 }
+export function inheritBlockId(source, target) {
+  ids.set(target, blockId(source))
+}
 export function captureBlocks(root) {
   return [...root.childNodes].map((node) => ({ id: blockId(node), text: node.textContent || '' }))
 }

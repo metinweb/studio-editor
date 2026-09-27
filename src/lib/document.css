@@ -314,3 +314,7 @@ body[contenteditable='true'] [data-studio-formula] {
   border-color: #52a477;
   color: #2c6846;
 }
+::highlight(studio-search) {
+  background-color: #ffe693;
+  color: #302400;
+}

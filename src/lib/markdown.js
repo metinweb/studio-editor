@@ -27,7 +27,7 @@ export function exportMarkdown(html) {
   }
   // Preserve features that Markdown cannot represent as sanitized HTML islands.
   const islands =
-    'table:has([colspan]),table:has([rowspan]),[data-studio-footnotes],[data-studio-footnote-ref],[data-studio-field],[data-studio-condition],table:has([data-studio-formula]),figure,img[data-studio-science]'
+    'table:has(caption),table:has([colspan]),table:has([rowspan]),[data-studio-footnotes],[data-studio-footnote-ref],[data-studio-field],[data-studio-condition],table:has([data-studio-formula]),figure,img[data-studio-science]'
   const converter = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',

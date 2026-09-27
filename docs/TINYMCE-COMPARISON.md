@@ -61,6 +61,8 @@ September 28 writing-tool update: see [WRITING-POWER-TOOLS.md](WRITING-POWER-TOO
 
 September 28 advanced-document update: [calculated tables, conditional fields and writing profiles](ADVANCED-DOCUMENTS.md).
 
+September 28 navigation and review update: [whole-word/accent-aware search with previews, whole-section outline actions, review filters/reports and caption/heading repairs](NAVIGATION-AND-REVIEW.md). Search now respects the editor locale and protected widgets. Caption checks are suggestions, not a complete accessibility audit.
+
 ## Verification
 
 `tests/document-tools.spec.js` exercises Word import including an embedded image and unsafe link, reference-order footnotes, removal/undo/reload, anchor renaming, field filling, actual DOCX footnotes/bookmarks, view-only guides, selection toolbar, custom sizes, indentation, typography and responsive flyouts. Existing editing, list, table, science and package checks remain in the CI suite.

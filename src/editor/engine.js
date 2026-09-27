@@ -1,5 +1,7 @@
 import { cleanHtml, escapeHtml } from '../lib/content'
 import { History } from './history'
+import { documentMatches } from './document-search.js'
+import { outlineTools } from './outline-tools.js'
 import { captureBlocks, restoreBlockIds } from './identity.js'
 import { diffText, selectionMap, mapSelection } from './operations.js'
 import { safeMediaUrl } from '../lib/media-url'
@@ -1436,51 +1438,15 @@ export class StudioEditor {
     else this.pasteContent({ html: html || '', text: text || '' })
   }
 
-  matches(query, sensitive = false) {
-    if (!query) return []
-    const walker = this.doc.createTreeWalker(this.root, 4)
-    const nodes = []
-    let text = '',
-      previousBlock
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      if (
-        node.parentElement.closest(
-          'figure[data-studio-embed],[data-studio-mention],[data-studio-task-control]',
-        )
-      )
-        continue
-      const block = closestBlock(this.root, node)
-      if (previousBlock && block !== previousBlock) text += '\n'
-      nodes.push({ node, offset: text.length })
-      text += node.textContent
-      previousBlock = block
-    }
-    const target = sensitive ? text : text.toLocaleLowerCase('tr')
-    const search = sensitive ? query : query.toLocaleLowerCase('tr')
-    const result = []
-    for (
-      let index = target.indexOf(search);
-      index !== -1;
-      index = target.indexOf(search, index + search.length)
-    ) {
-      const first = nodes.find(
-        (item) => item.offset <= index && item.offset + item.node.length > index,
-      )
-      const last = nodes.find(
-        (item) =>
-          item.offset < index + search.length &&
-          item.offset + item.node.length >= index + search.length,
-      )
-      if (!first || !last) continue
-      const range = this.doc.createRange()
-      range.setStart(first.node, index - first.offset)
-      range.setEnd(last.node, index + search.length - last.offset)
-      result.push(range)
-    }
-    return result
+  matches(query, sensitive = false, options = {}) {
+    return documentMatches(this.root, query, {
+      ...options,
+      sensitive,
+      locale: this.doc.documentElement.lang,
+    })
   }
-  find(query, index = 0, sensitive = false) {
-    const matches = this.matches(query, sensitive)
+  find(query, index = 0, sensitive = false, options = {}) {
+    const matches = this.matches(query, sensitive, options)
     if (!matches.length) return { count: 0, index: 0 }
     const position = ((index % matches.length) + matches.length) % matches.length
     this.root.focus({ preventScroll: true })
@@ -1492,19 +1458,18 @@ export class StudioEditor {
     })
     return { count: matches.length, index: position }
   }
-  replaceMatches(query, replacement, all = false, sensitive = false) {
+  replaceMatches(query, replacement, all = false, sensitive = false, options = {}) {
+    let count = 0
     this.transaction((range) => {
+      const candidates = this.matches(query, sensitive, options)
       const matches = all
-        ? this.matches(query, sensitive)
-        : [
-            (
-              sensitive
-                ? range.toString() === query
-                : range.toString().toLocaleLowerCase('tr') === query.toLocaleLowerCase('tr')
-            )
-              ? range
-              : null,
-          ].filter(Boolean)
+        ? candidates
+        : candidates.filter(
+            (match) =>
+              match.compareBoundaryPoints(0, range) === 0 &&
+              match.compareBoundaryPoints(2, range) === 0,
+          )
+      count = matches.length
       for (const match of matches.reverse()) {
         match.deleteContents()
         const node = this.doc.createTextNode(replacement)
@@ -1512,10 +1477,12 @@ export class StudioEditor {
         caretAfter(this.root, node)
       }
     })
+    return count
   }
 }
 
 Object.assign(StudioEditor.prototype, features)
+Object.assign(StudioEditor.prototype, outlineTools)
 Object.assign(StudioEditor.prototype, tableTools)
 Object.assign(StudioEditor.prototype, tableStructure)
 Object.assign(StudioEditor.prototype, tableFormat)

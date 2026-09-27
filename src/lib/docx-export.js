@@ -184,6 +184,7 @@ export async function exportDocx(html, options = {}) {
           first = false
         }
       } else if (node.tagName === 'TABLE') {
+        if (node.caption?.textContent.trim()) result += await paragraph(node.caption)
         const grid = tableGrid(node)
         if (!grid)
           throw new Error('DOCX için tablo yapısını düzeltin; eksik veya çakışan hücre var.')

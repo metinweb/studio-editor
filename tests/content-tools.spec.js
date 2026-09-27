@@ -159,16 +159,22 @@ test('accessibility checker repairs image and table metadata with undo and repor
     '<h1>Başlık</h1><h3>Atlanan düzey</h3><p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII="></p><table><tr><td>Başlık</td></tr><tr><td>Veri</td></tr></table>',
   )
   await page.getByRole('button', { name: 'İçerik denetimi', exact: true }).click()
-  await expect(page.locator('.check-card')).toHaveCount(3)
+  await expect(page.locator('.check-card')).toHaveCount(4)
   await page
     .getByRole('textbox', { name: 'Görsel açıklaması', exact: true })
     .fill('Açıklayıcı metin')
-  await page.getByRole('button', { name: 'Düzeltmeyi uygula', exact: true }).click()
+  await page
+    .locator('.check-card')
+    .filter({ hasText: 'Görsel açıklaması eksik' })
+    .getByRole('button', { name: 'Düzeltmeyi uygula', exact: true })
+    .click()
   await expect(body(page).locator('img')).toHaveAttribute('alt', 'Açıklayıcı metin')
   await page.getByRole('button', { name: 'İlk satırı başlık yap', exact: true }).click()
   await expect(body(page).locator('th')).toHaveAttribute('scope', 'col')
-  await expect(page.locator('.check-card')).toHaveCount(1)
-  await expect(page.locator('.check-card')).toContainText('Başlık düzeyi atlanmış')
+  await expect(page.locator('.check-card')).toHaveCount(2)
+  await expect(
+    page.locator('.check-card').filter({ hasText: 'Başlık düzeyi atlanmış' }),
+  ).toHaveCount(1)
   await page.getByRole('button', { name: 'Geri al', exact: true }).click()
   await expect(body(page).locator('th')).toHaveCount(0)
 })
