@@ -46,6 +46,7 @@
     "dompurify": "^3.4.15",
     "fflate": "^0.8.3",
     "idb": "^8.0.3",
+    "openchemlib": "^9.25.0",
     "pinia": "^4.0.3",
     "vue": "^3.5.43",
     "y-indexeddb": "^9.0.12",

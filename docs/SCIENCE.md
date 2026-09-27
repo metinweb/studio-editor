@@ -29,7 +29,8 @@ The preview must finish successfully before insertion. Supported TeX packages ar
 Choose **Molecule drawing**. The workspace opens in **Move** mode with labeled tools, an element palette and a ring tray. On mobile, the ring tray sits above the canvas.
 
 - **Drag and drop:** drag an element from the palette onto the canvas to add it, or onto an atom to replace its element. Drag a ring card onto the canvas to place it. A preview follows your pointer. Dropping outside the canvas leaves the drawing unchanged; Escape cancels the drag.
-- **Move:** grab an atom to reposition it, or grab any bond to move the entire connected molecule without changing its geometry. Other disconnected structures stay put. Select an atom and drag its **+** handle to extend a branch without switching tools. Dragging on empty canvas creates a first bond.
+- **Move:** grab a chain atom to reposition it, or grab any bond to move the entire connected molecule without changing its geometry. Ring atoms are rigid handles: dragging a ring corner moves the whole connected structure, preserving all ring lengths and angles. This protection also applies to arrow keys and X/Y fields, including older saved drawings and fused rings. Other disconnected structures stay put. Select an atom and drag its **+** handle to extend a branch without switching tools. Dragging on empty canvas creates a first bond.
+- **Tidy structure:** recalculate a clean 2D layout, including previously distorted rings. Atom elements, bonds and bond orders are preserved. Undo restores the previous geometry. Deliberately deleting ring atoms or bonds opens the ring; open chains can be edited freely.
 
 - **Draw bond:** drag on empty space for the first bond, then drag from an existing atom to extend a chain. Release near another atom to connect to it. Click/tap two atoms to connect them without dragging. Bond lengths are standardized and angles snap in 30° steps; hold Alt for a free angle and length.
 - **Add atom:** click empty space to place the chosen element, or click an existing atom to replace it. Choosing a palette element also changes the selected atom.
@@ -39,7 +40,18 @@ Choose **Molecule drawing**. The workspace opens in **Move** mode with labeled t
 
 Undo/redo treats each completed drag or ring placement as one step and stays local until you insert/update the result. The small document preview shows the exported appearance without selection handles or canvas dots.
 
-Water, ethanol and benzene presets provide starting points. Presets replace the current drawing and can be undone. The drawing supports C, H, O, N, S, P, F, Cl, Br and I, up to 100 atoms and 150 bonds. It is a structural illustration tool: there is no valence validation, automatic hydrogen completion, stereochemistry, SMILES/MOL import/export or chemical calculation. Carbon-bound hydrogens in presets are implicit.
+Water, ethanol and benzene presets provide starting points. Presets replace the current drawing and can be undone. The drawing supports C, H, O, N, S, P, F, Cl, Br and I, up to 100 atoms and 150 bonds. Manual drawing does not validate valence or automatically complete hydrogens. Charges, isotopes, radicals, stereochemistry, MOL files and chemical calculations are not supported. Carbon-bound hydrogens in presets are implicit.
+
+### Text to structure
+
+Open **From text**, enter a recognized formula/name or SMILES, and choose **Draw structure**. Conversion replaces the current draft in one undoable step. It uses a lazy-loaded, locally bundled [OpenChemLib](https://github.com/cheminfo/openchemlib-js) parser and coordinate generator; no structure is sent to an external service.
+
+- **Auto** recognizes a small catalog of common names and condensed formulas, such as `water`, `ethanol`, `CH₃CH₂OH`, `CH3COOH` and `CH3COCH3`. Unicode subscripts are accepted.
+- A recognized molecular formula presents named structure choices. For example, `C2H6O` offers ethanol and dimethyl ether. These are common examples, not a complete isomer search; composition alone cannot determine connectivity. Even a formula with one listed example requires selecting that structure.
+- **SMILES** explicitly interprets input as SMILES, e.g. `CCO`, `CC(=O)O`, `c1ccccc1`, `C1CCCCC1`. Use this mode for strings such as `CO` that could also be read as a molecular formula. Branches, rings, aromatic bonds and single/double/triple bonds are supported.
+- SMILES imports validate atom valences. Hydrogens on heteroatoms and isolated atoms are drawn explicitly; carbon-bound hydrogens otherwise remain implicit. Unsupported elements, charges, isotope/radical/stereo annotations and invalid/oversized input are rejected without replacing the existing drawing. Input is limited to 1,000 characters and the resulting graph to 100 atoms/150 bonds.
+
+The **Chemical formula** tab remains for typesetting formulas and reactions with mhchem. **From text** creates an editable molecule graph.
 
 Keyboard users can add an atom at the center, Tab to atom controls and press Enter to select them, change the selected atom's element/X/Y coordinates, connect two atoms with Enter in Draw bond mode, and delete focused atoms/bonds with Delete. In Draw bond mode, focused bonds accept Enter to apply the chosen order. While the canvas or an atom is focused: B selects bonds, V selects Move, E selects Delete, 1/2/3 selects bond order, C/N/O/H/S/P/F/I selects an element, arrow keys move the selected atom by 2 units (Shift: 10), and Ctrl/Cmd+Z or Shift+Ctrl/Cmd+Z undo/redo drawing changes. Shortcuts do not capture typing in form fields.
 
@@ -61,4 +73,4 @@ editorRef.value.executeCommand('studio/science')
 
 The dialog follows the instance's `locale`, `messages`, `readonly` and `disabled` settings. It is available through the `insert` toolbar/menu group; hiding UI does not remove the API. MathJax is a lazy chunk, so deployments must include all generated assets. CSP configurations must permit `img-src data: blob:` for local previews and inserted images.
 
-Studio Editor remains MIT licensed. MathJax code and font assets retain their own licenses, included in `THIRD_PARTY_NOTICES.txt` in generated site and component distributions.
+Studio Editor remains MIT licensed. MathJax code/font assets and OpenChemLib (BSD-3-Clause) retain their own licenses, included in `THIRD_PARTY_NOTICES.txt` in generated site and component distributions.

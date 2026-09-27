@@ -1,4 +1,45 @@
 export const scienceMessages = {
+  'Metinden çiz': 'From text',
+  'Yapıyı düzelt': 'Tidy structure',
+  'Formül, molekül adı veya SMILES': 'Formula, molecule name or SMILES',
+  'Metin biçimi': 'Text format',
+  Otomatik: 'Auto',
+  'Çiziliyor…': 'Drawing…',
+  'Çizime dönüştür': 'Draw structure',
+  'Mevcut çizimin yerini alır; geri alınabilir. Karbona bağlı hidrojenler örtüktür.':
+    'Replaces the current drawing; you can undo it. Carbon-bound hydrogens are implicit.',
+  'Formül bağ yapısını tek başına belirlemez. Yaygın yapılardan birini seçin; liste tüm izomerleri kapsamaz.':
+    'A formula does not specify connectivity. Choose a common structure; this is not a complete list of isomers.',
+  'Halka şekli korunur. Taşıma tüm bağlı yapıya uygulanır.':
+    'Ring shape is protected. Moving applies to the whole connected structure.',
+  '1–1000 karakterlik bir formül veya SMILES yazın.':
+    'Enter a formula or SMILES of 1–1,000 characters.',
+  'Bu formül tek bir yapıyı belirtmiyor. Molekül adını yazın veya SMILES modunu seçin.':
+    'This formula does not specify a structure. Enter a molecule name or select SMILES mode.',
+  'Yapı okunamadı. Formülü, SMILES yazımını ve atomların bağ sayılarını kontrol edin.':
+    'Could not read the structure. Check the formula, SMILES syntax and atom valences.',
+  'Bu çizim aracı yük, izotop, radikal ve stereokimya gösterimlerini henüz desteklemiyor.':
+    'This drawing tool does not yet support charges, isotopes, radicals or stereochemistry.',
+  'Çizim en fazla 100 atom ve 150 bağ içerebilir.':
+    'A drawing can contain at most 100 atoms and 150 bonds.',
+  'Çizim değişti. Tekrar deneyin.': 'The drawing changed. Please try again.',
+  Amonyak: 'Ammonia',
+  Metan: 'Methane',
+  Karbondioksit: 'Carbon dioxide',
+  Oksijen: 'Oxygen',
+  Azot: 'Nitrogen',
+  Hidrojen: 'Hydrogen',
+  'Dimetil eter': 'Dimethyl ether',
+  Metanol: 'Methanol',
+  'Asetik asit': 'Acetic acid',
+  Aseton: 'Acetone',
+  Propanal: 'Propanal',
+  Siklohekzan: 'Cyclohexane',
+  '1-Hekzen': '1-Hexene',
+  Eten: 'Ethene',
+  Etin: 'Ethyne',
+  Etan: 'Ethane',
+  Propan: 'Propane',
   Halka: 'Ring',
   'Molekül stüdyosu': 'Molecule studio',
   'Tut. Sürükle. Bırak.': 'Pick it up. Make it yours.',

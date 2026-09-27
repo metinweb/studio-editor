@@ -1,5 +1,26 @@
 import { test, expect } from '@playwright/test'
 
+test('installed package lazily converts text to an editable molecule with Turkish labels', async ({
+  page,
+}) => {
+  const errors = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Bilimsel içerik aç', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Matematik ve kimya' })
+  await dialog.getByRole('button', { name: 'Molekül çizimi', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Metinden çiz', exact: true }).click()
+  await page.getByLabel('Formül, molekül adı veya SMILES').fill('CH₃CH₂OH')
+  await page.getByRole('button', { name: 'Çizime dönüştür', exact: true }).click()
+  await expect(dialog.locator('.molecule-atom')).toHaveCount(4)
+  await dialog.getByRole('button', { name: 'Ekle', exact: true }).click()
+  const first = page.frameLocator('.studio-editor-frame').first().locator('body')
+  const image = first.locator('img[data-studio-science="molecule"]')
+  await expect(image).toHaveCount(1)
+  expect(JSON.parse(await image.getAttribute('data-studio-source')).bonds).toHaveLength(3)
+  expect(errors).toEqual([])
+})
+
 test('installed science addon is lazy, isolated and respects readonly/disabled API calls', async ({
   page,
 }) => {

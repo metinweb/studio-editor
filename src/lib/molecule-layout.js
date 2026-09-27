@@ -12,6 +12,45 @@ export const atomColors = {
 }
 export const bondLength = 54
 export const cloneMolecule = (graph) => JSON.parse(JSON.stringify(graph))
+export function connectedAtoms(graph, start, excluded = -1) {
+  const seen = new Set([start]),
+    queue = [start]
+  for (const atom of queue) {
+    for (const b of graph.bonds) {
+      const next = b.a === atom ? b.b : b.b === atom ? b.a : -1
+      if (next >= 0 && next !== excluded && !seen.has(next)) {
+        seen.add(next)
+        queue.push(next)
+      }
+    }
+  }
+  return [...seen]
+}
+// A cyclic atom is a rigid handle for its connected structure. Infer this from
+// bonds so old saved drawings and newly closed/fused rings receive the same protection.
+export function movableAtoms(graph, index) {
+  const neighbours = graph.bonds.flatMap((b) =>
+    b.a === index ? [b.b] : b.b === index ? [b.a] : [],
+  )
+  if (neighbours.length > 1) {
+    for (let i = 0; i < neighbours.length - 1; i++) {
+      const reachable = connectedAtoms(graph, neighbours[i], index)
+      if (neighbours.slice(i + 1).some((n) => reachable.includes(n)))
+        return connectedAtoms(graph, index)
+    }
+  }
+  return [index]
+}
+export function translateAtoms(graph, indices, dx, dy) {
+  const xs = indices.map((i) => graph.atoms[i].x),
+    ys = indices.map((i) => graph.atoms[i].y)
+  dx = Math.max(20 - Math.min(...xs), Math.min(580 - Math.max(...xs), dx))
+  dy = Math.max(20 - Math.min(...ys), Math.min(340 - Math.max(...ys), dy))
+  for (const i of indices) {
+    graph.atoms[i].x += dx
+    graph.atoms[i].y += dy
+  }
+}
 export function atomLabel(graph, index) {
   const atom = graph.atoms[index]
   return graph.skeletal &&

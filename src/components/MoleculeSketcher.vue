@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, useId, onBeforeUnmount } from 'vue'
+import { computed, ref, useId, onBeforeUnmount, nextTick } from 'vue'
 import {
   MousePointer2,
   Pencil,
@@ -21,8 +21,12 @@ import {
   connectAtoms,
   addRing,
   centerMolecule,
+  connectedAtoms,
+  movableAtoms,
+  translateAtoms,
 } from '../lib/molecule-layout.js'
 import { useEditorLocale } from '../lib/editor-locale'
+import { resolveMoleculeText } from '../lib/molecule-catalog.js'
 const { t } = useEditorLocale()
 const props = defineProps({ modelValue: Object })
 const emit = defineEmits(['update:modelValue'])
@@ -39,6 +43,86 @@ const graph = computed(() => props.modelValue)
 const atom = computed(() => graph.value.atoms[selected.value])
 const instructionId = useId()
 const trayDrag = ref(null)
+const textOpen = ref(false),
+  textSource = ref(''),
+  textMode = ref('auto'),
+  textBusy = ref(false),
+  textError = ref(''),
+  textChoices = ref([])
+let textRequest = 0
+const protectedRing = computed(
+  () => !!atom.value && movableAtoms(graph.value, selected.value).length > 1,
+)
+const textErrors = {
+  'text-limit': '1–1000 karakterlik bir formül veya SMILES yazın.',
+  'formula-needs-structure':
+    'Bu formül tek bir yapıyı belirtmiyor. Molekül adını yazın veya SMILES modunu seçin.',
+  'invalid-structure':
+    'Yapı okunamadı. Formülü, SMILES yazımını ve atomların bağ sayılarını kontrol edin.',
+  'unsupported-structure':
+    'Bu çizim aracı yük, izotop, radikal ve stereokimya gösterimlerini henüz desteklemiyor.',
+  'molecule-limit': 'Çizim en fazla 100 atom ve 150 bağ içerebilir.',
+}
+function toggleText() {
+  textOpen.value = !textOpen.value
+  textRequest++
+  textBusy.value = false
+}
+function resetText() {
+  textChoices.value = []
+  textError.value = ''
+}
+function useTextExample(example) {
+  textSource.value = example
+  resetText()
+}
+async function fromText(smiles = null, tidy = false) {
+  if (textBusy.value) return
+  resetText()
+  try {
+    if (!tidy && smiles === null) {
+      const result = resolveMoleculeText(textSource.value, textMode.value)
+      if (result.choices) {
+        textChoices.value = result.choices
+        return
+      }
+      smiles = result.smiles
+    }
+  } catch (error) {
+    textError.value = t(textErrors[error.message] || textErrors['invalid-structure'])
+    return
+  }
+  cancelGesture()
+  stopTray()
+  const request = ++textRequest,
+    before = JSON.stringify(graph.value)
+  textBusy.value = true
+  try {
+    const converter = await import('../lib/molecule-text.js')
+    if (request !== textRequest) return
+    if (JSON.stringify(graph.value) !== before) throw new Error('drawing-changed')
+    const result = tidy ? converter.tidyMolecule(graph.value) : converter.moleculeFromSmiles(smiles)
+    update(result)
+    selected.value = -1
+    tool.value = 'move'
+    textChoices.value = []
+    await nextTick()
+    if (window.matchMedia('(max-width: 680px)').matches)
+      canvas.value?.scrollIntoView({ block: 'nearest' })
+  } catch (error) {
+    if (request === textRequest) {
+      textError.value = t(
+        error.message === 'drawing-changed'
+          ? 'Çizim değişti. Tekrar deneyin.'
+          : textErrors[error.message] || textErrors['invalid-structure'],
+      )
+      textOpen.value = true
+    }
+  } finally {
+    if (request === textRequest) textBusy.value = false
+  }
+}
+onBeforeUnmount(() => textRequest++)
 const rings = [
   { id: 'ring5', label: 'Beşli halka', count: 5 },
   { id: 'ring6', label: 'Altılı halka', count: 6 },
@@ -258,7 +342,11 @@ function begin(event, index = -1, forceMode = null, members = null) {
     moved: false,
     before: JSON.stringify(graph.value),
     mode: forceMode || (tool.value === 'move' && index < 0 && !members ? 'bond' : tool.value),
-    members,
+    members:
+      members ||
+      (index >= 0 && tool.value === 'move' && forceMode !== 'bond'
+        ? movableAtoms(graph.value, index)
+        : null),
     pointer: event.pointerId,
   }
   canvas.value.setPointerCapture(event.pointerId)
@@ -274,14 +362,7 @@ function move(event) {
   if (session.mode === 'move' && (session.index >= 0 || session.members)) {
     const next = JSON.parse(session.before)
     const indices = session.members || [session.index]
-    const xs = indices.map((i) => next.atoms[i].x),
-      ys = indices.map((i) => next.atoms[i].y)
-    const dx = Math.max(20 - Math.min(...xs), Math.min(580 - Math.max(...xs), p.x - session.raw.x))
-    const dy = Math.max(20 - Math.min(...ys), Math.min(340 - Math.max(...ys), p.y - session.raw.y))
-    indices.forEach((i) => {
-      next.atoms[i].x += dx
-      next.atoms[i].y += dy
-    })
+    translateAtoms(next, indices, p.x - session.raw.x, p.y - session.raw.y)
     update(next, false)
   } else if (session.mode === 'bond') {
     session.target = closestAtom(graph.value, p, session.index)
@@ -344,19 +425,7 @@ function bondAction(index) {
 }
 function beginBond(event, index) {
   if (tool.value !== 'move') return bondAction(index)
-  const members = new Set([graph.value.bonds[index].a])
-  let changed = true
-  while (changed) {
-    changed = false
-    for (const b of graph.value.bonds) {
-      if (members.has(b.a) !== members.has(b.b)) {
-        members.add(b.a)
-        members.add(b.b)
-        changed = true
-      }
-    }
-  }
-  begin(event, -1, 'move', [...members])
+  begin(event, -1, 'move', connectedAtoms(graph.value, graph.value.bonds[index].a))
 }
 function choosePreset(name) {
   cancelGesture()
@@ -371,7 +440,14 @@ function clear() {
 function changeAtom(key, value) {
   if (atom.value)
     edit((g) => {
-      g.atoms[selected.value][key] = value
+      if (key === 'x' || key === 'y')
+        translateAtoms(
+          g,
+          movableAtoms(g, selected.value),
+          key === 'x' ? value - g.atoms[selected.value].x : 0,
+          key === 'y' ? value - g.atoms[selected.value].y : 0,
+        )
+      else g.atoms[selected.value][key] = value
     })
 }
 function key(event) {
@@ -397,20 +473,11 @@ function key(event) {
   else if (/^Arrow/.test(event.key) && atom.value) {
     const delta = event.shiftKey ? 10 : 2
     edit((g) => {
-      const a = g.atoms[selected.value]
-      a.x = Math.max(
-        20,
-        Math.min(
-          580,
-          a.x + (event.key === 'ArrowRight' ? delta : event.key === 'ArrowLeft' ? -delta : 0),
-        ),
-      )
-      a.y = Math.max(
-        20,
-        Math.min(
-          340,
-          a.y + (event.key === 'ArrowDown' ? delta : event.key === 'ArrowUp' ? -delta : 0),
-        ),
+      translateAtoms(
+        g,
+        movableAtoms(g, selected.value),
+        event.key === 'ArrowRight' ? delta : event.key === 'ArrowLeft' ? -delta : 0,
+        event.key === 'ArrowDown' ? delta : event.key === 'ArrowUp' ? -delta : 0,
       )
     })
   } else if (elements.includes(event.key.toUpperCase())) palette(event.key.toUpperCase())
@@ -425,7 +492,67 @@ function key(event) {
       <div>
         <strong>{{ t('Molekül stüdyosu') }}</strong>
       </div>
-      <span class="molecule-live-dot">{{ t('Düzenlenebilir çizim') }}</span>
+      <div class="molecule-heading-actions">
+        <button :aria-expanded="textOpen" @click="toggleText">{{ t('Metinden çiz') }}</button
+        ><button :disabled="textBusy || !graph.atoms.length" @click="fromText(null, true)">
+          {{ t('Yapıyı düzelt') }}
+        </button>
+      </div>
+    </div>
+    <div v-if="textOpen" class="molecule-text-panel">
+      <label :for="instructionId + '-source'">{{ t('Formül, molekül adı veya SMILES') }}</label>
+      <div class="molecule-text-row">
+        <input
+          :id="instructionId + '-source'"
+          v-model="textSource"
+          :disabled="textBusy"
+          maxlength="1000"
+          placeholder="CH₃CH₂OH · C₂H₆O · c1ccccc1"
+          @input="resetText"
+          @keydown.enter.prevent="fromText()"
+        /><select
+          v-model="textMode"
+          :disabled="textBusy"
+          :aria-label="t('Metin biçimi')"
+          @change="resetText"
+        >
+          <option value="auto">{{ t('Otomatik') }}</option>
+          <option value="smiles">SMILES</option></select
+        ><button :disabled="textBusy" @click="fromText()">
+          {{ t(textBusy ? 'Çiziliyor…' : 'Çizime dönüştür') }}
+        </button>
+      </div>
+      <div class="molecule-text-examples">
+        <button
+          v-for="example in ['H₂O', 'CH₃CH₂OH', 'C₂H₆O', 'c1ccccc1']"
+          :key="example"
+          :disabled="textBusy"
+          @click="useTextExample(example)"
+        >
+          {{ example }}
+        </button>
+      </div>
+      <p>
+        {{ t('Mevcut çizimin yerini alır; geri alınabilir. Karbona bağlı hidrojenler örtüktür.') }}
+      </p>
+      <div v-if="textChoices.length" class="molecule-text-choices">
+        <p>
+          {{
+            t(
+              'Formül bağ yapısını tek başına belirlemez. Yaygın yapılardan birini seçin; liste tüm izomerleri kapsamaz.',
+            )
+          }}
+        </p>
+        <button
+          v-for="choice in textChoices"
+          :key="choice.smiles"
+          :disabled="textBusy"
+          @click="fromText(choice.smiles)"
+        >
+          {{ t(choice.name) }} <code>{{ choice.smiles }}</code>
+        </button>
+      </div>
+      <p v-if="textError" role="alert" class="molecule-text-error">{{ textError }}</p>
     </div>
     <div class="molecule-modebar" role="group" :aria-label="t('Çizim araçları')">
       <button
@@ -684,6 +811,9 @@ function key(event) {
           </button>
         </div>
         <div v-if="atom" class="molecule-properties">
+          <p v-if="protectedRing" class="molecule-ring-lock">
+            {{ t('Halka şekli korunur. Taşıma tüm bağlı yapıya uygulanır.') }}
+          </p>
           <span class="molecule-section-title">{{
             atom ? t('Seçili atom') + ' ' + (selected + 1) : t('Atom özellikleri')
           }}</span>
@@ -758,6 +888,91 @@ function key(event) {
   align-items: center;
   padding: 18px 20px 12px;
   background: linear-gradient(120deg, #f7f9ff, #fff);
+}
+.molecule-heading-actions {
+  display: flex;
+  gap: 6px;
+}
+.molecule-editor .molecule-heading-actions button {
+  border: 1px solid #dbe2f1;
+  border-radius: 8px;
+  background: white;
+  padding: 7px 10px;
+  font-size: 11px;
+  color: #5064c8;
+}
+.molecule-text-panel {
+  padding: 12px 16px;
+  background: #f7f9ff;
+  border-top: 1px solid #e5eaf1;
+  border-bottom: 1px solid #e5eaf1;
+}
+.molecule-text-panel > label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+.molecule-text-row {
+  display: flex;
+  gap: 6px;
+}
+.molecule-text-row input {
+  flex: 1;
+  min-width: 0;
+}
+.molecule-text-row input,
+.molecule-text-row select {
+  border: 1px solid #d8dfea;
+  border-radius: 7px;
+  background: white;
+  padding: 9px;
+  color: #27364c;
+  font: inherit;
+  font-size: 12px;
+}
+.molecule-editor .molecule-text-row button {
+  background: #5364d9;
+  color: white;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.molecule-text-panel p {
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+  color: #73829c;
+}
+.molecule-text-examples {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.molecule-editor .molecule-text-examples button,
+.molecule-editor .molecule-text-choices button {
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px solid #dce3ef;
+  background: white;
+}
+.molecule-editor .molecule-text-choices button {
+  margin: 8px 6px 0 0;
+  color: #4c60b7;
+}
+.molecule-text-choices code {
+  margin-left: 8px;
+  color: #7a88a4;
+}
+.molecule-text-panel .molecule-text-error {
+  color: #b13b4f;
+}
+.molecule-properties .molecule-ring-lock {
+  color: #526aaf;
+  background: #eef2ff;
+  border-radius: 6px;
+  padding: 7px;
 }
 .molecule-heading strong {
   display: block;
@@ -1196,6 +1411,19 @@ function key(event) {
   color: #8c98aa;
 }
 @media (max-width: 680px) {
+  .molecule-heading {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .molecule-text-row {
+    flex-wrap: wrap;
+  }
+  .molecule-text-row input {
+    flex-basis: 100%;
+  }
+  .molecule-text-row select {
+    flex: 1;
+  }
   .molecule-heading {
     padding: 14px 12px 10px;
   }

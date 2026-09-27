@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Protected rings and text to structure
+
+- Ring corners now move the connected structure rigidly, including drag, keyboard and numeric coordinate edits. Protection derives from bond connectivity and applies to existing saved drawings and fused rings.
+- Tidy structure repairs distorted geometry with a fresh 2D layout; changes remain undoable.
+- From text converts common names/condensed formulas and SMILES into editable molecules. Molecular formulas offer explicit common-structure choices instead of guessing connectivity.
+- Lazy-loaded OpenChemLib validates SMILES and computes coordinates locally. Unsupported chemical annotations and invalid input leave the current drawing intact. Distribution includes its BSD-3-Clause license.
+
 ## Unreleased — Direct molecule manipulation
 
 - Drag atoms and ring cards from the palette onto the canvas, with placement previews and touch support.
