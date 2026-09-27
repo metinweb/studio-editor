@@ -116,13 +116,11 @@ test('named writing profiles persist, load explicitly and export/import JSON', a
   await expect(
     page.getByRole('combobox', { name: 'Kayıtlı profiller' }).locator('option'),
   ).toHaveCount(1)
-  await page
-    .getByLabel('Profil JSON içe aktar', { exact: true })
-    .setInputFiles({
-      name: 'invalid.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from('{"schemaVersion":1,"kind":"unknown"}'),
-    })
+  await page.getByLabel('Profil JSON içe aktar', { exact: true }).setInputFiles({
+    name: 'invalid.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"schemaVersion":1,"kind":"unknown"}'),
+  })
   await expect(page.getByRole('dialog').getByRole('alert')).toContainText(
     'Geçerli bir yazma profili',
   )
