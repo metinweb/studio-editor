@@ -17,6 +17,7 @@ import { dailyWriting } from './daily-writing.js'
 import { normalizeWritingWidgets } from './writing-widgets.js'
 import { normalizeDocumentFields } from './document-fields.js'
 import { documentTools } from './document-tools.js'
+import { writingAssistance } from './writing-assistance.js'
 import { readMediaEmbed, parseMediaEmbed } from '../lib/media-embed.js'
 import { modelFromDOM } from './model-bridge.js'
 import { renderModel, applyModelOperations } from './document-model.js'
@@ -542,7 +543,7 @@ export class StudioEditor {
     })
     selection?.restore()
     this.cellSelection = null
-    this.commit(before)
+    this.commit(before, kind === 'penTyping' ? 'insertText' : null)
     this.operationKind = null
   }
   undo() {
@@ -604,6 +605,7 @@ export class StudioEditor {
     }
     if (this.composing || event.isComposing) return
     if (this.markdownInput(event)) return
+    if (this.penInput(event)) return
     this.cellSelection = null
     this.before = this.snapshot()
     this.history.checkpoint(this.before)
@@ -653,6 +655,7 @@ export class StudioEditor {
         caret.collapse(true)
         selectRange(this.root, caret)
       })
+      this.autoCorrect(event)
     }
   }
   input(event) {
@@ -672,6 +675,7 @@ export class StudioEditor {
     this.autoLink(event)
     this.commit(this.before, group)
     this.before = null
+    this.autoCorrect(event)
   }
   keydown(event) {
     if (!this.editable) {
@@ -1519,3 +1523,4 @@ Object.assign(StudioEditor.prototype, mediaEmbeds)
 Object.assign(StudioEditor.prototype, dailyWriting)
 
 Object.assign(StudioEditor.prototype, documentTools)
+Object.assign(StudioEditor.prototype, writingAssistance)

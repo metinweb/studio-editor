@@ -104,6 +104,7 @@ import { useEditorMedia } from '../stores/editor-media'
 import { assetUrl } from '../lib/media-service'
 import { includesOption, menuNames } from '../lib/editor-options'
 import { readScience } from '../lib/science.js'
+import { defaultWritingPreferences, defaultPen } from '../lib/writing-preferences.js'
 import './rich-editor.css'
 import './content-tools.css'
 import './image-editor.css'
@@ -114,6 +115,8 @@ const MediaEmbedDialog = defineAsyncComponent(() => import('./MediaEmbedDialog.v
 const ScienceDialog = defineAsyncComponent(() => import('./ScienceDialog.vue'))
 const WordImportDialog = defineAsyncComponent(() => import('./WordImportDialog.vue'))
 const DocumentFieldsDialog = defineAsyncComponent(() => import('./DocumentFieldsDialog.vue'))
+const MarkdownDialog = defineAsyncComponent(() => import('./MarkdownDialog.vue'))
+const WritingSettingsDialog = defineAsyncComponent(() => import('./WritingSettingsDialog.vue'))
 
 const props = defineProps({
   modelValue: String,
@@ -164,6 +167,22 @@ function setTablePasteStyle(value) {
 watch(() => props.tablePasteStyle, setTablePasteStyle)
 const media = useEditorMedia()
 const engine = shallowRef(null)
+const writingPreferences = ref(defaultWritingPreferences())
+const permanentPen = ref(defaultPen())
+function applyWritingSettings(value) {
+  if (locked.value) return
+  if (dialog.value === 'pen') {
+    permanentPen.value = value
+    engine.value.permanentPen = value
+  } else {
+    writingPreferences.value = value
+    engine.value.writingPreferences = value
+  }
+}
+function stopPen() {
+  permanentPen.value = { ...permanentPen.value, enabled: false }
+  engine.value.permanentPen = permanentPen.value
+}
 const writingMenu = ref(null)
 const mentionMenu = ref(null)
 const outlineOpen = ref(false)
@@ -402,6 +421,15 @@ function applyNamedStyle(id) {
 }
 const allMenus = computed(() => ({
   Dosya: [
+    { label: 'Markdown içe aktar', icon: FileUp, action: () => openDialog('markdownImport') },
+    {
+      label: 'Markdown dışa aktar',
+      icon: FileText,
+      action: () => {
+        popup.value = null
+        dialog.value = 'markdownExport'
+      },
+    },
     { label: 'Word dosyası içe aktar', icon: FileUp, action: () => openDialog('importWord') },
     { label: 'Belge önizlemesi', icon: Eye, action: openPreview },
     {
@@ -614,6 +642,12 @@ const allMenus = computed(() => ({
     },
     { label: 'Biçimi kopyala', icon: Paintbrush, action: copyFormat },
     {
+      label: 'Kalıcı kalem',
+      icon: Paintbrush,
+      active: permanentPen.value.enabled,
+      action: () => openDialog('pen'),
+    },
+    {
       label: 'Kopyalanan biçimi uygula',
       icon: Paintbrush,
       disabled: !format.value,
@@ -740,6 +774,12 @@ const allMenus = computed(() => ({
     },
   ],
   Araçlar: [
+    {
+      label: 'Otomatik düzeltme ve metin kısayolları',
+      icon: TextCursorInput,
+      active: writingPreferences.value.enabled,
+      action: () => openDialog('writingSettings'),
+    },
     { label: 'Sözcük sayımı', icon: WholeWord, action: openMetrics },
     { label: 'Tipografiyi iyileştir', icon: ALargeSmall, action: () => command('typography') },
     { label: 'Belge yorumları', icon: MessageSquare, action: () => openReview('comments') },
@@ -784,6 +824,7 @@ const menus = computed(() =>
               !locked.value ||
               [
                 'Belgeyi kaydet',
+                'Markdown dışa aktar',
                 'HTML kaynak kodu',
                 'Bul ve değiştir',
                 'Tam ekran',
@@ -861,7 +902,8 @@ function hoverMenu(name, event) {
     popup.value === name ||
     event.pointerType === 'touch' ||
     window.innerWidth < 720
-  ) return
+  )
+    return
   popupAnchor.value = event.currentTarget
   popup.value = name
 }
@@ -981,10 +1023,13 @@ function initialize() {
   })
   engine.value.listen(engine.value.doc, 'keydown', (event) => {
     if (event.key === 'Escape') {
+      stopPen()
       fullscreen.value = false
       searchOpen.value = false
     }
   })
+  engine.value.writingPreferences = writingPreferences.value
+  engine.value.permanentPen = permanentPen.value
   engine.value.listen(engine.value.root, 'click', (event) => {
     if (locked.value) return
     if (event.target.closest?.('[data-studio-thread]')) reviewTab.value = 'comments'
@@ -2074,6 +2119,15 @@ defineExpose({
       @close="dialog = null"
     />
     <div class="native-statusbar">
+      <button
+        v-if="permanentPen.enabled && !locked"
+        class="pen-active"
+        :aria-label="t('Kalıcı kalemi kapat')"
+        @pointerdown.prevent
+        @click="stopPen"
+      >
+        <Paintbrush :size="14" />{{ t('Kalıcı kalem açık · Esc') }}
+      </button>
       <button :aria-label="t('Sözcük sayımı')" @pointerdown.prevent @click="openMetrics">
         <WholeWord :size="14" />{{ t('Sözcük sayımı') }}
       </button>
@@ -2092,6 +2146,20 @@ defineExpose({
     </div>
 
     <TemplateLibrary v-if="dialog === 'templates'" :engine="engine" @close="dialog = null" />
+    <MarkdownDialog
+      v-if="dialog === 'markdownImport' || dialog === 'markdownExport'"
+      :engine="engine"
+      :mode="dialog === 'markdownExport' ? 'export' : 'import'"
+      @close="dialog = null"
+    />
+    <WritingSettingsDialog
+      v-if="dialog === 'pen' || dialog === 'writingSettings'"
+      :kind="dialog === 'pen' ? 'pen' : 'correction'"
+      :preferences="writingPreferences"
+      :pen="permanentPen"
+      @apply="applyWritingSettings"
+      @close="dialog = null"
+    />
     <PrintDialog
       v-if="dialog === 'print'"
       :html="engine?.getHTML() || modelValue"

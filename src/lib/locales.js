@@ -4,12 +4,14 @@ import { workspaceMessages } from './workspace-messages.js'
 import { scienceMessages } from './science-messages.js'
 import { menuMessages } from './menu-messages.js'
 import { documentToolMessages } from './document-tool-messages.js'
+import { writingMessages } from './writing-messages.js'
 export const englishMessages = Object.freeze({
   ...panelMessages,
   ...workspaceMessages,
   ...scienceMessages,
   ...menuMessages,
   ...documentToolMessages,
+  ...writingMessages,
   'Görev listesi': 'Task list',
   'İçerik stilleri': 'Content styles',
   'Belge başlıkları': 'Document outline',

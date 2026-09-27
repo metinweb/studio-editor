@@ -1,5 +1,12 @@
 # Changelog
 
+## September 28, 2026 — Writing power tools
+
+- Added previewed Markdown file/text import and copy/download export, with GFM tables, checklists and fenced code. Complex tables and special Studio widgets use sanitized HTML islands.
+- Added opt-in exact autocorrection rules, multiline text shortcuts and smart symbols with separate undo.
+- Added a configurable permanent pen with grouped typing history, caret-following formatting and Escape exit. Settings are per editor session; code, links, protected content, paste and IME are excluded.
+- Added English/Turkish dialogs, mobile layouts, boundary validation and cross-browser coverage.
+
 ## Unreleased — Document tools and reference audit
 
 - Local DOCX import with preview, conversion notes, embedded raster images, sanitization, bounded ZIP preflight and one-step undo. Mammoth is lazy-loaded and its BSD-2-Clause notices are bundled.

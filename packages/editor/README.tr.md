@@ -1,5 +1,7 @@
 # Studio Editor — Vue 3
 
+Markdown içe/dışa aktarma, otomatik düzeltme kuralları, metin kısayolları ve kalıcı kalem bileşen içinde kullanılabilir. Ayarlar her editör oturumuna özeldir. [Kullanım ve sınırlar](../../docs/WRITING-POWER-TOOLS.md).
+
 [English](README.md) · Türkçe
 
 Varsayılan arayüz İngilizcedir. Türkçe için `locale="tr"` kullanın.

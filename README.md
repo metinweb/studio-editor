@@ -1,5 +1,7 @@
 # Studio Editor
 
+New writing tools: previewed Markdown import/export, personal autocorrection and multiline text shortcuts, plus a configurable permanent pen. [Usage and limits](docs/WRITING-POWER-TOOLS.md).
+
 **An open-source rich-text editor and local writing workspace, built with Vue 3.**
 
 [Website](https://metinweb.github.io/studio-editor/) · [Live demo](https://metinweb.github.io/studio-editor/demo/) · [Türkçe belge](README.tr.md) · [Vue component API](packages/editor/README.md)
