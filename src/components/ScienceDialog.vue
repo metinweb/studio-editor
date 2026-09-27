@@ -23,7 +23,7 @@ const math = ref(
   initial?.kind === 'math' ? initial.source : 'x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}',
 )
 const chemistry = ref(initial?.kind === 'chemistry' ? initial.source : '2H2 + O2 -> 2H2O')
-const graph = ref(initial?.graph || moleculePreset('water'))
+const graph = ref(initial?.graph || moleculePreset('benzene'))
 const alt = ref(
   initial && initial.kind !== 'molecule' && props.target?.alt === initial.source.slice(0, 500)
     ? ''
@@ -63,6 +63,10 @@ watch(
     rendered.value = null
     error.value = ''
     rendering.value = true
+    if (kind.value === 'molecule' && !graph.value.atoms.length) {
+      rendering.value = false
+      return
+    }
     timer = setTimeout(async () => {
       try {
         const diagram =
@@ -107,7 +111,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <AppDialog :title="t('Matematik ve kimya')" wide @close="emit('close')">
-    <div class="science-dialog-body">
+    <div class="science-dialog-body" :class="{ 'science-molecule': kind === 'molecule' }">
       <div class="science-tabs" role="group" :aria-label="t('İçerik türü')">
         <button
           v-for="item in [
@@ -160,6 +164,9 @@ onBeforeUnmount(() => {
         :aria-label="t('Bilimsel içerik önizlemesi')"
         :aria-busy="rendering"
       >
+        <span v-if="kind === 'molecule'" class="science-preview-label">{{
+          t('Belgedeki görünüm')
+        }}</span>
         <span v-if="rendering" role="status">{{ t('Önizleme hazırlanıyor…') }}</span>
         <img
           v-else-if="rendered"
@@ -258,40 +265,19 @@ onBeforeUnmount(() => {
   overflow-wrap: anywhere;
   white-space: normal;
 }
-.molecule-canvas {
-  display: block;
-  width: 100%;
-  max-width: 540px;
-  aspect-ratio: 5/3;
-  font-family: Arial, sans-serif;
-  background: #fff;
-  border: 1px solid #cdd5e2;
-  border-radius: 10px;
-  touch-action: none;
-  margin: 0 auto 12px;
+.science-molecule .science-preview {
+  min-height: 54px;
+  padding: 8px 14px;
+  justify-content: space-between;
+  margin: 12px 0;
 }
-.molecule-canvas [role='button'] {
-  cursor: pointer;
-  outline: none;
+.science-molecule .science-preview img {
+  max-height: 66px;
+  max-width: 65%;
 }
-.molecule-canvas [role='button']:focus circle {
-  stroke: #7351b5;
-  stroke-width: 3;
-}
-.molecule-canvas [role='button']:focus line {
-  stroke: #7351b5;
-}
-.molecule-tools label {
-  display: grid;
-  font-size: 12px;
-  gap: 4px;
-}
-.molecule-tools input {
-  width: 72px;
-}
-.atom-properties {
-  border-top: 1px solid #dfe4ee;
-  padding-top: 12px;
+.science-preview-label {
+  font-size: 11px;
+  color: #758499;
 }
 @media (max-width: 480px) {
   .science-dialog-body {

@@ -26,11 +26,19 @@ The preview must finish successfully before insertion. Supported TeX packages ar
 
 ## Molecules
 
-Choose **Molecule drawing**. Add atoms by clicking/tapping empty canvas space. Select an element, then use **Draw bond** and select two atoms to connect them. Choose single, double or triple bonds. Click an existing bond to apply the selected order. **Move** drags atoms; **Delete** removes atoms and incident bonds, or individual bonds. Drawing undo/redo stays local until you insert/update the result.
+Choose **Molecule drawing**. The drawing workspace has an element palette, bond/ring tools on the left, and starting structures and atom properties on the right.
+
+- **Draw bond:** drag on empty space for the first bond, then drag from an existing atom to extend a chain. Release near another atom to connect to it. Click/tap two atoms to connect them without dragging. Bond lengths are standardized and angles snap in 30° steps; hold Alt for a free angle and length.
+- **Add atom:** click empty space to place the chosen element, or click an existing atom to replace it. Choosing a palette element also changes the selected atom.
+- **Bonds and rings:** select single/double/triple bonds, then click a bond to apply that order. Choose a five-membered, six-membered or benzene ring tool and click empty space to add a separate ring. Connect it to your structure with the bond tool. Rings are not automatically fused.
+- **Move / Delete:** drag atoms to move them; delete atoms with their incident bonds, or individual bonds. Escape cancels an in-progress gesture. Center drawing fits and centers the existing geometry without computing a new chemical layout.
+- **Skeletal carbons:** hide connected carbon labels and show the familiar line-angle structure. Isolated carbons and other elements remain labeled; oxygen, nitrogen and other elements have distinct colors. Ring double bonds point inward. This display choice is saved and applies to exports as well.
+
+Undo/redo treats each completed drag or ring placement as one step and stays local until you insert/update the result. The small document preview shows the exported appearance without selection handles or canvas dots.
 
 Water, ethanol and benzene presets provide starting points. Presets replace the current drawing and can be undone. The drawing supports C, H, O, N, S, P, F, Cl, Br and I, up to 100 atoms and 150 bonds. It is a structural illustration tool: there is no valence validation, automatic hydrogen completion, stereochemistry, SMILES/MOL import/export or chemical calculation. Carbon-bound hydrogens in presets are implicit.
 
-Keyboard users can add an atom at the center, Tab to atom controls and press Enter to select them, change the selected atom's element/X/Y coordinates, connect two atoms with Enter in Draw bond mode, and delete focused atoms/bonds with Delete. Focused bonds accept Enter to apply the chosen order.
+Keyboard users can add an atom at the center, Tab to atom controls and press Enter to select them, change the selected atom's element/X/Y coordinates, connect two atoms with Enter in Draw bond mode, and delete focused atoms/bonds with Delete. In Draw bond mode, focused bonds accept Enter to apply the chosen order. While the canvas or an atom is focused: B selects bonds, V selects Move, E selects Delete, 1/2/3 selects bond order, C/N/O/H/S/P/F/I selects an element, arrow keys move the selected atom by 2 units (Shift: 10), and Ctrl/Cmd+Z or Shift+Ctrl/Cmd+Z undo/redo drawing changes. Shortcuts do not capture typing in form fields.
 
 ## Editing, storage and export
 

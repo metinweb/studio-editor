@@ -1,8 +1,10 @@
+import { atomColors, atomLabel, moleculeBondLines } from './molecule-layout.js'
 export const elements = ['C', 'H', 'O', 'N', 'S', 'P', 'F', 'Cl', 'Br', 'I']
 
 export function validMolecule(value) {
   if (
     !value ||
+    (value.skeletal !== undefined && typeof value.skeletal !== 'boolean') ||
     !Array.isArray(value.atoms) ||
     !Array.isArray(value.bonds) ||
     !value.atoms.length ||
@@ -66,6 +68,7 @@ export function readScience(node) {
 export function moleculePreset(name) {
   if (name === 'water')
     return {
+      skeletal: true,
       atoms: [
         { element: 'O', x: 300, y: 130 },
         { element: 'H', x: 235, y: 180 },
@@ -78,6 +81,7 @@ export function moleculePreset(name) {
     }
   if (name === 'benzene')
     return {
+      skeletal: true,
       atoms: Array.from({ length: 6 }, (_, i) => ({
         element: 'C',
         x: 300 + 85 * Math.cos((i * Math.PI) / 3),
@@ -86,6 +90,7 @@ export function moleculePreset(name) {
       bonds: Array.from({ length: 6 }, (_, i) => ({ a: i, b: (i + 1) % 6, order: i % 2 ? 1 : 2 })),
     }
   return {
+    skeletal: true,
     atoms: [
       { element: 'C', x: 200, y: 190 },
       { element: 'C', x: 270, y: 150 },
@@ -100,22 +105,7 @@ export function moleculePreset(name) {
   }
 }
 
-export function bondLines(graph, bond) {
-  const a = graph.atoms[bond.a],
-    b = graph.atoms[bond.b]
-  const dx = b.x - a.x,
-    dy = b.y - a.y,
-    length = Math.hypot(dx, dy) || 1
-  return Array.from({ length: bond.order }, (_, i) => {
-    const offset = (i - (bond.order - 1) / 2) * 6
-    return {
-      x1: a.x - (dy / length) * offset,
-      y1: a.y + (dx / length) * offset,
-      x2: b.x - (dy / length) * offset,
-      y2: b.y + (dx / length) * offset,
-    }
-  })
-}
+export const bondLines = moleculeBondLines
 
 export function moleculeSvg(graph) {
   if (!validMolecule(graph)) throw new Error('Invalid molecule')
@@ -133,10 +123,12 @@ export function moleculeSvg(graph) {
     )
     .join('')
   const atoms = graph.atoms
-    .map(
-      (a) =>
-        `<circle cx="${a.x}" cy="${a.y}" r="14" fill="white"/><text x="${a.x}" y="${a.y + 7}" text-anchor="middle" font-family="Arial,sans-serif" font-size="21" fill="#172238">${a.element}</text>`,
-    )
+    .map((a, index) => {
+      const label = atomLabel(graph, index)
+      return label
+        ? `<text x="${a.x}" y="${a.y + 6.5}" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="500" fill="${atomColors[a.element]}">${label}</text>`
+        : ''
+    })
     .join('')
   return {
     svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="${x} ${y} ${width} ${height}"><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="white"/>${lines}${atoms}</svg>`,

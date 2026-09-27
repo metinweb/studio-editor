@@ -1,4 +1,29 @@
 export const scienceMessages = {
+  'Çizimi ortala': 'Center drawing',
+  'Element {element}': 'Element {element}',
+  'Bir atomdan sürükleyerek zinciri uzatın. İki atoma tıklayarak da bağlayabilirsiniz.':
+    'Drag from an atom to extend a chain, or click two atoms to connect them.',
+  'Atomları sürükleyin. Ok tuşlarıyla hassas taşıyın.':
+    'Drag atoms to move them. Use arrow keys for precise adjustments.',
+  'Halka eklemek için boş alana tıklayın.': 'Click empty space to place a ring.',
+  'Silmek için bir atoma veya bağa tıklayın.': 'Click an atom or bond to delete it.',
+  'Boş alana tıklayarak atom ekleyin. Bir atoma tıklayarak elementini değiştirin.':
+    'Click empty space to add an atom. Click an existing atom to replace its element.',
+  'Çizim sınırına ulaşıldı.': 'Drawing limit reached.',
+  'Beşli halka': 'Five-membered ring',
+  'Altılı halka': 'Six-membered ring',
+  'Benzen halkası': 'Benzene ring',
+  'İlk bağı çizerek başlayın': 'Start with your first bond',
+  'Boş alanda sürükleyin veya bir şablon seçin.':
+    'Drag on the canvas or choose a starting structure.',
+  '{atoms} atom · {bonds} bağ': '{atoms} atoms · {bonds} bonds',
+  'Karbon iskeleti': 'Skeletal carbons',
+  'Başlangıç yapıları': 'Starting structures',
+  'Atom özellikleri': 'Atom properties',
+  'Elementini veya konumunu değiştirmek için bir atom seçin.':
+    'Select an atom to change its element or position.',
+  'Alt: serbest açı': 'Alt: free angle',
+  'Belgedeki görünüm': 'Document preview',
   İptal: 'Cancel',
   Sil: 'Delete',
   'Matematik ve kimya': 'Math & chemistry',

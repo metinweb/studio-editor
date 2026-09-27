@@ -73,7 +73,7 @@ test('molecule sketcher draws atoms and bonds, changes bond order, deletes and u
   await canvas.click({ position: { x: 130, y: 140 } })
   await canvas.click({ position: { x: 240, y: 140 } })
   await dialog(page).getByRole('button', { name: 'Draw bond', exact: true }).click()
-  await page.getByLabel('Bond order').selectOption('2')
+  await page.getByRole('button', { name: 'Double bond', exact: true }).click()
   await canvas.getByRole('button', { name: 'Atom 1: C', exact: true }).click()
   await canvas.getByRole('button', { name: 'Atom 2: C', exact: true }).click()
   await expect(canvas.locator('g').filter({ has: page.locator('line') })).toHaveCount(1)

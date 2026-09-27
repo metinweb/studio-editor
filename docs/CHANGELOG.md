@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Molecule drawing workspace
+
+- Rebuilt the sketcher around a drawing canvas, element palette, icon tools and a stable atom inspector.
+- Drag from empty space to create a bond, extend chains from existing atoms, and snap onto existing endpoints. Bonds use fixed lengths and 30° angles; Alt allows free drawing.
+- Place five/six-membered rings and benzene rings, with inward-facing double bonds.
+- Optional skeletal carbon notation, colored elements, clipped bond endpoints and matching document exports. Existing diagrams remain editable.
+- Gesture-level undo/redo, Escape to cancel a move, arrow-key positioning, element and bond keyboard shortcuts, and compact output preview.
+
 ## Unreleased — Math and chemistry
 
 - Lazy-loaded Math & chemistry dialog from the Insert menu, toolbar and `/science` command.
