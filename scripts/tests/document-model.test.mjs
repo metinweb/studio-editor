@@ -24,6 +24,30 @@ const fixture = () => ({
     },
   ],
 })
+
+test('styled reversed lists round trip through the JSON schema and attribute operations', () => {
+  const model = fixture()
+  model.blocks[0].node = {
+    type: 'element',
+    tag: 'ol',
+    attrs: { start: '0', reversed: '', style: 'list-style-type:upper-roman', dir: 'rtl' },
+    children: [
+      { type: 'element', tag: 'li', attrs: {}, children: [{ type: 'text', text: 'Item' }] },
+    ],
+  }
+  assert.equal(validateModel(model), model)
+  assert.match(
+    renderModel(model),
+    /<ol start="0" reversed="" style="list-style-type:upper-roman" dir="rtl">/,
+  )
+  const next = applyModelOperations(model, {
+    baseRevision: 4,
+    operations: [
+      { type: 'setAttributes', blockId: 'a', path: [], attrs: { start: '5', reversed: '' } },
+    ],
+  })
+  assert.match(renderModel(next), /start="5" reversed=""/)
+})
 test('semantic text, move, attribute and block operations are immutable and revision checked', () => {
   const model = fixture()
   const next = applyModelOperations(model, {

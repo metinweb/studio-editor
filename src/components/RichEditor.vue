@@ -64,9 +64,17 @@ import {
   FlaskConical,
   ListChecks,
   Palette,
+  ALargeSmall,
+  ArrowDownUp,
+  Clock,
+  Smile,
+  Pilcrow,
+  CircleHelp,
 } from '@lucide/vue'
 import AppDialog from './AppDialog.vue'
 import EditorPopover from './EditorPopover.vue'
+import EditorMenu from './EditorMenu.vue'
+import { listStyles, lineHeights, symbolGroups } from '../lib/menu-options.js'
 import TablePicker from './TablePicker.vue'
 import ImageControls from './ImageControls.vue'
 import TableControls from './TableControls.vue'
@@ -181,6 +189,61 @@ const state = ref({ block: 'p', align: 'left' })
 const fullscreen = ref(false)
 const toolbarExpanded = ref(false)
 const dialog = ref(null)
+const listForm = ref({ start: 1, reversed: false })
+const symbolGroup = ref('Simgeler')
+const commandQuery = ref('')
+const listTag = computed(() => (popup.value === 'bulletStyles' ? 'ul' : 'ol'))
+function applyListStyle(tag, value) {
+  popup.value = null
+  command('list', tag, value)
+}
+function removeCurrentList() {
+  const tag = listTag.value
+  popup.value = null
+  command('list', tag)
+}
+function openListProperties() {
+  listForm.value = { start: state.value.listStart, reversed: state.value.listReversed }
+  openDialog('listProperties')
+}
+function applyListProperties() {
+  command('listProperties', Number(listForm.value.start), listForm.value.reversed)
+  dialog.value = null
+}
+function insertSymbol(value) {
+  insert(escapeHtml(value))
+  dialog.value = null
+}
+function insertDate(kind) {
+  const date = new Date()
+  const value =
+    kind === 'iso'
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      : kind === 'time'
+        ? date.toLocaleTimeString(activeLocale.value, { hour: '2-digit', minute: '2-digit' })
+        : date.toLocaleDateString(activeLocale.value, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+  insert(escapeHtml(value))
+}
+function selectAll() {
+  const range = engine.value.doc.createRange()
+  range.selectNodeContents(engine.value.root)
+  engine.value.root.focus()
+  const selection = engine.value.doc.getSelection()
+  selection.removeAllRanges()
+  selection.addRange(range)
+  rememberSelection()
+}
+function openCommandSearch() {
+  rememberSelection()
+  popupAnchor.value = menubar.value?.querySelector('.native-command-search') || popupAnchor.value
+  popup.value = null
+  commandQuery.value = ''
+  dialog.value = 'commands'
+}
 const error = ref('')
 const busy = ref(false)
 const linkForm = ref({ href: '', text: '', blank: false })
@@ -317,6 +380,7 @@ const allMenus = computed(() => ({
         searchOpen.value = true
       },
     },
+    { label: 'Tümünü seç', shortcut: 'Ctrl A', action: selectAll },
   ],
   Görünüm: [
     {
@@ -351,8 +415,92 @@ const allMenus = computed(() => ({
     },
     { label: 'Kod bloğu ekle', icon: Code2, action: () => openDialog('code') },
     { label: 'Yatay çizgi', icon: Minus, action: () => insert('<hr><p><br></p>') },
+    {
+      label: 'Özel karakterler ve emoji',
+      icon: Smile,
+      section: 'Belge öğeleri',
+      action: () => openDialog('symbols'),
+    },
+    {
+      label: 'Tarih ve saat',
+      icon: Clock,
+      children: [
+        { label: 'Tarih', action: () => insertDate('date') },
+        { label: 'Saat', action: () => insertDate('time') },
+        { label: 'ISO tarihi', action: () => insertDate('iso') },
+      ],
+    },
+    { label: 'Bölünemez boşluk', action: () => insert('&nbsp;') },
+    {
+      label: 'Sayfa sonu',
+      icon: FileText,
+      action: () =>
+        insert(
+          '<hr data-studio-page-break="true" style="break-after:page;page-break-after:always"><p><br></p>',
+        ),
+    },
   ],
   Biçim: [
+    {
+      label: 'Paragraf biçimleri',
+      icon: Pilcrow,
+      section: 'Paragraf ve listeler',
+      children: blocks.map((item) => ({
+        label: item.label,
+        active: state.value.block === item.value,
+        action: () => command('block', item.value),
+      })),
+    },
+    {
+      label: 'Hizalama',
+      icon: AlignLeft,
+      children: alignButtons.map((item) => ({
+        label: item.title,
+        icon: item.icon,
+        active: state.value.align === item.value,
+        action: () => command('align', item.value),
+      })),
+    },
+    ...['ul', 'ol'].map((tag) => ({
+      label: tag === 'ul' ? 'Madde işareti stilleri' : 'Numaralandırma stilleri',
+      icon: tag === 'ul' ? List : ListOrdered,
+      children: listStyles[tag].map((item) => ({
+        label: item.label,
+        active: state.value.list === tag && state.value.listStyle === item.value,
+        action: () => applyListStyle(tag, item.value),
+      })),
+    })),
+    {
+      label: 'Liste özellikleri',
+      icon: ListOrdered,
+      disabled: state.value.list !== 'ol',
+      action: openListProperties,
+    },
+    {
+      label: 'Satır aralığı',
+      icon: ArrowDownUp,
+      children: lineHeights.map((value) => ({
+        label: value || 'Varsayılan aralık',
+        active: state.value.lineHeight === value,
+        action: () => command('blockStyle', 'lineHeight', value),
+      })),
+    },
+    {
+      label: 'Metin yönü',
+      icon: ALargeSmall,
+      children: [
+        {
+          label: 'Soldan sağa',
+          active: state.value.direction === 'ltr',
+          action: () => command('blockStyle', 'direction', 'ltr'),
+        },
+        {
+          label: 'Sağdan sola',
+          active: state.value.direction === 'rtl',
+          action: () => command('blockStyle', 'direction', 'rtl'),
+        },
+      ],
+    },
     { label: 'Biçimi kopyala', icon: Paintbrush, action: copyFormat },
     {
       label: 'Kopyalanan biçimi uygula',
@@ -473,30 +621,79 @@ const allMenus = computed(() => ({
     { label: 'Erişilebilirlik denetimi', icon: ScanEye, action: () => openReview('check') },
     { label: 'Şablon kütüphanesi', icon: LayoutTemplate, action: () => openDialog('templates') },
     { label: 'İçindekiler ekle / güncelle', icon: ListTree, action: insertContents },
+    { label: 'Komut bul', icon: Search, action: openCommandSearch },
+  ],
+  Yardım: [
+    { label: 'Komut bul', icon: Search, action: openCommandSearch },
+    {
+      label: 'Klavye kısayolları',
+      icon: CircleHelp,
+      action: () => {
+        dialog.value = 'help'
+      },
+    },
   ],
 }))
+const menuSections = {
+  'Sayfa düzeni ve dışa aktarım': 'Belge işlemleri',
+  'Yapıştır: biçimi koru': 'Yapıştırma',
+  'Geri al': 'Düzenleme',
+  'Belge başlıkları': 'Belgede gezinme',
+  'Şablon kütüphanesi': 'Belge öğeleri',
+  'Görsel veya medya': 'Medya ve bağlantılar',
+  'Biçimi kopyala': 'Metin biçimi',
+  'Tablo yapıştır: hedef biçimini koru': 'Yapıştırma',
+  'Hücre biçimi': 'Hücre işlemleri',
+  'Tablo ekle': 'Tablo yapısı',
+  'Belge yorumları': 'İnceleme',
+}
 const menus = computed(() =>
   Object.fromEntries(
     Object.entries(menuNames)
       .filter(([id]) => includesOption(props.menubar, id))
       .map(([, name]) => [
         name,
-        allMenus.value[name].filter(
-          (item) =>
-            !locked.value ||
-            [
-              'Belgeyi kaydet',
-              'HTML kaynak kodu',
-              'Bul ve değiştir',
-              'Tam ekran',
-              'Tam ekrandan çık',
-              'Belge başlıkları',
-            ].includes(item.label),
-        ),
+        allMenus.value[name]
+          .filter(
+            (item) =>
+              !locked.value ||
+              [
+                'Belgeyi kaydet',
+                'HTML kaynak kodu',
+                'Bul ve değiştir',
+                'Tam ekran',
+                'Tam ekrandan çık',
+                'Belge başlıkları',
+                'Komut bul',
+                'Klavye kısayolları',
+              ].includes(item.label),
+          )
+          .map((item) => ({ ...item, section: item.section || menuSections[item.label] })),
       ])
       .filter(([, items]) => items.length),
   ),
 )
+const foundCommands = computed(() => {
+  const found = []
+  const seen = new Set()
+  const visit = (items, section) =>
+    items.forEach((item) => {
+      if (item.children) visit(item.children, `${section} / ${t(item.label)}`)
+      else if (item.label !== 'Komut bul' && !seen.has(item.label)) {
+        seen.add(item.label)
+        found.push({ ...item, trail: section })
+      }
+    })
+  Object.entries(menus.value).forEach(([name, items]) => visit(items, t(name)))
+  const query = commandQuery.value.trim().toLocaleLowerCase(activeLocale.value)
+  return found.filter((item) =>
+    `${t(item.label)} ${item.trail}`.toLocaleLowerCase(activeLocale.value).includes(query),
+  )
+})
+function runFoundCommand(item) {
+  dialog.value = null
+  runMenu(item)
+}
 function openReview(tab) {
   if (locked.value) return
   rememberSelection()
@@ -563,8 +760,8 @@ function menuKeys(event) {
     const match = ordered.find((button) =>
       button.textContent
         .trim()
-        .toLocaleLowerCase('tr')
-        .startsWith(event.key.toLocaleLowerCase('tr')),
+        .toLocaleLowerCase(activeLocale.value)
+        .startsWith(event.key.toLocaleLowerCase(activeLocale.value)),
     )
     if (match) {
       event.preventDefault()
@@ -952,7 +1149,15 @@ defineExpose({
       >
         {{ t(name) }}
       </button>
-      <span class="native-editor-label">studio<span>.</span></span>
+      <button
+        class="native-command-search"
+        :aria-label="t('Komut bul')"
+        :title="t('Komut bul')"
+        @pointerdown.prevent
+        @click="openCommandSearch"
+      >
+        <Search :size="16" /><span>{{ t('Komut bul') }}</span>
+      </button>
     </div>
     <EditorPopover
       v-if="menus[popup]"
@@ -961,30 +1166,7 @@ defineExpose({
       :label="t(popup)"
       @close="popup = null"
     >
-      <div class="editor-menu" role="menu" @keydown="menuKeys">
-        <button
-          v-for="item in menus[popup]"
-          :key="item.label"
-          :class="{
-            'menu-separated': [
-              'Bul ve değiştir',
-              'Görsel veya medya',
-              'Kalın',
-              'Alıntı',
-              'Tablo ekle',
-              'Biçimlendirmeyi temizle',
-            ].includes(item.label),
-          }"
-          role="menuitem"
-          :aria-label="t(item.label)"
-          :disabled="item.disabled"
-          @click="runMenu(item)"
-        >
-          <component :is="item.icon" :size="17" /><span>{{ t(item.label) }}</span
-          ><kbd v-if="item.shortcut">{{ item.shortcut }}</kbd
-          ><Check v-if="item.active" :size="15" class="menu-check" />
-        </button>
-      </div>
+      <EditorMenu :items="menus[popup]" :label="popup" @select="runMenu" @navigate="switchMenu" />
     </EditorPopover>
     <EditorPopover
       v-if="['fonts', 'sizes', 'blocks'].includes(popup)"
@@ -1012,6 +1194,51 @@ defineExpose({
             t(item.label)
           }}</span>
         </button>
+      </div>
+    </EditorPopover>
+    <EditorPopover
+      v-if="['bulletStyles', 'numberStyles'].includes(popup)"
+      :key="popup"
+      :anchor="popupAnchor"
+      :label="t(listTag === 'ul' ? 'Madde işareti stilleri' : 'Numaralandırma stilleri')"
+      @close="popup = null"
+    >
+      <div class="list-style-menu" role="menu" @keydown="menuKeys">
+        <div class="editor-menu-section">
+          {{ t(listTag === 'ul' ? 'Madde işareti stilleri' : 'Numaralandırma stilleri') }}
+        </div>
+        <div class="list-style-grid">
+          <button
+            v-for="item in listStyles[listTag]"
+            :key="item.value"
+            role="menuitemradio"
+            :aria-label="t(item.label)"
+            :aria-checked="
+              state.list === listTag && state.listStyle === item.value && !state.taskList
+            "
+            @click="applyListStyle(listTag, item.value)"
+          >
+            <span class="list-style-preview" aria-hidden="true"
+              ><span v-for="(marker, index) in item.markers" :key="index"
+                ><b>{{ marker }}</b
+                ><i></i></span
+            ></span>
+            <span>{{ t(item.label) }}</span>
+          </button>
+        </div>
+        <div class="editor-menu list-style-actions">
+          <button
+            v-if="listTag === 'ol'"
+            role="menuitem"
+            :disabled="state.list !== 'ol'"
+            @click="openListProperties"
+          >
+            <ListOrdered :size="16" />{{ t('Liste özellikleri') }}
+          </button>
+          <button role="menuitem" :disabled="state.list !== listTag" @click="removeCurrentList">
+            <RemoveFormatting :size="16" />{{ t('Listeyi kaldır') }}
+          </button>
+        </div>
       </div>
     </EditorPopover>
     <TablePicker
@@ -1173,26 +1400,34 @@ defineExpose({
           </button>
         </div>
         <div v-if="tools('lists')" class="native-tool-group">
-          <button
-            class="native-tool"
-            :aria-label="t('Madde işaretli liste')"
-            :title="t('Madde işaretli liste')"
-            :aria-pressed="state.list === 'ul'"
-            @pointerdown.prevent
-            @click="command('list', 'ul')"
+          <div
+            v-for="tag in ['ul', 'ol']"
+            :key="tag"
+            class="native-list-split"
+            :class="{ active: state.list === tag && !state.taskList }"
           >
-            <List :size="17" />
-          </button>
-          <button
-            class="native-tool"
-            :aria-label="t('Numaralı liste')"
-            :title="t('Numaralı liste')"
-            :aria-pressed="state.list === 'ol'"
-            @pointerdown.prevent
-            @click="command('list', 'ol')"
-          >
-            <ListOrdered :size="17" />
-          </button>
+            <button
+              class="native-tool"
+              :aria-label="t(tag === 'ul' ? 'Madde işaretli liste' : 'Numaralı liste')"
+              :title="t(tag === 'ul' ? 'Madde işaretli liste' : 'Numaralı liste')"
+              :aria-pressed="state.list === tag && !state.taskList"
+              @pointerdown.prevent
+              @click="command('list', tag)"
+            >
+              <component :is="tag === 'ul' ? List : ListOrdered" :size="17" />
+            </button>
+            <button
+              class="native-tool native-list-arrow"
+              :aria-label="t(tag === 'ul' ? 'Madde işareti stilleri' : 'Numaralandırma stilleri')"
+              :title="t(tag === 'ul' ? 'Madde işareti stilleri' : 'Numaralandırma stilleri')"
+              aria-haspopup="menu"
+              :aria-expanded="popup === (tag === 'ul' ? 'bulletStyles' : 'numberStyles')"
+              @pointerdown.prevent
+              @click="togglePopup(tag === 'ul' ? 'bulletStyles' : 'numberStyles', $event)"
+            >
+              <ChevronDown :size="12" />
+            </button>
+          </div>
           <button
             class="native-tool"
             :aria-label="t('Girintiyi artır')"
@@ -1584,6 +1819,116 @@ defineExpose({
       :apply="applyImageEdit"
       @close="dialog = null"
     />
+    <AppDialog
+      v-if="dialog === 'listProperties'"
+      :title="t('Liste özellikleri')"
+      @close="dialog = null"
+    >
+      <form id="list-properties" class="native-form" @submit.prevent="applyListProperties">
+        <label class="field-label"
+          >{{ t('Başlangıç numarası')
+          }}<input
+            v-model="listForm.start"
+            class="text-input"
+            type="number"
+            min="-999999"
+            max="999999"
+            step="1"
+            required
+            :aria-label="t('Başlangıç numarası')"
+        /></label>
+        <label class="native-checkbox"
+          ><input v-model="listForm.reversed" type="checkbox" />{{
+            t('Ters numaralandırma')
+          }}</label
+        >
+        <p class="muted">{{ t('Seçili listeye uygulanır.') }}</p>
+      </form>
+      <template #footer
+        ><button class="button" @click="dialog = null">{{ t('Vazgeç') }}</button
+        ><button class="button primary" form="list-properties" type="submit">
+          {{ t('Uygula') }}
+        </button></template
+      >
+    </AppDialog>
+    <AppDialog
+      v-if="dialog === 'symbols'"
+      :title="t('Özel karakterler ve emoji')"
+      @close="dialog = null"
+    >
+      <div class="native-form">
+        <div class="symbol-tabs" role="group" :aria-label="t('Karakter grupları')">
+          <button
+            v-for="(_, name) in symbolGroups"
+            :key="name"
+            :aria-pressed="symbolGroup === name"
+            @click="symbolGroup = name"
+          >
+            {{ t(name) }}
+          </button>
+        </div>
+        <div class="symbol-grid">
+          <button
+            v-for="symbol in symbolGroups[symbolGroup]"
+            :key="symbol"
+            :aria-label="symbol"
+            @click="insertSymbol(symbol)"
+          >
+            {{ symbol }}
+          </button>
+        </div>
+      </div>
+    </AppDialog>
+    <AppDialog v-if="dialog === 'commands'" :title="t('Komut bul')" @close="dialog = null">
+      <div class="native-form command-search-panel">
+        <input
+          v-model="commandQuery"
+          class="text-input"
+          :placeholder="t('Komut veya özellik ara')"
+          :aria-label="t('Komut veya özellik ara')"
+          autofocus
+          @keydown.down.prevent="
+            $event.currentTarget.nextElementSibling?.querySelector('button:not(:disabled)')?.focus()
+          "
+        />
+        <div class="command-results" @keydown="menuKeys">
+          <button
+            v-for="item in foundCommands"
+            :key="item.label"
+            :disabled="item.disabled"
+            @click="runFoundCommand(item)"
+          >
+            <span>{{ t(item.label) }}</span
+            ><small>{{ item.trail }}</small>
+          </button>
+          <p v-if="!foundCommands.length" class="muted">{{ t('Komut bulunamadı.') }}</p>
+        </div>
+      </div>
+    </AppDialog>
+    <AppDialog v-if="dialog === 'help'" :title="t('Klavye kısayolları')" @close="dialog = null">
+      <dl class="editor-shortcuts native-form">
+        <template
+          v-for="[label, key] in [
+            ['Geri al', 'Ctrl / ⌘ Z'],
+            ['Yinele', 'Ctrl / ⌘ Shift Z'],
+            ['Kalın', 'Ctrl / ⌘ B'],
+            ['İtalik', 'Ctrl / ⌘ I'],
+            ['Altı çizili', 'Ctrl / ⌘ U'],
+            ['Bul ve değiştir', 'Ctrl / ⌘ F'],
+            ['Belgeyi kaydet', 'Ctrl / ⌘ S'],
+            ['Tümünü seç', 'Ctrl / ⌘ A'],
+            ['Menüde gezinme', '↑ ↓ Home End'],
+            ['Alt menüyü aç / geri dön', '→ / ←'],
+            ['Menüyü kapat', 'Esc'],
+          ]"
+          :key="label"
+          ><dt>{{ t(label) }}</dt>
+          <dd>
+            <kbd>{{ key }}</kbd>
+          </dd></template
+        >
+      </dl>
+    </AppDialog>
     <AppDialog v-if="dialog === 'link'" :title="t('Bağlantı')" @close="dialog = null">
       <form id="link-form" class="native-form" @submit.prevent="applyLink">
         <label class="field-label"

@@ -103,6 +103,8 @@ export async function exportDocx(html, options = {}) {
     if (node.style?.textAlign)
       props += `<w:jc w:val="${node.style.textAlign === 'justify' ? 'both' : node.style.textAlign}"/>`
     if (node.dir === 'rtl') props += '<w:bidi/>'
+    if (/^[\d.]+$/.test(node.style?.lineHeight || ''))
+      props += `<w:spacing w:line="${Math.round(Number(node.style.lineHeight) * 240)}" w:lineRule="auto"/>`
     if (number)
       props += `<w:numPr><w:ilvl w:val="${Math.min(8, depth)}"/><w:numId w:val="${number}"/></w:numPr>`
     return `<w:p><w:pPr>${props}</w:pPr>${await runs(node)}</w:p>`
@@ -120,11 +122,35 @@ export async function exportDocx(html, options = {}) {
         continue
       }
       if (node.matches('ul,ol')) {
-        const num = numbers.length + 1
-        const type = node.tagName === 'UL' ? 'bullet' : 'decimal'
-        numbers.push({ num, type, start: Number(node.getAttribute('start')) || 1 })
+        let num = numbers.length + 1
+        const style = node.style.listStyleType
+        const type =
+          node.tagName === 'UL'
+            ? 'bullet'
+            : {
+                'lower-alpha': 'lowerLetter',
+                'upper-alpha': 'upperLetter',
+                'lower-roman': 'lowerRoman',
+                'upper-roman': 'upperRoman',
+                'decimal-leading-zero': 'decimalZero',
+              }[style] || 'decimal'
+        const marker = { circle: '○', square: '▪' }[style] || '•'
+        let counter = node.hasAttribute('start')
+          ? node.start
+          : node.reversed
+            ? node.children.length
+            : 1
+        numbers.push({ num, type, marker, start: counter })
+        let first = true
         for (const item of node.children) {
+          if (item.hasAttribute('value')) counter = item.value
+          if ((!first && node.reversed) || item.hasAttribute('value')) {
+            num = numbers.length + 1
+            numbers.push({ num, type, marker, start: counter })
+          }
           const copy = item.cloneNode(true)
+          if (!copy.dir && node.dir) copy.dir = node.dir
+          if (!copy.style.lineHeight) copy.style.lineHeight = node.style.lineHeight
           copy.querySelectorAll('ul,ol').forEach((n) => n.remove())
           result += await paragraph(copy, num, depth)
           for (const nested of item.children)
@@ -133,6 +159,8 @@ export async function exportDocx(html, options = {}) {
               wrapper.append(nested.cloneNode(true))
               result += await blocks(wrapper, depth + 1)
             }
+          counter += node.reversed ? -1 : 1
+          first = false
         }
       } else if (node.tagName === 'TABLE') {
         const grid = tableGrid(node)
@@ -203,7 +231,7 @@ export async function exportDocx(html, options = {}) {
         numbers
           .map(
             (n) =>
-              `<w:abstractNum w:abstractNumId="${n.num}">${Array.from({ length: 9 }, (_, level) => `<w:lvl w:ilvl="${level}"><w:start w:val="${n.start}"/><w:numFmt w:val="${n.type}"/><w:lvlText w:val="${n.type === 'bullet' ? '•' : `%${level + 1}.`}"/><w:pPr><w:ind w:left="${720 * (level + 1)}" w:hanging="360"/></w:pPr></w:lvl>`).join('')}</w:abstractNum><w:num w:numId="${n.num}"><w:abstractNumId w:val="${n.num}"/></w:num>`,
+              `<w:abstractNum w:abstractNumId="${n.num}">${Array.from({ length: 9 }, (_, level) => `<w:lvl w:ilvl="${level}"><w:start w:val="${n.start}"/><w:numFmt w:val="${n.type}"/><w:lvlText w:val="${n.type === 'bullet' ? n.marker : `%${level + 1}.`}"/><w:pPr><w:ind w:left="${720 * (level + 1)}" w:hanging="360"/></w:pPr></w:lvl>`).join('')}</w:abstractNum><w:num w:numId="${n.num}"><w:abstractNumId w:val="${n.num}"/></w:num>`,
           )
           .join(''),
       ),

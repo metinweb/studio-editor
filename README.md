@@ -13,6 +13,8 @@ Studio combines a standalone writing app with an embeddable Vue component. The e
 ## Features
 
 - Rich text, headings, lists, links, colors, alignment and undo/redo.
+- Preview galleries for bullet/numbered list styles, numbering properties, line spacing and text direction.
+- Grouped menus, keyboard-accessible submenus, command search, special characters, emoji, dates and page breaks. See [Menus and lists](docs/MENUS-AND-LISTS.md).
 - [Math and chemistry](docs/SCIENCE.md): LaTeX equations, chemical reactions and an editable molecule sketcher.
 - Task lists, mentions, slash commands, Markdown shortcuts and a live heading outline.
 - Multi-cell table selection, merged cells, column resizing, sorting and bulk formatting.

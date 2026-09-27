@@ -415,6 +415,17 @@ export class StudioEditor {
       fontSize: this.pending?.styles?.fontSize || typography.fontSize,
       ...selectionColors(this.root, styleElement, typography, this.pending?.styles),
       list: element?.closest('ul,ol')?.tagName.toLowerCase() || '',
+      listStyle: element?.closest('ul,ol')
+        ? this.doc.defaultView.getComputedStyle(element.closest('ul,ol')).listStyleType
+        : '',
+      listStart: element?.closest('ol')?.hasAttribute('start')
+        ? element.closest('ol').start
+        : element?.closest('ol')?.reversed
+          ? element.closest('ol').children.length
+          : 1,
+      listReversed: !!element?.closest('ol')?.reversed,
+      lineHeight: block?.style.lineHeight || '',
+      direction: block?.dir || this.root.dir || 'ltr',
       table: !!table,
       selectedCellCount: selectedCells?.cells.length || 0,
       tableStyle: table?.dataset.studioTable || 'plain',
@@ -830,11 +841,56 @@ export class StudioEditor {
     })
   }
 
-  splitList(list, selected, tag) {
+  formattingRange(range) {
+    // Clicking beyond the text can leave the caret at a body boundary in Chromium/WebKit.
+    // Resolve that boundary to an adjacent text block before applying paragraph/list commands.
+    if (range?.collapsed && range.startContainer === this.root) {
+      const atEnd = range.startOffset === this.root.childNodes.length
+      const node = this.root.childNodes[range.startOffset] || this.root.lastChild
+      const candidates =
+        node?.nodeType === 1 ? [...node.querySelectorAll('p,h1,h2,h3,h4,h5,h6,li,td,th,pre')] : []
+      const block = (atEnd ? candidates.at(-1) : candidates[0]) || closestBlock(this.root, node)
+      if (block) {
+        range.selectNodeContents(block)
+        range.collapse(!atEnd)
+        selectRange(this.root, range)
+      }
+    }
+    return range
+  }
+  blockStyle(property, value) {
+    const choices = {
+      lineHeight: ['', '1', '1.15', '1.5', '1.65', '2', '2.5', '3'],
+      direction: ['ltr', 'rtl'],
+    }
+    if (!choices[property]?.includes(value)) return
+    this.transaction((range) => {
+      this.formattingRange(range)
+      for (const block of selectedBlocks(this.root, range)) {
+        if (property === 'direction') block.dir = value
+        else block.style[property] = value
+      }
+    })
+  }
+  listProperties(start, reversed = false) {
+    if (!Number.isInteger(Number(start)) || Math.abs(Number(start)) > 999999) return
+    this.transaction((range) => {
+      this.formattingRange(range)
+      const list = elementAt(range.startContainer)?.closest('ol')
+      if (!list) return
+      list.start = Number(start)
+      list.reversed = !!reversed
+      for (const item of list.children) item.removeAttribute('value')
+    })
+  }
+  splitList(list, selected, tag, style = null) {
     let segment = null
+    let segmentChosen = false
+    let counter = list.hasAttribute('start') ? list.start : list.reversed ? list.children.length : 1
     const fragment = this.doc.createDocumentFragment()
     const paragraphs = []
     for (const item of [...list.children]) {
+      if (item.hasAttribute('value')) counter = item.value
       const chosen = selected.has(item)
       const kind = chosen ? tag : list.tagName.toLowerCase()
       if (!kind) {
@@ -845,20 +901,49 @@ export class StudioEditor {
         paragraph.append(...[...item.childNodes].filter((child) => !nested.includes(child)))
         fragment.append(paragraph, ...nested)
       } else {
-        if (!segment || segment.tagName.toLowerCase() !== kind) {
+        if (
+          !segment ||
+          segment.tagName.toLowerCase() !== kind ||
+          (style && chosen !== segmentChosen)
+        ) {
           segment = this.doc.createElement(kind)
+          segmentChosen = chosen
+          segment.style.cssText = list.style.cssText
+          if (list.dir) segment.dir = list.dir
+          if (kind === list.tagName.toLowerCase()) {
+            if (list.hasAttribute('type')) segment.setAttribute('type', list.getAttribute('type'))
+            if (kind === 'ol') {
+              segment.start = counter
+              segment.reversed = list.reversed
+            }
+          } else segment.style.removeProperty('list-style-type')
+          if (chosen && style) segment.style.listStyleType = style
           if (kind === 'ul' && list.dataset.studioTaskList === 'true')
             segment.dataset.studioTaskList = 'true'
           fragment.append(segment)
         }
         segment.append(item)
       }
+      counter += list.reversed ? -1 : 1
     }
     list.replaceWith(fragment)
     return paragraphs
   }
-  list(tag) {
+  list(tag, style = null) {
+    const styles = {
+      ul: ['disc', 'circle', 'square'],
+      ol: [
+        'decimal',
+        'decimal-leading-zero',
+        'lower-alpha',
+        'upper-alpha',
+        'lower-roman',
+        'upper-roman',
+      ],
+    }
+    if (!styles[tag] || (style !== null && !styles[tag].includes(style))) return
     this.transaction((range) => {
+      this.formattingRange(range)
       const blocks = selectedBlocks(this.root, range)
       const selection = markRange(this.root, range)
       const handled = new Set()
@@ -873,13 +958,28 @@ export class StudioEditor {
               .map((block) => block.closest('li'))
               .filter((node) => node?.parentElement === list),
           )
-          this.splitList(list, selected, list.tagName.toLowerCase() === tag ? null : tag)
+          if (style && list.tagName.toLowerCase() === tag) {
+            list.style.listStyleType = style
+            list.removeAttribute('data-studio-task-list')
+            for (const child of list.children) child.removeAttribute('data-studio-checked')
+          } else
+            this.splitList(
+              list,
+              selected,
+              !style && list.tagName.toLowerCase() === tag ? null : tag,
+              style,
+            )
         } else {
           const item = this.doc.createElement('li')
           item.append(...block.childNodes)
           const previous = block.previousElementSibling
           const list =
-            previous?.tagName.toLowerCase() === tag ? previous : this.doc.createElement(tag)
+            previous?.tagName.toLowerCase() === tag &&
+            !previous.dataset.studioTaskList &&
+            (!style || previous.style.listStyleType === style)
+              ? previous
+              : this.doc.createElement(tag)
+          if (style) list.style.listStyleType = style
           if (list !== previous) block.before(list)
           list.append(item)
           block.remove()
@@ -905,6 +1005,7 @@ export class StudioEditor {
         let nested = [...previous.children].find((child) => child.tagName === list.tagName)
         if (!nested) {
           nested = this.doc.createElement(list.tagName)
+          nested.style.listStyleType = list.style.listStyleType
           if (list.dataset.studioTaskList === 'true') nested.dataset.studioTaskList = 'true'
           previous.append(nested)
         }

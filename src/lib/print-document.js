@@ -12,7 +12,7 @@ export function renderPrintDocument(html, options = {}) {
   const value = printOptions(options)
   return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="script-src 'none';object-src 'none';base-uri 'none'"><title>${escapeHtml(value.header || 'Studio')}</title><style>${documentCss}
   @page{size:${value.size} ${value.landscape ? 'landscape' : 'portrait'};margin:${value.margin}mm}
-  body{max-width:none;margin:0;padding:0;background:white}img{max-width:100%}table{max-width:100%;border-collapse:collapse}thead{display:table-header-group}tfoot{display:table-footer-group}tr,img{break-inside:avoid}h1,h2,h3,h4{break-after:avoid}p{orphans:3;widows:3}[data-studio-page-break]{break-before:page}
+  body{max-width:none;margin:0;padding:0;background:white}img{max-width:100%}table{max-width:100%;border-collapse:collapse}thead{display:table-header-group}tfoot{display:table-footer-group}tr,img{break-inside:avoid}h1,h2,h3,h4{break-after:avoid}p{orphans:3;widows:3}[data-studio-page-break]{break-before:page}hr[data-studio-page-break]{break-before:auto;break-after:page}
   .print-header,.print-footer{font:11px Arial;color:#64748b;padding:4px 0}
   @media print{.print-header,.print-footer{position:fixed;left:0;right:0}.print-header{top:-${Math.max(6, value.margin - 5)}mm}.print-footer{bottom:-${Math.max(6, value.margin - 5)}mm}}
   </style></head><body><header class="print-header">${escapeHtml(value.header)}</header>${publicHtml(html)}<footer class="print-footer">${escapeHtml(value.footer)}</footer></body></html>`

@@ -18,6 +18,7 @@ export const menuNames = Object.freeze({
   format: 'Biçim',
   table: 'Tablo',
   tools: 'Araçlar',
+  help: 'Yardım',
 })
 export function includesOption(value, key) {
   return value !== false && (!Array.isArray(value) || value.includes(key))

@@ -270,7 +270,7 @@ export interface StudioEditorProps {
 }
 export type ToolbarGroup =
   'history' | 'typography' | 'format' | 'color' | 'align' | 'lists' | 'insert' | 'tools' | 'review'
-export type MenuName = 'file' | 'edit' | 'view' | 'insert' | 'format' | 'table' | 'tools'
+export type MenuName = 'file' | 'edit' | 'view' | 'insert' | 'format' | 'table' | 'tools' | 'help'
 export type PasteMode = 'keep' | 'clean' | 'text'
 export type TablePasteStyle = 'target' | 'source'
 export interface PasteInfo {

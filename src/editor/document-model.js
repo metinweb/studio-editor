@@ -5,7 +5,7 @@ const tags = new Set(
   ),
 )
 const attributes =
-  /^(?:id|title|class|style|dir|lang|href|target|rel|src|alt|width|height|colspan|rowspan|scope|start|value|type|controls|poster|preload|color|face|size|align|valign|bgcolor|download|aria-[\w-]+|data-studio-[\w-]+)$/
+  /^(?:id|title|class|style|dir|lang|href|target|rel|src|alt|width|height|colspan|rowspan|scope|start|reversed|value|type|controls|poster|preload|color|face|size|align|valign|bgcolor|download|aria-[\w-]+|data-studio-[\w-]+)$/
 const voids = new Set(['img', 'br', 'hr', 'col', 'source'])
 const escape = (text) =>
   text.replace(

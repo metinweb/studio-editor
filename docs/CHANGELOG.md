@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Menus, list galleries and writing tools
+
+- Split buttons for bullet and numbered lists with nine visual style choices, start/reverse numbering and removal. Nested lists and split segments preserve styling and numbering.
+- Grouped menus with submenus, keyboard navigation, mobile back navigation, command search and a Help menu. English and Turkish labels follow the editor instance.
+- Added line spacing, paragraph direction, special characters/emoji, date/time, nonbreaking spaces and page breaks. Commands preserve the document selection and participate in undo/redo.
+- DOCX output preserves letter/Roman numbering, bullet shapes, reversed numbering, line spacing and page breaks. Print output avoids duplicate breaks.
+- Fixed list commands doing nothing when Chromium/WebKit places a caret at the document boundary after a whitespace click.
+
 ## Unreleased — Protected rings and text to structure
 
 - Ring corners now move the connected structure rigidly, including drag, keyboard and numeric coordinate edits. Protection derives from bond connectivity and applies to existing saved drawings and fused rings.
