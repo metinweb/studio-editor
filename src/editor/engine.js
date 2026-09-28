@@ -1,4 +1,5 @@
 import { cleanHtml, escapeHtml } from '../lib/content'
+import { installFeaturePolicy } from '../lib/feature-policy.js'
 import { History } from './history'
 import { documentMatches } from './document-search.js'
 import { outlineTools } from './outline-tools.js'
@@ -1493,3 +1494,4 @@ Object.assign(StudioEditor.prototype, dailyWriting)
 
 Object.assign(StudioEditor.prototype, documentTools)
 Object.assign(StudioEditor.prototype, writingAssistance)
+installFeaturePolicy(StudioEditor.prototype)

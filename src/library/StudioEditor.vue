@@ -14,6 +14,7 @@ import { publicHtml } from '../lib/content'
 import { createMediaService, mediaServiceKey } from '../lib/media-service'
 import { provideEditorLocale } from '../lib/editor-locale'
 import { createCommandRegistry } from '../lib/command-registry'
+import { featureEnabled } from '../lib/feature-policy.js'
 
 const SourceEditor = defineAsyncComponent(() => import('../components/SourceEditor.vue'))
 const MediaManager = defineAsyncComponent(() => import('../components/MediaManager.vue'))
@@ -35,6 +36,10 @@ const props = defineProps({
   tablePasteStyle: { type: String, default: 'target' },
   contentCss: { type: [String, Array], default: () => [] },
   allowContentCss: { type: Boolean, default: true },
+  assistanceAdapter: Object,
+  bodyClass: { type: String, default: '' },
+  features: { type: Object, default: () => ({}) },
+  documentSession: Object,
 })
 const emit = defineEmits([
   'update:modelValue',
@@ -49,6 +54,7 @@ const emit = defineEmits([
   'upload-error',
   'update:contentCss',
   'content-css-status',
+  'update:bodyClass',
 ])
 const editor = ref(null)
 const commandVersion = ref(0)
@@ -62,6 +68,14 @@ const slashCommands = computed(() => {
 provideEditorLocale(props)
 const modal = ref(null)
 const locked = computed(() => props.readonly || props.disabled)
+watch(
+  () => props.features,
+  () => {
+    modal.value = null
+    if (!featureEnabled(props.features, 'media')) customMedia?.cancel()
+  },
+  { deep: true },
+)
 watch(
   () => [props.readonly, props.disabled],
   () => {
@@ -93,18 +107,18 @@ function changed(html) {
   emit('change', html)
 }
 function openMedia() {
-  if (locked.value) return
+  if (locked.value || !featureEnabled(props.features, 'media')) return
   editor.value?.rememberSelection()
   modal.value = 'media'
   media.initialize()
 }
 function insertMedia(item) {
-  if (locked.value) return
+  if (locked.value || !featureEnabled(props.features, 'media')) return
   editor.value?.insert(media.markup(item))
   modal.value = null
 }
 function applySource(html) {
-  if (locked.value) return
+  if (locked.value || !featureEnabled(props.features, 'source')) return
   editor.value?.replace(html)
   modal.value = null
 }
@@ -137,18 +151,22 @@ const api = {
   applyOperations: (transaction) => editor.value?.applyOperations(transaction) || false,
   getHTML: () => editor.value?.getHTML() || props.modelValue,
   getPublicHTML: () => publicHtml(api.getHTML()),
+  getInlineHTML: () => editor.value?.getInlineHTML() || '',
   setHTML: (html) => editor.value?.replace(html),
   insertHTML: (html) => editor.value?.insert(html),
   focus: () => editor.value?.focus(),
   undo: () => editor.value?.undo(),
   redo: () => editor.value?.redo(),
   openSource: () => {
-    if (props.disabled) return
+    if (props.disabled || !featureEnabled(props.features, 'source')) return
     modal.value = 'source'
   },
   openMedia,
   openScience: () => editor.value?.openScience(),
   openContentStyles: () => editor.value?.openContentStyles(),
+  openAssistant: (kind) => editor.value?.openAssistant(kind),
+  openVersionHistory: () => editor.value?.openVersionHistory(),
+  openPageEmbed: () => editor.value?.openPageEmbed(),
   getDocument: () => editor.value?.getDocument(),
   getHistoryStats: () => editor.value?.getHistoryStats(),
 }
@@ -207,6 +225,11 @@ defineExpose(api)
       :table-paste-style="tablePasteStyle"
       :content-css="contentCss"
       :allow-content-css="allowContentCss"
+      :assistance-adapter="assistanceAdapter"
+      :body-class="bodyClass"
+      :features="features"
+      :document-session="documentSession"
+      @update:body-class="emit('update:bodyClass', $event)"
       @update:content-css="emit('update:contentCss', $event)"
       @content-css-status="emit('content-css-status', $event)"
       @update:table-paste-style="emit('update:tablePasteStyle', $event)"
@@ -215,7 +238,7 @@ defineExpose(api)
       @update:model-value="changed"
       @ready="emit('ready', api)"
       @save="emit('save', api.getHTML())"
-      @source="modal = 'source'"
+      @source="api.openSource"
       @media="openMedia"
       @transaction="publishTransaction"
     />

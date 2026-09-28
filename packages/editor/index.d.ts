@@ -16,6 +16,8 @@ export interface StudioEditorApi {
   /** Includes internal review metadata. Use getPublicHTML for published content. */
   getHTML(): string
   getPublicHTML(): string
+  /** Snapshot supported computed presentation styles; not an email rendering guarantee. */
+  getInlineHTML(): string
   /** Sanitizes the HTML and creates an undo step. Call after ready. */
   setHTML(html: string): void
   insertHTML(html: string): void
@@ -26,6 +28,9 @@ export interface StudioEditorApi {
   openMedia(): void
   openScience(): void
   openContentStyles(): void
+  openAssistant(kind?: 'ai' | 'language'): void
+  openPageEmbed(): void
+  openVersionHistory(): void
   getDocument(): EditorDocument | undefined
   getHistoryStats(): HistoryStats | undefined
 }
@@ -54,7 +59,95 @@ export interface StoredDocument {
 export interface DocumentStorageAdapter {
   load(id: string): Promise<StoredDocument>
   save(document: StoredDocument, options: { expectedVersion: string }): Promise<StoredDocument>
+  listVersions?(id: string): Promise<DocumentVersion[]>
+  loadVersion?(id: string, version: string): Promise<StoredDocument>
 }
+export interface DocumentVersion {
+  version: string
+  title: string
+  createdAt?: string
+}
+export interface AutosaveState {
+  record: StoredDocument | null
+  dirty: boolean
+  status: 'idle' | 'loading' | 'dirty' | 'saving' | 'saved' | 'conflict' | 'error'
+  error: Error | null
+}
+export interface AutosaveSession {
+  readonly state: AutosaveState
+  load(id: string): Promise<boolean>
+  update(changes: Partial<Pick<StoredDocument, 'title' | 'html' | 'blockIds'>>): void
+  save(): Promise<StoredDocument | null>
+  retry(): Promise<StoredDocument | null>
+  pause(): void
+  resume(): void
+  listVersions(): Promise<DocumentVersion[]>
+  loadVersion(version: string): Promise<StoredDocument>
+  dispose(): void
+}
+export function createAutosaveSession(
+  adapter: DocumentStorageAdapter,
+  options?: { delay?: number; onChange?: (state: AutosaveState) => void },
+): AutosaveSession
+export function bindDocumentSession(
+  editor: StudioEditorApi,
+  options: {
+    adapter: DocumentStorageAdapter
+    id: string
+    delay?: number
+    onChange?: (state: AutosaveState) => void
+    warnOnUnload?: boolean
+    signal?: AbortSignal
+  },
+): Promise<{ session: AutosaveSession; dispose(): void }>
+export function createHttpDocumentAdapter(options: {
+  baseUrl: string
+  getToken?: () => string | Promise<string>
+  fetch?: typeof fetch
+  timeout?: number
+}): DocumentStorageAdapter
+export type FeatureName =
+  | 'formatting'
+  | 'lists'
+  | 'tables'
+  | 'media'
+  | 'links'
+  | 'review'
+  | 'history'
+  | 'science'
+  | 'source'
+  | 'ai'
+  | 'language'
+  | 'pageEmbed'
+export type EditorFeatures = Partial<Record<FeatureName, boolean>>
+export interface AssistanceInput {
+  text: string
+  language: string
+}
+export interface AiInput extends AssistanceInput {
+  action: 'rewrite' | 'summarize' | 'translate' | 'shorten' | 'expand'
+  instruction: string
+}
+export interface LanguageIssue {
+  offset: number
+  length: number
+  message: string
+  replacements: string[]
+}
+export interface AssistanceAdapter {
+  label?: string
+  generate?(input: AiInput, context: { signal: AbortSignal }): Promise<{ text: string }>
+  check?(
+    input: AssistanceInput,
+    context: { signal: AbortSignal },
+  ): Promise<{ issues: LanguageIssue[] }>
+}
+export function createHttpAssistanceAdapter(options: {
+  baseUrl: string
+  getToken?: () => string | Promise<string>
+  label?: string
+  fetch?: typeof fetch
+}): AssistanceAdapter
 export interface DocumentSession {
   readonly record: StoredDocument | null
   readonly dirty: boolean
@@ -231,6 +324,11 @@ export function mapOffset(
   affinity?: -1 | 1,
 ): number
 export interface StudioEditorProps {
+  features?: EditorFeatures
+  assistanceAdapter?: AssistanceAdapter
+  documentSession?: AutosaveSession
+  bodyClass?: string
+  'onUpdate:bodyClass'?: (classes: string) => void
   /** Trusted stylesheet URLs, applied only to the content iframe and its preview. */
   contentCss?: string | string[]
   /** Show content CSS settings; does not prevent host-provided styles. Defaults true. */
@@ -316,6 +414,9 @@ export type MountedEditorOptions = Pick<
   | 'tablePasteStyle'
   | 'contentCss'
   | 'allowContentCss'
+  | 'features'
+  | 'bodyClass'
+  | 'documentSession'
 >
 export interface MountedEditor extends StudioEditorApi {
   isDirty(): boolean
@@ -326,6 +427,8 @@ export interface MountedEditor extends StudioEditorApi {
   destroy(): void
 }
 export interface MountStudioEditorOptions extends MountedEditorOptions {
+  assistanceAdapter?: AssistanceAdapter
+  onBodyClassChange?: (classes: string) => void
   onContentCssChange?: (urls: string[]) => void
   onContentCssStatus?: (status: ContentCssStatus) => void
   mediaAdapter?: MediaAdapter

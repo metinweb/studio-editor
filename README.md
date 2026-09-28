@@ -2,6 +2,8 @@
 
 New: native HTML form integration with `mountStudioEditor`, Vue `v-model`, and external content stylesheet settings. Setup, configurable features and examples: [CMS integration guide](docs/CMS-INTEGRATION.md) · [Live HTML example](https://metinweb.github.io/studio-editor/integration/).
 
+Also available: opt-in CMS autosave/version history, command feature switches, AI/grammar adapter UI, sandboxed page embeds, responsive preview and inline CSS snapshots. [Advanced integration guide](docs/CMS-PREMIUM.md) · [CMS integration lab](https://metinweb.github.io/studio-editor/integration/cms.html). Service-backed tools require your own backend adapters.
+
 New: context-aware search, section organization and exportable review reports. [Navigation and review guide](docs/NAVIGATION-AND-REVIEW.md).
 
 New: calculated table cells, conditional template fields and reusable writing profiles. [Usage and limits](docs/ADVANCED-DOCUMENTS.md).

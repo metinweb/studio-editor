@@ -1,10 +1,17 @@
 import { blockId } from './identity.js'
 import { validateModel } from './document-model.js'
 import { readMediaEmbed, mediaEmbedHtml } from '../lib/media-embed.js'
+import { readPageEmbed, pageEmbedHtml } from '../lib/page-embed.js'
 export function modelFromDOM(root, revision) {
   function node(value) {
     if (value.nodeType === 3) return { type: 'text', text: value.data }
     const media = readMediaEmbed(value)
+    const page = readPageEmbed(value)
+    if (page) {
+      const template = root.ownerDocument.createElement('template')
+      template.innerHTML = pageEmbedHtml(page.url, page)
+      value = template.content.firstElementChild
+    }
     if (media) {
       // Players are derived views. JSON documents contain the portable link widget.
       const template = root.ownerDocument.createElement('template')

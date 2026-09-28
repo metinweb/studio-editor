@@ -2,6 +2,8 @@
 
 Studio Editor edits an HTML content field in your existing application. Your CMS owns pages, routes, users, translations, SEO metadata, approvals and publishing. The standalone writing workspace is an optional demo, not a prerequisite for embedding the editor.
 
+For command-level feature switches, autosave, HTTP persistence, CMS version history, AI/grammar adapters, responsive preview and inline CSS, see [CMS persistence and advanced editing](CMS-PREMIUM.md).
+
 ## Plain HTML: enhance a textarea
 
 Run `npm ci` and `npm run build:library` in this repository. Copy **all of** `packages/editor/dist/browser/` to a public directory on your site, such as `/vendor/studio-editor/`. Keep its files together: dialogs and science tools load additional modules when opened. This browser build includes Vue and Pinia; your page needs no framework setup, import map or build tool. Serve it over HTTP(S).
@@ -133,7 +135,7 @@ const editor = await mountStudioEditor('#content', {
 editor.setOptions({ readonly: true })
 ```
 
-**Visibility is not feature authorization.** Hiding a toolbar/menu does not remove commands, keyboard shortcuts, contextual tools or permitted pasted HTML. There is currently no per-command feature allowlist or tree-shaking plugin switch for built-in tools. For a fully noneditable field use `readonly`/`disabled`; enforce content policy and permissions on the server. Custom plugin commands can be disabled through their `enabled` callback or unregistered through their disposer.
+**Visibility is not feature authorization.** Hiding a toolbar/menu does not remove commands, keyboard shortcuts, contextual tools or permitted pasted HTML. Use the independent `features` command policy described in [CMS-PREMIUM.md](CMS-PREMIUM.md) to disable built-in command groups. This is not a tree-shaking plugin switch or an HTML schema restriction. For a fully noneditable field use `readonly`/`disabled`; enforce content policy and permissions on the server. Custom plugin commands can be disabled through their `enabled` callback or unregistered through their disposer.
 
 Autocorrection, permanent pen, visual guides and the outline can also be switched from their respective menus. These editor-session tools are separate from toolbar visibility. Collaboration stays inactive until your application explicitly loads/connects the optional collaboration module.
 

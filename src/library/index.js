@@ -10,6 +10,10 @@ export { toolbarGroups, menuNames } from '../lib/editor-options.js'
 export { validateModel, renderModel, applyModelOperations } from '../editor/document-model.js'
 export { createHttpMediaAdapter } from '../lib/http-media-adapter.js'
 export { createDocumentSession } from '../lib/document-storage.js'
+export { createAutosaveSession } from '../lib/autosave.js'
+export { bindDocumentSession } from '../lib/cms-binding.js'
+export { createHttpDocumentAdapter } from '../lib/http-document-adapter.js'
+export { createHttpAssistanceAdapter } from '../lib/assistance.js'
 export { renderPrintDocument, printDocument } from '../lib/print-document.js'
 export const exportDocx = async (html, options) =>
   (await import('../lib/docx-export.js')).exportDocx(html, options)

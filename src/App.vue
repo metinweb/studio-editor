@@ -37,11 +37,13 @@ import { cleanHtml, downloadHtml, renderDocument, plainText } from './lib/conten
 import { createDocumentFilter, normalizeTags, searchKey } from './lib/document-library'
 import { provideEditorLocale } from './lib/editor-locale'
 import { workspaceLocale } from './lib/workspace-locale'
-import { normalizeContentCss } from './lib/content-css.js'
+import { normalizeContentCss, normalizeBodyClass } from './lib/content-css.js'
 
 const locale = workspaceLocale
 const contentCss = ref([])
+const bodyClass = ref('')
 try {
+  bodyClass.value = normalizeBodyClass(localStorage.getItem('studio-content-body-class') || '')
   contentCss.value = normalizeContentCss(
     JSON.parse(localStorage.getItem('studio-content-css') || '[]'),
     document.baseURI,
@@ -55,6 +57,14 @@ function saveContentCss(urls) {
     localStorage.setItem('studio-content-css', JSON.stringify(urls))
   } catch {
     /* Session-only when storage is unavailable. */
+  }
+}
+function saveBodyClass(value) {
+  bodyClass.value = normalizeBodyClass(value)
+  try {
+    localStorage.setItem('studio-content-body-class', bodyClass.value)
+  } catch {
+    /* Session-only preference. */
   }
 }
 const { t } = provideEditorLocale({
@@ -508,6 +518,8 @@ onBeforeUnmount(() => {
             <div class="editor-surface">
               <RichEditor
                 :content-css="contentCss"
+                :body-class="bodyClass"
+                @update:body-class="saveBodyClass"
                 @update:content-css="saveContentCss"
                 :locale="locale"
                 :key="workspace.activeId"

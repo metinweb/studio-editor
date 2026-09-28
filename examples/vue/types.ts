@@ -105,3 +105,32 @@ async function mountTypes() {
   editor.destroy()
 }
 void mountTypes
+
+async function cmsTypes(api: StudioEditorApi) {
+  const { bindDocumentSession, createHttpDocumentAdapter, createHttpAssistanceAdapter } =
+    await import('studio-editor')
+  const binding = await bindDocumentSession(api, {
+    id: 'article',
+    signal: new AbortController().signal,
+    adapter: createHttpDocumentAdapter({ baseUrl: 'https://cms.example/api' }),
+    onChange: (state) => console.log(state.status),
+  })
+  const assistanceAdapter = createHttpAssistanceAdapter({
+    baseUrl: 'https://cms.example/assistance',
+  })
+  h(StudioEditor, {
+    documentSession: binding.session,
+    assistanceAdapter,
+    features: { science: false },
+    bodyClass: 'article',
+  })
+  // @ts-expect-error unknown feature switches must be rejected
+  h(StudioEditor, { features: { inventedFeature: false } })
+  const snapshot: string = api.getInlineHTML()
+  api.openAssistant('language')
+  api.openVersionHistory()
+  api.openPageEmbed()
+  binding.dispose()
+  void snapshot
+}
+void cmsTypes

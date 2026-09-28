@@ -2,6 +2,8 @@
 
 Yeni: `mountStudioEditor` ile HTML form entegrasyonu; Vue için `v-model`; içerik alanına harici CSS ekleme ayarları. Kurulum, açılabilen/gizlenebilen özellikler ve örnekler: [Türkçe CMS entegrasyon rehberi](docs/CMS-INTEGRATION.tr.md) · [Canlı HTML örneği](https://metinweb.github.io/studio-editor/integration/).
 
+Yeni gelişmiş araçlar: CMS otomatik kayıt/sürüm geçmişi, komut kapatma ayarları, AI/dil servisi arayüzü, güvenli sayfa gömme, mobil önizleme ve satır içi CSS çıktısı. [Türkçe kullanım rehberi](docs/CMS-PREMIUM.tr.md) · [CMS entegrasyon örneği](https://metinweb.github.io/studio-editor/integration/cms.html). Servis gerektiren araçları kendi backend adaptörlerinize bağlayın.
+
 Yeni: gelişmiş belge araması, bölümleri içerikleriyle taşıma ve indirilebilir inceleme raporları. [Gezinme ve inceleme rehberi](docs/NAVIGATION-AND-REVIEW.md).
 
 Yeni belge araçları: otomatik hesaplanan tablo hücreleri, koşullu şablon alanları ve tarayıcıda saklanabilen/JSON ile taşınabilen yazma profilleri. [Kullanım ve sınırlar](docs/ADVANCED-DOCUMENTS.md).

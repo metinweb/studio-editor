@@ -48,3 +48,15 @@ export function installContentCss(document, urls, report = () => {}) {
     }
   }
 }
+
+export function normalizeBodyClass(value = '') {
+  return [
+    ...new Set(
+      String(value)
+        .split(/\s+/)
+        .filter((name) => /^[a-zA-Z_][\w-]{0,63}$/.test(name)),
+    ),
+  ]
+    .slice(0, 20)
+    .join(' ')
+}

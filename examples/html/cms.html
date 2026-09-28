@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Studio Editor · CMS integration lab</title>
+    <link rel="stylesheet" href="./editor/studio-editor.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f3f6fb;
+        color: #17253e;
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 1240px;
+        margin: auto;
+        padding: 32px 20px 64px;
+      }
+      h1 {
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.1;
+        margin: 10px 0 20px;
+      }
+      .eyebrow {
+        letter-spacing: 0.15em;
+        font-size: 12px;
+        font-weight: 700;
+        color: #255ed3;
+      }
+      .intro {
+        max-width: 780px;
+      }
+      .bar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 16px 0;
+      }
+      .bar button,
+      .bar select {
+        font: inherit;
+        padding: 8px 14px;
+        background: white;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .bar button:first-child {
+        background: #245add;
+        color: white;
+      }
+      output {
+        margin-left: auto;
+        font-weight: 600;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-height: 340px;
+        overflow: auto;
+        padding: 20px;
+        border-radius: 12px;
+        background: #15223a;
+        color: #e6efff;
+      }
+      a {
+        color: #245add;
+      }
+      #error {
+        color: #a32424;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">STUDIO EDITOR / CMS INTEGRATION LAB</div>
+      <h1>Write. Save. Review. Restore.</h1>
+      <p class="intro">
+        An embedded editor with autosave, version history, feature controls and website styles. This
+        example uses an in-memory adapter: edits last until you reload this page. Connect the same
+        API to your own CMS for durable storage.
+      </p>
+      <div class="bar">
+        <button id="save" type="button">Save now</button
+        ><button id="history" type="button">Version history</button
+        ><button id="export" type="button">Inspect inline CSS HTML</button>
+        <label
+          >Tools
+          <select id="features">
+            <option value="all">All features</option>
+            <option value="writing">Writing only</option>
+          </select></label
+        >
+        <output id="status" aria-live="polite">Loading…</output>
+      </div>
+      <p id="error" role="alert" hidden></p>
+      <textarea id="article" aria-label="Article content"></textarea>
+      <details>
+        <summary>Exported HTML</summary>
+        <pre id="html">
+Use “Inspect inline CSS HTML” to see the website styles included in the output.</pre>
+      </details>
+      <p>
+        AI and grammar tools require your own assistance adapter; this page does not send text to an
+        AI service.
+      </p>
+      <p>
+        <a href="./">Basic HTML form example</a> ·
+        <a href="https://github.com/metinweb/studio-editor/blob/main/docs/CMS-PREMIUM.md"
+          >Vue, HTML and backend integration guide</a
+        >
+      </p>
+    </main>
+    <script type="module" src="./cms-demo.js"></script>
+  </body>
+</html>

@@ -1,6 +1,7 @@
 import createDOMPurify from 'dompurify'
 import documentCss from './document.css?inline'
 import { readMediaEmbed, mediaEmbedHtml } from './media-embed.js'
+import { readPageEmbed, pageEmbedHtml } from './page-embed.js'
 import { normalizeDocumentFields } from '../editor/document-fields.js'
 import { normalizeTableFormulas } from './table-formulas.js'
 import { normalizeWritingWidgets } from '../editor/writing-widgets.js'
@@ -47,13 +48,20 @@ export const cleanHtml = (html) => {
     FORBID_ATTR: ['contenteditable', 'autofocus', 'srcdoc'],
   })
   if (
-    !/data-studio-(embed|task|checked|mention|style|field|footnote|condition|formula)/.test(
+    !/data-studio-(page|embed|task|checked|mention|style|field|footnote|condition|formula)/.test(
       sanitized,
     )
   )
     return sanitized
   const template = window.document.createElement('template')
   template.innerHTML = sanitized
+  for (const node of template.content.querySelectorAll('figure[data-studio-page]')) {
+    const page = readPageEmbed(node)
+    if (page) node.outerHTML = pageEmbedHtml(page.url, page, true)
+    else
+      for (const attr of [...node.attributes])
+        if (attr.name.startsWith('data-studio-page')) node.removeAttribute(attr.name)
+  }
   for (const node of template.content.querySelectorAll('figure[data-studio-embed]')) {
     const media = readMediaEmbed(node)
     if (media) node.outerHTML = mediaEmbedHtml(media.url, media, true)
@@ -98,7 +106,7 @@ export function publicHtml(html) {
       node.removeAttribute('data-studio-suggestion')
     })
   doc
-    .querySelectorAll('figure[data-studio-embed]')
+    .querySelectorAll('figure[data-studio-embed],figure[data-studio-page]')
     .forEach((node) => node.removeAttribute('contenteditable'))
   doc.querySelectorAll('[data-studio-task-control]').forEach((node) => {
     node.setAttribute('tabindex', '-1')

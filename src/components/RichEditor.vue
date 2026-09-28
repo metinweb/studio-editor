@@ -51,6 +51,8 @@ import {
   MessageSquare,
   LayoutTemplate,
   ScanEye,
+  Sparkles,
+  Globe,
   Paintbrush,
   ListTree,
   CaseUpper,
@@ -97,14 +99,17 @@ import BlockControls from './BlockControls.vue'
 import MediaEmbedControls from './MediaEmbedControls.vue'
 import MentionMenu from './MentionMenu.vue'
 import DocumentOutline from './DocumentOutline.vue'
+import ResponsivePreview from './ResponsivePreview.vue'
 import { contentStyles } from '../editor/writing-widgets.js'
 import { StudioEditor } from '../editor/engine'
 import { documentCss, escapeHtml, renderDocument } from '../lib/content'
 import { useEditorMedia } from '../stores/editor-media'
 import { assetUrl } from '../lib/media-service'
 import { includesOption, menuNames } from '../lib/editor-options'
-import { normalizeContentCss, installContentCss } from '../lib/content-css.js'
+import { featureEnabled, dialogFeatures, menuFeature } from '../lib/feature-policy.js'
+import { normalizeContentCss, installContentCss, normalizeBodyClass } from '../lib/content-css.js'
 import { readScience } from '../lib/science.js'
+import { inlineContentHtml } from '../lib/inline-css.js'
 import { defaultWritingPreferences, defaultPen } from '../lib/writing-preferences.js'
 import './rich-editor.css'
 import './content-tools.css'
@@ -121,6 +126,9 @@ const WritingSettingsDialog = defineAsyncComponent(() => import('./WritingSettin
 const TableFormulaDialog = defineAsyncComponent(() => import('./TableFormulaDialog.vue'))
 const ConditionalFieldDialog = defineAsyncComponent(() => import('./ConditionalFieldDialog.vue'))
 const ContentStylesDialog = defineAsyncComponent(() => import('./ContentStylesDialog.vue'))
+const AssistanceDialog = defineAsyncComponent(() => import('./AssistanceDialog.vue'))
+const PageEmbedDialog = defineAsyncComponent(() => import('./PageEmbedDialog.vue'))
+const CmsHistoryDialog = defineAsyncComponent(() => import('./CmsHistoryDialog.vue'))
 
 const props = defineProps({
   modelValue: String,
@@ -140,11 +148,23 @@ const props = defineProps({
   tablePasteStyle: { type: String, default: 'target' },
   contentCss: { type: [String, Array], default: () => [] },
   allowContentCss: { type: Boolean, default: true },
+  assistanceAdapter: Object,
+  bodyClass: { type: String, default: '' },
+  features: { type: Object, default: () => ({}) },
+  documentSession: Object,
 })
 const { t, locale: activeLocale } = provideEditorLocale(props)
 const locked = computed(() => props.readonly || props.disabled)
 let editEpoch = 0
-const tools = (group) => !locked.value && includesOption(props.toolbar, group)
+const allowed = (feature) => featureEnabled(props.features, feature)
+const tools = (group) =>
+  !locked.value &&
+  includesOption(props.toolbar, group) &&
+  allowed(
+    { typography: 'formatting', format: 'formatting', color: 'formatting', align: 'formatting' }[
+      group
+    ] || group,
+  )
 const firstRow = computed(() => ['history', 'typography', 'format', 'color', 'insert'].some(tools))
 const secondRow = computed(() => ['align', 'lists', 'insert', 'tools', 'review'].some(tools))
 const emit = defineEmits([
@@ -160,7 +180,27 @@ const emit = defineEmits([
   'slash-command',
   'update:contentCss',
   'content-css-status',
+  'update:bodyClass',
 ])
+const contentBodyClass = ref(normalizeBodyClass(props.bodyClass))
+function applyBodyClass(value) {
+  contentBodyClass.value = normalizeBodyClass(value)
+  updateFrameOptions()
+  emit('update:bodyClass', contentBodyClass.value)
+}
+watch(
+  () => props.bodyClass,
+  (value) => {
+    contentBodyClass.value = normalizeBodyClass(value)
+    updateFrameOptions()
+  },
+)
+watch(
+  () => props.assistanceAdapter,
+  () => {
+    if (['ai', 'language'].includes(dialog.value)) dialog.value = null
+  },
+)
 const cssUrls = ref([])
 const cssStatus = ref([])
 let removeContentCss = () => {}
@@ -229,7 +269,9 @@ const conditionalTarget = shallowRef(null)
 const imageTarget = shallowRef(null)
 const embedTarget = shallowRef(null)
 const scienceTarget = shallowRef(null)
+const pageTarget = shallowRef(null)
 function openScience(target = null) {
+  if (!allowed('science')) return
   if (locked.value || !engine.value?.editable || engine.value.destroyed) return
   rememberSelection()
   scienceTarget.value = target
@@ -237,6 +279,7 @@ function openScience(target = null) {
   dialog.value = 'science'
 }
 function openEmbed(target = null) {
+  if (!allowed('media')) return
   if (locked.value) return
   rememberSelection()
   embedTarget.value = target
@@ -282,6 +325,7 @@ function openPreview() {
       )
       .join('') + '</head>',
   )
+  previewHtml.value = previewHtml.value.replace('<body', `<body class="${contentBodyClass.value}"`)
   dialog.value = 'preview'
 }
 function openMetrics() {
@@ -615,6 +659,7 @@ const allMenus = computed(() => ({
     { label: 'İçindekiler ekle / güncelle', icon: ListTree, action: insertContents },
     { label: 'Görsel veya medya', icon: Image, action: openMedia },
     { label: 'Bağlantıdan medya ekle', icon: Film, action: () => openEmbed() },
+    { label: 'Web sayfası göm', icon: Globe, action: () => openPageEmbed() },
     { label: 'Matematik ve kimya', icon: FlaskConical, action: () => openScience() },
     { label: 'Görev listesi', icon: ListChecks, action: () => command('taskList') },
     { label: 'Bağlantı ekle', icon: Link, action: () => openDialog('link') },
@@ -853,6 +898,11 @@ const allMenus = computed(() => ({
     },
   ],
   Araçlar: [
+    ...(props.documentSession
+      ? [{ label: 'CMS sürüm geçmişi', icon: Clock, action: () => openDialog('cmsHistory') }]
+      : []),
+    { label: 'AI yazım yardımcısı', icon: Sparkles, action: () => openDialog('ai') },
+    { label: 'Yazım ve dil bilgisi', icon: ScanEye, action: () => openDialog('language') },
     {
       label: 'Otomatik düzeltme ve metin kısayolları',
       icon: TextCursorInput,
@@ -898,6 +948,7 @@ const menus = computed(() =>
       .map(([, name]) => [
         name,
         allMenus.value[name]
+          .filter((item) => allowed(menuFeature(item.label)))
           .filter(
             (item) =>
               !locked.value ||
@@ -1067,6 +1118,8 @@ function customTable(value) {
 const frameDocument = `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><style>${documentCss}body{position:relative;outline:none;min-height:calc(100vh - 160px);overflow-wrap:anywhere}table{width:100%}td,th{min-width:40px}a{cursor:text}img{cursor:default}::selection{background:#b4d7ff}pre{white-space:pre-wrap}body:focus{outline:none}body[data-empty="true"]::before{content:attr(data-placeholder);position:absolute;top:14px;left:32px;right:32px;color:#77808d;pointer-events:none;white-space:pre-wrap}[data-studio-thread]{background:#fff1bf;border-bottom:2px solid #dfb455}[data-studio-resolved="true"]{background:transparent;border-bottom:1px dotted #b8b0c4}</style></head><body contenteditable="true" role="textbox" aria-label="Belge içeriği" aria-multiline="true" spellcheck="true"></body></html>`
 
 function initialize() {
+  // A nested iframe finishing navigation must not recreate the editor/history.
+  if (engine.value?.root === frame.value.contentDocument.body && !engine.value.destroyed) return
   engine.value?.destroy()
   engine.value = new StudioEditor(frame.value.contentDocument.body, {
     content: props.modelValue,
@@ -1108,14 +1161,30 @@ function initialize() {
     }
   })
   engine.value.writingPreferences = writingPreferences.value
+  engine.value.features = props.features
+  engine.value.listen(engine.value.root, 'pointerdown', (event) => {
+    const page = event.target.closest?.('figure[data-studio-page]')
+    if (!locked.value && allowed('pageEmbed') && page && event.target.closest?.('figcaption')) {
+      event.preventDefault()
+      openPageEmbed(page)
+    }
+  })
   engine.value.permanentPen = permanentPen.value
   engine.value.listen(engine.value.root, 'click', (event) => {
     if (locked.value) return
+    const page = event.target.closest?.('figure[data-studio-page]')
+    if (page && event.target.closest?.('figcaption')) {
+      event.preventDefault()
+      openPageEmbed(page)
+      return
+    }
     if (event.target.closest?.('[data-studio-thread]')) reviewTab.value = 'comments'
   })
   engine.value.listen(engine.value.root, 'dblclick', (event) => {
     if (locked.value) return
     const conditional = event.target.closest?.('[data-studio-condition]')
+    const page = event.target.closest?.('figure[data-studio-page]')
+    if (page) return openPageEmbed(page)
     if (conditional) {
       conditionalTarget.value = conditional
       openDialog('condition')
@@ -1145,6 +1214,7 @@ function initialize() {
 function updateFrameOptions() {
   const root = engine.value?.root
   if (!root) return
+  root.className = contentBodyClass.value
   root.dataset.placeholder = props.placeholder
   root.ownerDocument.documentElement.lang = activeLocale.value
   root.dataset.visualBlocks = String(visualBlocks.value)
@@ -1173,6 +1243,24 @@ watch(
   { flush: 'sync' },
 )
 watch(() => props.placeholder, updateFrameOptions)
+watch(
+  () => props.documentSession,
+  () => {
+    if (dialog.value === 'cmsHistory') dialog.value = null
+  },
+)
+watch(
+  () => props.features,
+  () => {
+    editEpoch++
+    if (engine.value) engine.value.features = props.features
+    dialog.value = null
+    popup.value = null
+    reviewTab.value = null
+    contextMenu.value?.close()
+  },
+  { deep: true, flush: 'sync' },
+)
 watch(() => props.direction, updateFrameOptions)
 watch(() => [props.locale, props.messages], updateFrameOptions, { deep: true })
 watch(
@@ -1198,12 +1286,12 @@ function command(name, ...args) {
   engine.value?.[name](...args)
 }
 function openMedia() {
-  if (locked.value) return
+  if (locked.value || !allowed('media')) return
   rememberSelection()
   emit('media')
 }
 function openDialog(name) {
-  if (locked.value) return
+  if (locked.value || !allowed(dialogFeatures[name])) return
   contextMenu.value?.close()
   popup.value = null
   rememberSelection()
@@ -1214,6 +1302,11 @@ function openDialog(name) {
       : { href: '', text: engine.value.range().toString(), blank: false }
   if (name === 'image') imageForm.value = { ...state.value.image }
   dialog.value = name
+}
+function openPageEmbed(target = null) {
+  if (locked.value || !allowed('pageEmbed')) return
+  pageTarget.value = target
+  openDialog('pageEmbed')
 }
 function openCellFormat() {
   if (locked.value) return
@@ -1293,7 +1386,7 @@ function applyCode() {
   codeForm.value.code = ''
 }
 async function uploadFiles(files, position, prepared = null) {
-  if (busy.value || locked.value) return
+  if (busy.value || locked.value || !allowed('media')) return
   busy.value = true
   error.value = ''
   const instance = engine.value
@@ -1426,6 +1519,12 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', escape)
 })
 defineExpose({
+  getInlineHTML: () => inlineContentHtml(engine.value?.root),
+  openVersionHistory: () => {
+    if (props.documentSession) openDialog('cmsHistory')
+  },
+  openPageEmbed: () => openPageEmbed(),
+  openAssistant: (kind = 'ai') => openDialog(kind === 'language' ? 'language' : 'ai'),
   openContentStyles: () => {
     if (props.allowContentCss && !props.disabled) dialog.value = 'content-styles'
   },
@@ -1827,6 +1926,7 @@ defineExpose({
           <button
             class="native-tool"
             :aria-label="t('Bağlantı ekle')"
+            v-if="allowed('links')"
             :title="t('Bağlantı ekle veya düzenle')"
             :aria-pressed="!!state.link"
             @pointerdown.prevent
@@ -1837,6 +1937,7 @@ defineExpose({
           <button
             class="native-tool"
             :aria-label="t('Medya kütüphanesini aç')"
+            v-if="allowed('media')"
             :title="t('Medya kütüphanesi')"
             @pointerdown.prevent
             @click="openMedia"
@@ -1845,6 +1946,7 @@ defineExpose({
           </button>
           <button
             class="native-tool native-table-button"
+            v-if="allowed('tables')"
             :aria-label="t('Tablo ekle')"
             :aria-expanded="popup === 'table'"
             :title="t('Tablo ekle')"
@@ -1856,6 +1958,7 @@ defineExpose({
           <button
             class="native-tool"
             :aria-label="t('Bağlantıdan medya ekle')"
+            v-if="allowed('media')"
             :title="t('YouTube / Vimeo')"
             @pointerdown.prevent
             @click="openEmbed()"
@@ -1865,6 +1968,7 @@ defineExpose({
           <button
             class="native-tool"
             :aria-label="t('Matematik ve kimya')"
+            v-if="allowed('science')"
             :title="t('Matematik ve kimya')"
             @pointerdown.prevent
             @click="openScience()"
@@ -2169,7 +2273,7 @@ defineExpose({
           :suspended="!!dialog || !!popup || !!state.table || !!state.image || !!state.mediaEmbed"
         />
         <ImageControls
-          v-if="!locked"
+          v-if="!locked && allowed('media')"
           :engine="engine"
           :state="state"
           :frame="frame"
@@ -2178,7 +2282,7 @@ defineExpose({
           @properties="openDialog('image')"
         />
         <MediaEmbedControls
-          v-if="engine && !locked"
+          v-if="engine && !locked && allowed('media')"
           :engine="engine"
           :state="state"
           :frame="frame"
@@ -2186,7 +2290,7 @@ defineExpose({
           @edit="openEmbed"
         />
         <TableControls
-          v-if="!locked"
+          v-if="!locked && allowed('tables')"
           ref="tableControls"
           :engine="engine"
           :state="state"
@@ -2243,13 +2347,8 @@ defineExpose({
       :title="t('Belge önizlemesi')"
       wide
       @close="dialog = null"
-      ><iframe
-        class="document-preview-frame"
-        sandbox=""
-        :title="t('Belge önizleme içeriği')"
-        :srcdoc="previewHtml"
-      ></iframe
-      ><template #footer
+      ><ResponsivePreview :html="previewHtml" />
+      <template #footer
         ><button class="button" @click="dialog = null">{{ t('Kapat') }}</button
         ><button class="button primary" @click="dialog = 'print'">
           {{ t('Yazdır / PDF') }}
@@ -2350,7 +2449,28 @@ defineExpose({
       v-if="dialog === 'content-styles' && allowContentCss"
       :urls="cssUrls"
       :status="cssStatus"
+      :body-class="contentBodyClass"
+      @body-class="applyBodyClass"
       @apply="applyContentCss"
+      @close="dialog = null"
+    />
+    <AssistanceDialog
+      v-if="['ai', 'language'].includes(dialog)"
+      :engine="engine"
+      :adapter="assistanceAdapter"
+      :kind="dialog === 'ai' ? 'ai' : 'language'"
+      @close="dialog = null"
+    />
+    <PageEmbedDialog
+      v-if="dialog === 'pageEmbed'"
+      :engine="engine"
+      :target="pageTarget"
+      @close="dialog = null"
+    />
+    <CmsHistoryDialog
+      v-if="dialog === 'cmsHistory' && documentSession"
+      :engine="engine"
+      :session="documentSession"
       @close="dialog = null"
     />
     <WritingSettingsDialog

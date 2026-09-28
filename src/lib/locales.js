@@ -8,6 +8,11 @@ import { writingMessages } from './writing-messages.js'
 import { advancedDocumentMessages } from './advanced-document-messages.js'
 import { navigationReviewMessages } from './navigation-review-messages.js'
 export const englishMessages = Object.freeze({
+  'AI yazım yardımcısı': 'AI writing assistant',
+  'CMS sürüm geçmişi': 'CMS version history',
+  'Web sayfası göm': 'Embed web page',
+  'İçerik CSS sınıfları': 'Content CSS classes',
+  'Yazım ve dil bilgisi': 'Spelling and grammar',
   'İçerik stili ayarları': 'Content style settings',
   'Harici CSS adresleri': 'External CSS URLs',
   'Sitenizin CSS dosyalarını içerik alanında kullanın. Her satıra bir adres girin; dosyalar listedeki sırayla uygulanır.':

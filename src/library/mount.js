@@ -19,6 +19,9 @@ const configurable = [
   'tablePasteStyle',
   'contentCss',
   'allowContentCss',
+  'bodyClass',
+  'features',
+  'documentSession',
 ]
 
 /** Enhance one existing textarea. No router, workspace or persistence is installed. */
@@ -53,6 +56,7 @@ export async function mountStudioEditor(target, options = {}) {
   })
   for (const key of configurable) if (Object.hasOwn(options, key)) props[key] = options[key]
   if (options.mediaAdapter) props.mediaAdapter = options.mediaAdapter
+  if (options.assistanceAdapter) props.assistanceAdapter = options.assistanceAdapter
   if (Object.hasOwn(options, 'readonly')) source.readOnly = !!options.readonly
   if (Object.hasOwn(options, 'disabled')) source.disabled = !!options.disabled
   function mode() {
@@ -92,7 +96,6 @@ export async function mountStudioEditor(target, options = {}) {
       source.dispatchEvent(new Event('input', { bubbles: true }))
       source.dispatchEvent(new Event('change', { bubbles: true }))
     } finally {
-      if (pinia) disposePinia(pinia)
       sending = false
     }
     options.onChange?.(html, instance)
@@ -157,6 +160,7 @@ export async function mountStudioEditor(target, options = {}) {
     try {
       app?.unmount()
     } finally {
+      if (pinia) disposePinia(pinia)
       root.remove()
       source.hidden = originalHidden
       source.setCustomValidity(originalValidity)
@@ -179,6 +183,10 @@ export async function mountStudioEditor(target, options = {}) {
               options.onContentCssChange?.(urls)
             },
             onContentCssStatus: (status) => options.onContentCssStatus?.(status),
+            'onUpdate:bodyClass': (value) => {
+              props.bodyClass = value
+              options.onBodyClassChange?.(value)
+            },
             onSave: (html) => options.onSave?.(html, instance),
             onReady: (editor) => {
               api = editor

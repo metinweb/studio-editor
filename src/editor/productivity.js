@@ -61,6 +61,8 @@ export const productivity = {
     this.publishState()
   },
   writingBlock(id) {
+    if (this.features?.[['ul', 'ol', 'task'].includes(id) ? 'lists' : 'formatting'] === false)
+      return false
     const block = paragraph(this)
     if (!block || !writingCommands.some((c) => c.id === id && !c.action)) return false
     this.transaction(() => {
@@ -103,7 +105,11 @@ export const productivity = {
           '[]': 'task',
           '[ ]': 'task',
         }[text]
-    if (!id) return false
+    if (
+      !id ||
+      this.features?.[['ul', 'ol', 'task'].includes(id) ? 'lists' : 'formatting'] === false
+    )
+      return false
     event.preventDefault()
     return this.writingBlock(id)
   },

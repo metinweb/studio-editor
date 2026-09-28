@@ -1,5 +1,15 @@
 # Changelog
 
+## September 28, 2026 — CMS persistence and advanced editing
+
+- Added opt-in debounced autosave, an HTTP document adapter, Vue/HTML session binding, dirty/error/conflict states and CMS version previews/restoration. In-flight saves retain newer edits; stale initial loads cannot overwrite typing. Added a runnable [CMS integration lab](https://metinweb.github.io/studio-editor/integration/cms.html) with an explicitly in-memory adapter.
+- Added independent `features` command switches, with runtime changes and keyboard/API gates. Toolbar visibility remains separate from editing policy and server validation.
+- Added provider-neutral AI rewrite/summary/translation tools and spelling/grammar suggestions: explicit selected-text submission, cancellation, response validation, stale-result checks and undo. Services must be supplied by the host CMS.
+- Added sandboxed HTTPS page widgets, portable JSON representation, caption editing/removal and undo; remote pages cannot request script/form permissions.
+- Added content body classes, mobile/tablet/landscape previews and `getInlineHTML()` computed-style snapshots.
+- Fixed textarea integration disposing its Pinia instance on every change, and guarded editor initialization against nested-frame loads resetting history.
+- Published [English](CMS-PREMIUM.md) and [Turkish](CMS-PREMIUM.tr.md) usage, contracts, feature controls and service limitations. Added concurrency, adapter and cross-browser interaction regression tests.
+
 ## September 28, 2026 — CMS embedding and content styles
 
 - Added `mountStudioEditor` for existing HTML textareas: native form data, validation, reset, readonly/disabled modes, dirty tracking and cleanup. Added a self-hosted browser module with its own Vue/Pinia runtime and a working HTML form example.

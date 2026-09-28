@@ -2,6 +2,8 @@
 
 Studio Editor, TinyMCE gibi mevcut uygulamanızdaki içerik alanına eklenir. Vue uygulamanızı, sayfa yapınızı veya yönetim panelinizi değiştirmez. Kayıt, kullanıcı yetkileri, SEO alanları, çeviriler ve yayınlama sizin CMS'inizde kalır.
 
+Otomatik kayıt, CMS sürüm geçmişi, gerçek komut kapatma, AI/dil servisi bağlantısı, mobil önizleme ve CSS çıktısı için [gelişmiş entegrasyon rehberine](CMS-PREMIUM.tr.md) bakın.
+
 ## Vue ile kullanım
 
 Paket henüz npm'de yayımlanmıyor. Bu depoda `npm run package:release` çalıştırıp oluşan yerel `.tgz` paketini uygulamanıza kurun. [Paket kurulum rehberi](../packages/editor/README.tr.md) ve [çalışan Vue örneği](../examples/vue/App.vue) ayrıntıları gösterir. Varsayılan medya kütüphanesi için uygulamada Pinia kurulmalıdır.
@@ -102,7 +104,7 @@ editor.setOptions({ readonly: true })
 
 Vue karşılığı: `:toolbar="['history', 'format', 'lists']"`, `:menubar="false"`, `:readonly="true"`. Boolean değerleri düz metin olarak değil, `:` ile bağlayın.
 
-**Bir düğmeyi gizlemek o özelliği tamamen kapatmak değildir.** Klavye kısayolları, sağ tık menüsü, komut API'si veya yapıştırma yoluyla aynı işlem erişilebilir olabilir. Yerleşik özellikler için tek tek komut engelleme listesi şu anda yoktur. İçerik/yetki kısıtlarını sunucuda uygulayın. Kendi eklenti komutlarınızın `enabled` fonksiyonu ve kaldırma fonksiyonu kullanılabilir.
+**Bir düğmeyi gizlemek o özelliği tamamen kapatmak değildir.** Klavye kısayolları, sağ tık menüsü, komut API'si veya yapıştırma yoluyla aynı işlem erişilebilir olabilir. Yerleşik komut gruplarını bağımsız `features` ayarıyla kapatabilirsiniz; [anahtarlar ve sınırlar](CMS-PREMIUM.tr.md). Bu ayar bir HTML şeması veya sunucu yetki kuralı değildir. İçerik/yetki kısıtlarını sunucuda uygulayın. Kendi eklenti komutlarınızın `enabled` fonksiyonu ve kaldırma fonksiyonu kullanılabilir.
 
 Otomatik düzeltme, kalıcı kalem, görsel işaretler ve başlık gezgini ilgili menülerden açılıp kapatılır. Ortak düzenleme modülü siz bağlamadıkça etkin değildir.
 
