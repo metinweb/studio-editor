@@ -2,6 +2,7 @@ import createDOMPurify from 'dompurify'
 import documentCss from './document.css?inline'
 import { readMediaEmbed, mediaEmbedHtml } from './media-embed.js'
 import { readPageEmbed, pageEmbedHtml } from './page-embed.js'
+import { normalizeUiElements } from './ui-elements.js'
 import { normalizeDocumentFields } from '../editor/document-fields.js'
 import { normalizeTableFormulas } from './table-formulas.js'
 import { normalizeWritingWidgets } from '../editor/writing-widgets.js'
@@ -48,13 +49,14 @@ export const cleanHtml = (html) => {
     FORBID_ATTR: ['contenteditable', 'autofocus', 'srcdoc'],
   })
   if (
-    !/data-studio-(page|embed|task|checked|mention|style|field|footnote|condition|formula)/.test(
+    !/data-studio-(ui|page|embed|task|checked|mention|style|field|footnote|condition|formula)/.test(
       sanitized,
     )
   )
     return sanitized
   const template = window.document.createElement('template')
   template.innerHTML = sanitized
+  normalizeUiElements(template.content)
   for (const node of template.content.querySelectorAll('figure[data-studio-page]')) {
     const page = readPageEmbed(node)
     if (page) node.outerHTML = pageEmbedHtml(page.url, page, true)
@@ -98,6 +100,7 @@ export function renderDocument(document) {
 // Review conversations belong to the workspace, not the published document.
 export function publicHtml(html) {
   const doc = new DOMParser().parseFromString(cleanHtml(html), 'text/html')
+  normalizeUiElements(doc.body, 'public')
   doc
     .querySelectorAll('[data-studio-thread],[data-studio-resolved],[data-studio-suggestion]')
     .forEach((node) => {

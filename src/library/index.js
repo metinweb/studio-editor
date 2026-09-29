@@ -14,6 +14,12 @@ export { createAutosaveSession } from '../lib/autosave.js'
 export { bindDocumentSession } from '../lib/cms-binding.js'
 export { createHttpDocumentAdapter } from '../lib/http-document-adapter.js'
 export { createHttpAssistanceAdapter } from '../lib/assistance.js'
+export {
+  uiElementHtml,
+  normalizeUiElement,
+  newUiElement,
+  uiFieldTypes,
+} from '../lib/ui-elements.js'
 export { renderPrintDocument, printDocument } from '../lib/print-document.js'
 export const exportDocx = async (html, options) =>
   (await import('../lib/docx-export.js')).exportDocx(html, options)

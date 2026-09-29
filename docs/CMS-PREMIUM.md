@@ -1,5 +1,7 @@
 # CMS persistence and advanced editing
 
+New: [native HTML forms, sliders and accordions](UI-ELEMENTS.md), controlled by `features.uiElements` and available through the Insert menu.
+
 Studio remains an **embedded HTML editor**, usable in an ordinary HTML form or a Vue application. Your CMS owns users, permissions, routing, workflow and publishing. Start with [CMS integration](CMS-INTEGRATION.md). [Türkçe](CMS-PREMIUM.tr.md).
 
 Try the [CMS integration lab](https://metinweb.github.io/studio-editor/integration/cms.html). Its adapter keeps versions **in memory only**; reloading resets them. It demonstrates the real editor/session APIs without pretending to save to your server.

@@ -134,3 +134,16 @@ async function cmsTypes(api: StudioEditorApi) {
   void snapshot
 }
 void cmsTypes
+
+async function uiTypes(api: StudioEditorApi) {
+  const { newUiElement, uiElementHtml } = await import('studio-editor')
+  const form = newUiElement('form')
+  form.action = '/api/contact'
+  form.fields.push({ type: 'checkbox', name: 'consent', label: 'I agree', required: true })
+  api.insertHTML(uiElementHtml(form))
+  api.openUiElement('slider')
+  h(StudioEditor, { features: { uiElements: false } })
+  // @ts-expect-error arbitrary scripts are not UI elements
+  api.openUiElement('script')
+}
+void uiTypes

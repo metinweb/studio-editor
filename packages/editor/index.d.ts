@@ -30,6 +30,7 @@ export interface StudioEditorApi {
   openContentStyles(): void
   openAssistant(kind?: 'ai' | 'language'): void
   openPageEmbed(): void
+  openUiElement(kind?: UiElementKind): void
   openVersionHistory(): void
   getDocument(): EditorDocument | undefined
   getHistoryStats(): HistoryStats | undefined
@@ -119,7 +120,78 @@ export type FeatureName =
   | 'ai'
   | 'language'
   | 'pageEmbed'
+  | 'uiElements'
 export type EditorFeatures = Partial<Record<FeatureName, boolean>>
+export type UiElementKind = 'form' | 'slider' | 'accordion'
+export type UiFieldType =
+  | 'text'
+  | 'email'
+  | 'tel'
+  | 'url'
+  | 'number'
+  | 'date'
+  | 'textarea'
+  | 'select'
+  | 'radio'
+  | 'checkbox'
+  | 'range'
+export interface UiField {
+  type: UiFieldType
+  name: string
+  label: string
+  help?: string
+  placeholder?: string
+  required?: boolean
+  fullWidth?: boolean
+  options?: string[]
+  min?: number
+  max?: number
+  step?: number
+}
+export interface UiElementBase {
+  version: 1
+  id: string
+  title: string
+  description?: string
+  accent?: string
+}
+export interface UiForm extends UiElementBase {
+  kind: 'form'
+  action?: string
+  submitLabel?: string
+  columns?: 1 | 2
+  fields: UiField[]
+}
+export interface UiSlide {
+  title: string
+  text?: string
+  image?: string
+  alt?: string
+  link?: string
+  linkLabel?: string
+}
+export interface UiSlider extends UiElementBase {
+  kind: 'slider'
+  cards?: 1 | 2 | 3
+  ratio?: '16/9' | '4/3' | '1/1'
+  items: UiSlide[]
+}
+export interface UiAccordion extends UiElementBase {
+  kind: 'accordion'
+  items: { title: string; text?: string; open?: boolean }[]
+}
+export type UiElement = UiForm | UiSlider | UiAccordion
+export const uiFieldTypes: readonly UiFieldType[]
+export function newUiElement(kind: 'form', locale?: 'en' | 'tr'): UiForm
+export function newUiElement(kind: 'slider', locale?: 'en' | 'tr'): UiSlider
+export function newUiElement(kind: 'accordion', locale?: 'en' | 'tr'): UiAccordion
+export function newUiElement(kind: UiElementKind, locale?: 'en' | 'tr'): UiElement
+export function normalizeUiElement(value: unknown): UiElement
+/** portable stores definitions, editor renders non-submitting cards, public renders native controls. */
+export function uiElementHtml(
+  value: UiElement,
+  mode?: 'portable' | 'editor' | 'public' | 'preview',
+): string
 export interface AssistanceInput {
   text: string
   language: string

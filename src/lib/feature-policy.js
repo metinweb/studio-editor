@@ -24,6 +24,7 @@ export const featureNames = [
   'ai',
   'language',
   'pageEmbed',
+  'uiElements',
 ]
 export function featureEnabled(features, name) {
   return features?.[name] !== false
@@ -55,9 +56,12 @@ export const dialogFeatures = {
   listProperties: 'lists',
   pen: 'formatting',
   pageEmbed: 'pageEmbed',
+  uiElement: 'uiElements',
   cmsHistory: 'history',
 }
 export function menuFeature(label) {
+  if (['Form oluşturucu', 'Slider oluşturucu', 'Akordeon oluşturucu'].includes(label))
+    return 'uiElements'
   if (label === 'Web sayfası göm') return 'pageEmbed'
   if (label === 'CMS sürüm geçmişi') return 'history'
   if (/Tablo|tablo|Hücre|hücre|Satır|satır|Sütun|sütun/.test(label)) return 'tables'

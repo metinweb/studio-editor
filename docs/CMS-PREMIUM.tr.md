@@ -1,5 +1,7 @@
 # CMS kayıt bağlantısı ve gelişmiş editör araçları
 
+Yeni: [düz HTML form, slider ve akordeon oluşturucuları](UI-ELEMENTS.tr.md). Ekle menüsünde bulunur; `features.uiElements` ile açılıp kapatılır.
+
 Studio, mevcut HTML/Vue CMS’inize yerleştirdiğiniz bir **HTML içerik editörüdür**. Kullanıcılar, sayfa adresleri, yetkilendirme, yayın akışı ve SEO alanları sizin CMS’inizde kalır. [Temel kurulum](CMS-INTEGRATION.tr.md) · [Ayrıntılı API sözleşmesi ve Vue/HTML örnekleri](CMS-PREMIUM.md).
 
 [CMS entegrasyon örneğini açın](https://metinweb.github.io/studio-editor/integration/cms.html). Otomatik kayıt, sürüm geçmişi, özellik seçimi ve CSS çıktısını deneyebilirsiniz. Bu örnekte kayıtlar **yalnızca bellektedir**; sayfa yenilenince sıfırlanır. Kalıcı kayıt için kendi sunucunuzun adaptörünü bağlayın.

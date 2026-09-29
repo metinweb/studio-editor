@@ -167,6 +167,7 @@ const api = {
   openAssistant: (kind) => editor.value?.openAssistant(kind),
   openVersionHistory: () => editor.value?.openVersionHistory(),
   openPageEmbed: () => editor.value?.openPageEmbed(),
+  openUiElement: (kind = 'form') => editor.value?.openUiElement(kind),
   getDocument: () => editor.value?.getDocument(),
   getHistoryStats: () => editor.value?.getHistoryStats(),
 }

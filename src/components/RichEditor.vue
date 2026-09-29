@@ -110,6 +110,7 @@ import { featureEnabled, dialogFeatures, menuFeature } from '../lib/feature-poli
 import { normalizeContentCss, installContentCss, normalizeBodyClass } from '../lib/content-css.js'
 import { readScience } from '../lib/science.js'
 import { inlineContentHtml } from '../lib/inline-css.js'
+import { readUiElement } from '../lib/ui-elements.js'
 import { defaultWritingPreferences, defaultPen } from '../lib/writing-preferences.js'
 import './rich-editor.css'
 import './content-tools.css'
@@ -128,6 +129,7 @@ const ConditionalFieldDialog = defineAsyncComponent(() => import('./ConditionalF
 const ContentStylesDialog = defineAsyncComponent(() => import('./ContentStylesDialog.vue'))
 const AssistanceDialog = defineAsyncComponent(() => import('./AssistanceDialog.vue'))
 const PageEmbedDialog = defineAsyncComponent(() => import('./PageEmbedDialog.vue'))
+const UiElementDialog = defineAsyncComponent(() => import('./UiElementDialog.vue'))
 const CmsHistoryDialog = defineAsyncComponent(() => import('./CmsHistoryDialog.vue'))
 
 const props = defineProps({
@@ -270,6 +272,9 @@ const imageTarget = shallowRef(null)
 const embedTarget = shallowRef(null)
 const scienceTarget = shallowRef(null)
 const pageTarget = shallowRef(null)
+const uiTarget = shallowRef(null)
+const uiKind = ref('form')
+const uiRevision = ref(0)
 function openScience(target = null) {
   if (!allowed('science')) return
   if (locked.value || !engine.value?.editable || engine.value.destroyed) return
@@ -660,6 +665,9 @@ const allMenus = computed(() => ({
     { label: 'Görsel veya medya', icon: Image, action: openMedia },
     { label: 'Bağlantıdan medya ekle', icon: Film, action: () => openEmbed() },
     { label: 'Web sayfası göm', icon: Globe, action: () => openPageEmbed() },
+    { label: 'Form oluşturucu', icon: ListChecks, action: () => openUiElement('form') },
+    { label: 'Slider oluşturucu', icon: Rows3, action: () => openUiElement('slider') },
+    { label: 'Akordeon oluşturucu', icon: ListTree, action: () => openUiElement('accordion') },
     { label: 'Matematik ve kimya', icon: FlaskConical, action: () => openScience() },
     { label: 'Görev listesi', icon: ListChecks, action: () => command('taskList') },
     { label: 'Bağlantı ekle', icon: Link, action: () => openDialog('link') },
@@ -1163,6 +1171,12 @@ function initialize() {
   engine.value.writingPreferences = writingPreferences.value
   engine.value.features = props.features
   engine.value.listen(engine.value.root, 'pointerdown', (event) => {
+    const ui = event.target.closest?.('figure[data-studio-ui]')
+    if (ui && !locked.value && allowed('uiElements')) {
+      event.preventDefault()
+      openUiElement(readUiElement(ui)?.kind, ui)
+      return
+    }
     const page = event.target.closest?.('figure[data-studio-page]')
     if (!locked.value && allowed('pageEmbed') && page && event.target.closest?.('figcaption')) {
       event.preventDefault()
@@ -1170,6 +1184,13 @@ function initialize() {
     }
   })
   engine.value.permanentPen = permanentPen.value
+  engine.value.listen(engine.value.root, 'keydown', (event) => {
+    const ui = event.target.closest?.('figure[data-studio-ui]')
+    if (ui && ['Enter', ' '].includes(event.key) && !locked.value && allowed('uiElements')) {
+      event.preventDefault()
+      openUiElement(readUiElement(ui)?.kind, ui)
+    }
+  })
   engine.value.listen(engine.value.root, 'click', (event) => {
     if (locked.value) return
     const page = event.target.closest?.('figure[data-studio-page]')
@@ -1307,6 +1328,14 @@ function openPageEmbed(target = null) {
   if (locked.value || !allowed('pageEmbed')) return
   pageTarget.value = target
   openDialog('pageEmbed')
+}
+function openUiElement(kind = 'form', target = null) {
+  if (locked.value || !allowed('uiElements') || !['form', 'slider', 'accordion'].includes(kind))
+    return
+  uiTarget.value = target
+  uiRevision.value = engine.value.revision
+  uiKind.value = kind
+  openDialog('uiElement')
 }
 function openCellFormat() {
   if (locked.value) return
@@ -1519,6 +1548,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', escape)
 })
 defineExpose({
+  openUiElement: (kind = 'form') => openUiElement(kind),
   getInlineHTML: () => inlineContentHtml(engine.value?.root),
   openVersionHistory: () => {
     if (props.documentSession) openDialog('cmsHistory')
@@ -2459,6 +2489,14 @@ defineExpose({
       :engine="engine"
       :adapter="assistanceAdapter"
       :kind="dialog === 'ai' ? 'ai' : 'language'"
+      @close="dialog = null"
+    />
+    <UiElementDialog
+      v-if="dialog === 'uiElement'"
+      :engine="engine"
+      :kind="uiKind"
+      :revision="uiRevision"
+      :target="uiTarget"
       @close="dialog = null"
     />
     <PageEmbedDialog

@@ -1,5 +1,7 @@
 # Studio Editor
 
+Yeni: [düz HTML form, slider ve akordeon oluşturucuları](docs/UI-ELEMENTS.tr.md). Sürükleyerek sıralama, mobil önizleme ve ek widget çalışma zamanı gerektirmeyen HTML çıktı. [Canlı UI örneği](https://metinweb.github.io/studio-editor/integration/ui.html).
+
 Yeni: `mountStudioEditor` ile HTML form entegrasyonu; Vue için `v-model`; içerik alanına harici CSS ekleme ayarları. Kurulum, açılabilen/gizlenebilen özellikler ve örnekler: [Türkçe CMS entegrasyon rehberi](docs/CMS-INTEGRATION.tr.md) · [Canlı HTML örneği](https://metinweb.github.io/studio-editor/integration/).
 
 Yeni gelişmiş araçlar: CMS otomatik kayıt/sürüm geçmişi, komut kapatma ayarları, AI/dil servisi arayüzü, güvenli sayfa gömme, mobil önizleme ve satır içi CSS çıktısı. [Türkçe kullanım rehberi](docs/CMS-PREMIUM.tr.md) · [CMS entegrasyon örneği](https://metinweb.github.io/studio-editor/integration/cms.html). Servis gerektiren araçları kendi backend adaptörlerinize bağlayın.

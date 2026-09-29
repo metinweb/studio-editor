@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useEditorLocale } from '../lib/editor-locale'
 const props = defineProps({ html: String })
+const srcdoc = computed(() => props.html?.replaceAll('href="#', 'href="about:srcdoc#'))
 const { locale } = useEditorLocale()
 const c = (en, tr) => (locale.value === 'tr' ? tr : en)
 const size = ref('desktop'),
@@ -49,7 +50,7 @@ const width = computed(() =>
       :style="{ width, minWidth: width }"
       sandbox=""
       :title="c('Document preview content', 'Belge önizleme içeriği')"
-      :srcdoc="html"
+      :srcdoc="srcdoc"
     ></iframe>
   </div>
 </template>

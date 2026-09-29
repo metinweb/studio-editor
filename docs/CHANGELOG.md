@@ -1,5 +1,13 @@
 # Changelog
 
+## September 30, 2026 — Native HTML UI builders
+
+- Added Insert-menu form, slider and accordion builders with field/item properties, pointer drag reordering, keyboard move buttons, duplication, removal and desktop/mobile sandbox previews.
+- Forms support eleven field types, labels/help, required validation, options, number/range bounds, responsive columns and explicit native POST endpoints. Editing cards cannot submit; public forms without an action are disabled. Backends and response handling remain host responsibilities.
+- Added script-free scroll-snap sliders with image/link cards and native details/summary accordions. Output works without Vue or a widget runtime.
+- Added versioned canonical UI definitions, portable JSON-model widgets, sanitized public rendering, duplicate-ID handling, source round-trips, stale-edit protection and undo. Added `openUiElement`, `features.uiElements` and typed generation helpers.
+- Added [UI playground](https://metinweb.github.io/studio-editor/integration/ui.html), HTML download, [English](UI-ELEMENTS.md) and [Turkish](UI-ELEMENTS.tr.md) guides. Tests exercise real native POST requests, pointer ordering, protected previews and three-browser editing.
+
 ## September 28, 2026 — CMS persistence and advanced editing
 
 - Added opt-in debounced autosave, an HTTP document adapter, Vue/HTML session binding, dirty/error/conflict states and CMS version previews/restoration. In-flight saves retain newer edits; stale initial loads cannot overwrite typing. Added a runnable [CMS integration lab](https://metinweb.github.io/studio-editor/integration/cms.html) with an explicitly in-memory adapter.
