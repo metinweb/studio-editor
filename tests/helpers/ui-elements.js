@@ -46,12 +46,14 @@ export function uiElementTests(test, expect) {
   }) => {
     await start(page)
     const dialog = await open(page)
+    await dialog.getByRole('button', { name: 'Add a field', exact: true }).click()
     await dialog.getByRole('button', { name: 'Dropdown', exact: true }).click()
     await dialog.getByRole('textbox', { name: 'Label', exact: true }).fill('Department')
     await dialog.getByRole('textbox', { name: 'Field name', exact: true }).fill('email')
     await dialog.getByRole('button', { name: 'Insert element' }).click()
     await expect(dialog.getByRole('alert')).toContainText('unique')
     await dialog.getByRole('textbox', { name: 'Field name', exact: true }).fill('department')
+    await dialog.getByText('Edit choices in bulk', { exact: true }).click()
     await dialog.getByRole('textbox', { name: 'Options (one per line)' }).fill('Sales\nSupport')
     await dialog.getByRole('button', { name: 'Settings', exact: true }).click()
     await dialog.getByRole('textbox', { name: 'Submission URL (POST)' }).fill('/contact')
@@ -235,5 +237,177 @@ export function uiElementTests(test, expect) {
     await page.evaluate(() => window.editor.openUiElement())
     await expect(dialog).toHaveCount(0)
     await expect(body(page)).toHaveText('Changed elsewhere')
+  })
+  test('live preview follows field and layout edits while invalid changes preserve the last valid preview', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await start(page)
+    const dialog = await open(page)
+    const preview = dialog.frameLocator('iframe')
+    await expect(preview.getByRole('textbox', { name: 'Your name' })).toBeEnabled()
+    await dialog.getByRole('textbox', { name: 'Label', exact: true }).fill('Full name')
+    await expect(preview.getByRole('textbox', { name: 'Full name' })).toBeVisible()
+    await dialog.getByRole('textbox', { name: 'Label', exact: true }).fill('')
+    await expect(dialog.getByText('Waiting for valid changes', { exact: true })).toBeVisible()
+    await expect(preview.getByRole('textbox', { name: 'Full name' })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Next item', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Insert element' }).click()
+    await expect(dialog.getByRole('textbox', { name: 'Label', exact: true })).toBeFocused()
+    await expect(dialog.getByRole('textbox', { name: 'Label', exact: true })).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    )
+    await dialog.getByRole('textbox', { name: 'Label', exact: true }).fill('Customer name')
+    await expect(preview.getByRole('textbox', { name: 'Customer name' })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Settings', exact: true }).click()
+    await dialog.getByRole('combobox', { name: 'Columns', exact: true }).selectOption('2')
+    await dialog.getByRole('textbox', { name: 'Title', exact: true }).fill('Contact sales')
+    await expect(preview.getByRole('heading', { name: 'Contact sales' })).toBeVisible()
+    await expect
+      .poll(async () => {
+        const name = await preview.getByRole('textbox', { name: 'Customer name' }).boundingBox()
+        const email = await preview.getByRole('textbox', { name: 'Email' }).boundingBox()
+        return email.x > name.x && Math.abs(email.y - name.y) < 2
+      })
+      .toBe(true)
+    await dialog.getByRole('button', { name: 'Mobile', exact: true }).click()
+    const size = await dialog.locator('iframe').boundingBox()
+    expect(size.width).toBeLessThanOrEqual(390)
+  })
+  test('field search, choice editing, keyboard reorder, delete recovery and discard protection work together', async ({
+    page,
+  }) => {
+    await start(page)
+    const dialog = await open(page)
+    await dialog.getByRole('button', { name: 'Add a field', exact: true }).click()
+    await dialog.getByRole('textbox', { name: 'Search fields', exact: true }).fill('choice')
+    await expect(dialog.locator('.ui-palette-grid button')).toHaveCount(1)
+    await page.keyboard.press('Escape')
+    await expect(dialog.getByRole('button', { name: 'Add a field', exact: true })).toBeFocused()
+    await dialog.getByRole('button', { name: 'Add a field', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Single choice', exact: true }).click()
+    await expect(dialog.getByRole('textbox', { name: 'Label', exact: true })).toBeFocused()
+    await dialog.getByRole('textbox', { name: 'Option 1', exact: true }).fill('Sales')
+    await dialog.getByRole('button', { name: 'Add option', exact: true }).click()
+    await dialog.getByRole('textbox', { name: 'Option 3', exact: true }).fill('Billing')
+    await dialog.getByRole('button', { name: 'Remove option 2', exact: true }).click()
+    const handle = dialog.getByRole('button', { name: 'Drag item 4', exact: true })
+    await handle.focus()
+    await page.keyboard.press('ArrowUp')
+    await expect(dialog.locator('[data-ui-row="2"]')).toContainText('Single choice')
+    await expect(dialog.getByRole('button', { name: 'Drag item 3', exact: true })).toBeFocused()
+    await dialog.getByRole('button', { name: 'Delete item', exact: true }).click()
+    await expect(dialog.locator('[data-ui-row]')).toHaveCount(3)
+    await dialog.getByRole('button', { name: 'Undo delete', exact: true }).click()
+    await expect(dialog.getByRole('textbox', { name: 'Option 2', exact: true })).toHaveValue(
+      'Billing',
+    )
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await expect(dialog.getByRole('alert')).toHaveText('Discard your unsaved changes?')
+    await dialog.getByRole('button', { name: 'Keep editing', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Insert element' }).click()
+    const config = JSON.parse(
+      await body(page).locator('[data-studio-ui]').getAttribute('data-studio-ui-config'),
+    )
+    expect(config.fields[2].options).toEqual(['Sales', 'Billing'])
+  })
+  test('slider validation selects the affected slide and accordion edits update the live preview', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await start(page)
+    let dialog = await open(page, 'slider')
+    await page.route('https://images.example.test/card.svg', (route) =>
+      route.fulfill({
+        contentType: 'image/svg+xml',
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="60"><rect width="80" height="60" fill="blue"/></svg>',
+      }),
+    )
+    await dialog.getByRole('button', { name: 'Add slide', exact: true }).click()
+    await dialog.getByRole('textbox', { name: 'Item title', exact: true }).fill('New collection')
+    await dialog
+      .getByRole('textbox', { name: 'Image URL', exact: true })
+      .fill('https://images.example.test/card.svg')
+    await dialog.getByRole('button', { name: 'Previous item', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Insert element' }).click()
+    await expect(
+      dialog.getByRole('textbox', { name: 'Alternative text', exact: true }),
+    ).toBeFocused()
+    await dialog
+      .getByRole('textbox', { name: 'Alternative text', exact: true })
+      .fill('Blue collection')
+    await expect(
+      dialog.frameLocator('iframe').getByRole('heading', { name: 'New collection' }),
+    ).toHaveCount(1)
+    await expect(dialog.locator('.slide-thumbnail img')).toHaveCount(1)
+    await dialog.getByRole('button', { name: 'Insert element' }).click()
+    dialog = await open(page, 'accordion')
+    await dialog.getByRole('textbox', { name: 'Item title', exact: true }).fill('Shipping details')
+    await dialog.getByRole('textbox', { name: 'Text', exact: true }).fill('Ships in two days.')
+    await dialog.getByRole('checkbox', { name: 'Initially open', exact: true }).check()
+    await expect(dialog.frameLocator('iframe').getByText('Ships in two days.')).toBeVisible()
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Discard changes', exact: true }).click()
+    await expect(body(page).locator('[data-studio-ui="accordion"]')).toHaveCount(0)
+  })
+  test('long outlines scroll during pointer dragging and retain every field on drop', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await start(page)
+    await page.evaluate(() => {
+      const config = window.lib.newUiElement('form')
+      config.fields = Array.from({ length: 20 }, (_, index) => ({
+        type: 'text',
+        name: `field_${index}`,
+        label: `Field ${index + 1}`,
+      }))
+      window.editor.setHTML(window.lib.uiElementHtml(config))
+    })
+    await body(page).locator('[data-studio-ui]').click()
+    const dialog = page.getByRole('dialog', { name: 'Form builder' })
+    const source = await dialog
+      .getByRole('button', { name: 'Drag item 1', exact: true })
+      .boundingBox()
+    const list = dialog.locator('.ui-field-list'),
+      box = await list.boundingBox()
+    await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height - 10, { steps: 8 })
+    await expect.poll(() => list.evaluate((node) => node.scrollTop)).toBeGreaterThan(150)
+    await page.mouse.up()
+    await dialog.getByRole('button', { name: 'Apply changes' }).click()
+    const config = JSON.parse(
+      await body(page).locator('[data-studio-ui]').getAttribute('data-studio-ui-config'),
+    )
+    expect(config.fields).toHaveLength(20)
+    expect(new Set(config.fields.map((field) => field.name)).size).toBe(20)
+    expect(config.fields.findIndex((field) => field.name === 'field_0')).toBeGreaterThan(3)
+  })
+  test('phone editing separates order and properties, and keeps adding and preview within reach', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await start(page, { locale: 'tr' })
+    await page.evaluate(() => window.editor.openUiElement('form'))
+    const dialog = page.getByRole('dialog', { name: 'Form oluşturucu' })
+    await dialog.getByRole('button', { name: 'Alan ekle', exact: true }).click()
+    await dialog.getByRole('textbox', { name: 'Alan ara', exact: true }).fill('tarih')
+    await dialog.getByRole('button', { name: 'Tarih', exact: true }).click()
+    await expect(dialog.getByRole('textbox', { name: 'Etiket', exact: true })).toBeFocused()
+    await dialog.getByRole('textbox', { name: 'Etiket', exact: true }).fill('Teslim tarihi')
+    await dialog.getByRole('button', { name: /^Alanlar/ }).click()
+    await expect(dialog.locator('[data-ui-row="3"]')).toContainText('Teslim tarihi')
+    await dialog.locator('[data-ui-row="0"] .ui-field-select').click()
+    await expect(dialog.getByRole('textbox', { name: 'Etiket', exact: true })).toBeVisible()
+    await dialog.getByRole('button', { name: 'Önizlemeyi dene', exact: true }).click()
+    await expect(dialog.locator('iframe')).toBeVisible()
+    const insert = dialog.getByRole('button', { name: 'Öğeyi ekle', exact: true })
+    const bounds = await insert.boundingBox()
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(844)
+    expect(await dialog.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true)
+    await insert.click()
+    await expect(body(page).locator('[data-studio-ui="form"]')).toHaveCount(1)
   })
 }

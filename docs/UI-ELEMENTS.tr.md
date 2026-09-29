@@ -6,9 +6,15 @@ Editörün içine **form oluşturucu, slider ve akordeon/SSS** eklendi. Yayınla
 
 **Ekle → Form oluşturucu / Slider oluşturucu / Akordeon oluşturucu** menüsünü açın. Mevcut öğenin üzerine tıklayarak yeniden düzenleyin. Klavyeyle odağa alıp Enter/Boşluk ile de açabilirsiniz. Değişiklik ve kaldırma işlemleri geri alınabilir. Oluşturucu açıkken belge başka yerden değişmişse eski taslak uygulanmaz.
 
-- **Oluştur:** alan/öğe ekleme, seçme, özellik düzenleme, çoğaltma, silme. Tutamacı sürükleyerek sıralayın; yukarı/aşağı düğmeleri dokunmatik ve klavye için de kullanılabilir.
+- **Oluştur:** geniş ekranlarda kısa öğe listesi, seçilen öğenin ayarları ve canlı önizleme yan yanadır. **Alan ekle** ile alan türlerini arayın; diğer araçlarda **Slayt ekle / Bölüm ekle** kullanın. Listeden veya önceki/sonraki düğmelerinden öğe seçin. Çoğaltma ve silme düğmeleri özellik panelinin altında görünür kalır.
 - **Ayarlar:** başlık, açıklama, vurgu rengi ve öğeye özel seçenekler.
 - **Önizlemeyi dene:** masaüstü/telefon görünümünde gerçek kontrolleri deneyin. Önizleme alanından form gönderimi engellenir.
+
+Yazmaya kısa bir ara verdiğinizde önizleme güncellenir. Geçersiz ayarlar varsa son geçerli görünüm korunur; kaydetmeye çalışınca sorunlu öğe seçilir ve ilgili kutuya odaklanılır. Gönderim adresi eklemeden de formu önizlemede deneyebilirsiniz; yayınlanan form adres girilene kadar kapalı kalır.
+
+Tutamacı fare/dokunmatik ile sürükleyin veya tutamaç odaktayken yukarı/aşağı ok tuşlarını kullanın. Uzun listeler sürükleme sırasında kenara gelince kayar. **Silmeyi geri al**, son silinen öğeyi diğer düzenlemeleri kaybetmeden geri getirir. İptal, Escape veya kapatma düğmesi değişmiş taslakları silmeden önce sorar. Telefonda liste ve **Öğeyi düzenle** arasında geçilir; önizleme ayrı açılır ve kaydetme düğmeleri görünür kalır. Orta genişlikteki ekranlarda da önizleme sekmeden açılır.
+
+Açılır liste ve tek seçim seçenekleri ayrı kutulardan eklenip silinebilir; **Seçenekleri toplu düzenle** her satıra bir seçenek kabul eder. Slider listesinde görsel küçük resimleri, akordeon listesinde başlangıçtaki açık/kapalı durumu gösterilir.
 
 ## Form oluşturucu
 

@@ -8,9 +8,15 @@ Choose **Insert → Form builder / Slider builder / Accordion builder**. Click a
 
 The builder has three tabs:
 
-- **Build:** add fields/items, select an item, edit its properties, duplicate/delete, reorder by dragging its handle or using the up/down buttons. Pointer dragging works with mouse/touch; buttons provide a keyboard alternative.
+- **Build:** a compact outline, focused properties and a live preview on wide screens. Use **Add a field** to search the field picker; sliders and accordions have **Add slide / Add section**. Select an item or use the previous/next buttons. Duplicate/delete actions stay visible below the properties.
 - **Settings:** title, description, accent color and element-specific options.
 - **Try preview:** desktop/mobile layout and actual native controls in an isolated iframe. Form submissions are blocked by the preview sandbox. No script or external widget runtime runs.
+
+Changes update the preview after a short typing pause. While a draft contains invalid settings, the last valid preview stays visible. Saving selects the first affected item and focuses its invalid control. The preview lets you test forms even before connecting a submission URL; published forms still remain disabled without one.
+
+Reorder with mouse/touch handles, up/down buttons, or the arrow keys while a handle is focused. Long outlines scroll when a dragged handle reaches their edge. **Undo delete** restores the last deleted item without discarding other edits. Cancel, Escape and the close button ask before discarding changed drafts. On phones, switch between the item list and **Edit item**, and open **Try preview** separately; save actions remain visible. On medium-width screens the preview is also available through its tab.
+
+Dropdown and radio choices have individual inputs and add/remove buttons. **Edit choices in bulk** accepts one choice per line. Slider outlines include image thumbnails; accordion outlines show their initial open/closed state.
 
 ## Forms
 

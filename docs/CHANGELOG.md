@@ -1,5 +1,12 @@
 # Changelog
 
+## September 30, 2026 — UI builder experience
+
+- Redesigned the form, slider and accordion builders with a compact item outline, focused property editor, persistent item actions and a debounced live preview on wide screens. Phone layouts separate ordering, editing and preview while keeping save actions visible.
+- Added searchable field picking, individual and bulk choice editing, slide thumbnails, previous/next item navigation, keyboard handle reordering and edge scrolling during pointer drags.
+- Invalid drafts keep the last valid preview; applying them selects and focuses the affected control. Added recovery for the last deleted item and confirmation before discarding changed drafts. Preview controls remain testable without a configured endpoint; published form behavior is unchanged.
+- Added browser coverage for live preview updates, validation focus, choice editing, keyboard focus preservation, delete recovery, discard protection and mobile workflows.
+
 ## September 30, 2026 — Native HTML UI builders
 
 - Added Insert-menu form, slider and accordion builders with field/item properties, pointer drag reordering, keyboard move buttons, duplication, removal and desktop/mobile sandbox previews.
