@@ -48,7 +48,7 @@ npm install @metinweb/studio-editor@beta vue@^3.5 pinia
 
 `import { StudioEditor } from '@metinweb/studio-editor'`; alt yollar aynıdır (`/style.css`, `/browser`, `/lite`). **Actions → Publish npm package → Run workflow** ile `dry-run` seçili çalıştırıp paket içeriğini yayımlamadan görebilirsiniz. Kaynak paket `private: true` olarak kalır; yerel `npm publish` bu yüzden reddedilir.
 
-Mevcut beta, bağımsız güvenlik incelemesi veya bütün fiziksel cihazlarda kabul testi yapıldığı anlamına gelmez. Gerçek mobil/IME/ekran okuyucu kontrolleri ve deneysel ortak düzenlemede eş zamanlı yapısal değişiklikler açık çalışma alanlarıdır. Medya ve iş birliği sunucuları referans uygulamalardır.
+Mevcut beta, bağımsız güvenlik incelemesi veya bütün fiziksel cihazlarda kabul testi yapıldığı anlamına gelmez. NVDA, VoiceOver, Android emülatöründe Chrome ve iOS simülatöründe Safari testleri `.github/workflows/assistive.yml` ile her gönderimde çalışır ([ayrıntılar](PLATFORM-FEATURES.tr.md#gerçek-ekran-okuyucular-ve-mobil-tarayıcılar)). Fiziksel telefonlar, TalkBack, iOS VoiceOver ve kompozisyonlu klavyelerle kontroller ve deneysel ortak düzenlemede eş zamanlı yapısal değişiklikler açık çalışma alanlarıdır. Medya ve iş birliği sunucuları referans uygulamalardır.
 
 ## Tarihsel temizlik kaydı
 

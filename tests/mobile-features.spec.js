@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
 
 // Runs in the mobile-chrome (Pixel 7) and mobile-safari (iPhone 14) projects: mobile user
-// agent, touch input and phone viewport. Physical devices and screen readers still need
-// manual sessions.
+// agent, touch input and phone viewport. tests/devices runs a session in the real Android and
+// iOS browsers; physical phones still need manual sessions.
 const body = (page) => page.frameLocator('.studio-editor-frame').locator('body')
 const noHorizontalScroll = (page) =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)

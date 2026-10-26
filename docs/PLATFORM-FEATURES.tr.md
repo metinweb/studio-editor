@@ -206,8 +206,41 @@ kullanıcılardan gizleniyordu.
   WebKit'in `pointerdown` engellendiğinde tıklamayı iptal ettiğini ve iPhone'da araç çubuğu ile
   menü düğmelerinin dokunmaya tepki vermediğini ortaya çıkardı; düğmeler artık bunu yalnızca fare ve
   kalem girişinde engelliyor.
-- Bunlar otomatik emülasyondur. Kararlı sürüm öncesinde fiziksel telefonlarda, VoiceOver, TalkBack
-  ve NVDA ile oturumlar yine gereklidir.
+- Bu projeler telefonları masaüstü motorlarında taklit eder; gerçek tarayıcılar bir sonraki
+  bölümde çalışır.
+
+## Gerçek ekran okuyucular ve mobil tarayıcılar
+
+`.github/workflows/assistive.yml`, `main`'e her gönderimde dört ortamda çalışır:
+
+| İş                 | Ortam                                            | Giriş                                                       |
+| ------------------ | ------------------------------------------------ | ----------------------------------------------------------- |
+| NVDA + Chromium    | Windows Server 2025, Guidepup ile NVDA 2026.2    | Tuşlar işletim sistemi üzerinden                            |
+| VoiceOver + WebKit | macOS 15, Guidepup ile VoiceOver                 | Tuşlar System Events ile, denetimler VO+Space ile           |
+| Android'de Chrome  | Android 15 emülatörü (API 35), Chrome 124        | Dokunma ve tuşlar Android giriş sisteminden (`adb input`)   |
+| iOS'ta Safari      | iOS 26.2 simülatörü (iPhone 17), Appium XCUITest | XCTest dokunmaları; yazma iOS klavyesinin tuşlarına basarak |
+
+- `tests/screen-reader/`, belge alanının etiketini, kalın düğmesinin adını ve durumunu, menü
+  öğelerini, diyalog adlarını ve bul alanını ekran okuyucunun gerçekten seslendirdiği metinden
+  doğrular. Her test konuşma dökümünü, VoiceOver öğe metnini ve düzenleyiciye ulaşan tuş ve giriş
+  olaylarını (hepsi `isTrusted`) saklar; dökümler iş özetinde görünür.
+- NVDA gerçek bir sorun buldu: kaydetme etiketi her tuş vuruşundan sonra “Kaydedilmeyi bekliyor.
+  Kaydediliyor… Tüm değişiklikler kaydedildi” diye okunuyordu. Görünen etiket artık canlı bölge
+  değil; yalnızca kullanıcının istediği kaydetmeler (Ctrl/⌘+S, Yeniden dene) duyurulur, hatalar
+  uyarı şeridinde kalır. NVDA ve VoiceOver testleri yazarken sessiz kalındığını denetler.
+- VoiceOver, Home/End ile kendi imlecini ve klavye odağını taşır. Bu yüzden macOS testi imleci
+  betikle konumlar ve düzenleme çerçevesi dışındaki denetimlere bir VoiceOver kullanıcısı gibi
+  ulaşır (etkileşimden çıkma, ardından klavye odağı ya da öğe seçici).
+- `tests/devices/` iki telefonda aynı oturumu çalıştırır: belgeye dokunma, cihaz klavyesiyle
+  yazma, araç çubuğundan kalın, geri alma ve Ekle menüsünden yatay çizgi. Her dokunuştan önce
+  şeffaf bir ölçüm katmanı, tarayıcı çubuklarının ve yazılım klavyesinin sayfayı nereye
+  koyduğunu ölçer; sayfaya yalnızca okumak için erişilir. Başarısız çalışmalar cihaz ekran
+  görüntüsünü ve düzenleyicinin giriş olaylarını saklar.
+- Sınırlar: Bunlar gerçek işletim sistemleri, tarayıcılar ve ekran okuyuculardır, ancak emülatör
+  ve simülatörde çalışır. Fiziksel dokunmatik donanım ve cihaz performansı, TalkBack, iOS
+  VoiceOver ve gerçek kompozisyonlu klavyeler (Japonca, Çince) için cihazda oturum hâlâ
+  gereklidir. Kompozisyonun kendisi `tests/editor.spec.js` ve `tests/track-changes.spec.js`
+  içinde yapay olaylarla ve CDP ile sınanır.
 
 ## Kalite kapıları
 

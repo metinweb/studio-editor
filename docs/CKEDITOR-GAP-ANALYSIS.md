@@ -44,7 +44,7 @@ Araştırma tarihi: 24 Eylül 2026. Studio: beta.10 kaynak ağacı ve sonraki re
 - **Multi-root:** Birden fazla bağımsız Studio örneği çalışıyor. Tek belgenin başlık/gövde/özet gibi ayrı düzenleme köklerinde ortak geçmişle düzenlenmesi yok. [CKEditor multi-root](https://ckeditor.com/docs/ckeditor5/latest/examples/builds/multi-root-editor.html).
 - **Çökme sonrası otomatik toparlama:** IndexedDB otomatik kayıt ve kalıcı sürümler var. Bozulan editör örneğini içerikle yeniden oluşturan yaşam döngüsü koruması yok. [Watchdog](https://ckeditor.com/docs/ckeditor5/latest/features/watchdog.html).
 - **Diyagram:** Düzenlenebilir Mermaid öğesi yok. CKEditor'ın [Mermaid entegrasyonu](https://ckeditor.com/docs/ckeditor5/latest/features/mermaid.html) da deneysel ve belgede üretim için önerilmiyor. Bunu olgun çekirdek özellik gibi değerlendirmemeliyiz.
-- **Doğrulama kapsamı:** Studio'nun otomatik üç tarayıcı testleri mevcut. Gerçek ekran okuyucu/telefon/IME oturumları, Word/LibreOffice görsel kontrolleri ve uzun süreli yapısal eş zamanlı düzenleme kabulü hâlâ gerekli. Bu bir ürün özelliği sayısı değil, yayın kalitesi açığıdır.
+- **Doğrulama kapsamı:** Studio'nun otomatik üç tarayıcı testlerine ek olarak NVDA, VoiceOver, Android emülatöründe Chrome ve iOS simülatöründe Safari oturumları CI'de çalışıyor. Fiziksel telefon, TalkBack/iOS VoiceOver ve kompozisyonlu klavye oturumları, Word/LibreOffice görsel kontrolleri ve uzun süreli yapısal eş zamanlı düzenleme kabulü hâlâ gerekli. Bu bir ürün özelliği sayısı değil, yayın kalitesi açığıdır.
 
 ## Bizde zaten bulunanlar
 

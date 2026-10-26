@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
 // Automated WCAG 2.1 A/AA checks of the interface in its main states. Automated rules catch
-// a subset of problems; keyboard and screen reader sessions are still needed.
+// a subset of problems; tests/screen-reader runs sessions with NVDA and VoiceOver.
 // Each axe run also scans the editing iframes, so these tests get more time.
 test.describe.configure({ timeout: 120000 })
 const body = (page) => page.frameLocator('.studio-editor-frame').locator('body')

@@ -203,8 +203,39 @@ empty category failed the MongoDB cast, and drafts were hidden from `superadmin`
   `tests/mobile-*.spec.js` with mobile user agents, touch input and phone viewports. They found
   that WebKit cancels the click when `pointerdown` is prevented, which left toolbar and menu
   buttons unresponsive to taps on iPhone; buttons now prevent it only for mouse and pen.
-- These are automated emulations. Sessions on physical phones, with VoiceOver, TalkBack and NVDA,
-  remain necessary before a stable release.
+- These projects emulate phones in desktop engines; the next section runs the real browsers.
+
+## Real screen readers and mobile browsers
+
+`.github/workflows/assistive.yml` runs on every push to `main` in four environments:
+
+| Job                | Environment                                       | Input                                                        |
+| ------------------ | ------------------------------------------------- | ------------------------------------------------------------ |
+| NVDA + Chromium    | Windows Server 2025, NVDA 2026.2 through Guidepup | Keys through the operating system                            |
+| VoiceOver + WebKit | macOS 15, VoiceOver through Guidepup              | Keys through System Events, controls activated with VO+Space |
+| Chrome on Android  | Android 15 emulator (API 35), Chrome 124          | Taps and keys through Android's input system (`adb input`)   |
+| Safari on iOS      | iOS 26.2 Simulator (iPhone 17), Appium XCUITest   | XCTest touches; typing taps keys on the iOS keyboard         |
+
+- `tests/screen-reader/` checks, from what the screen reader actually spoke, the document label,
+  the bold button's name and state, menu items, dialog names and the find field. Each test keeps
+  the spoken transcript, VoiceOver's item text and the key and input events the editor received
+  (all `isTrusted`); transcripts appear in the job summary.
+- NVDA found a real problem: the save label read “Pending save. Saving… All changes saved” after
+  every typed character. The visible label is no longer a live region; only saves the user asks
+  for (Ctrl/⌘+S, Retry) are announced, and failures keep the error alert. The NVDA and VoiceOver
+  tests check that typing stays quiet.
+- VoiceOver moves its own cursor, and keyboard focus, with Home/End, so the macOS test places the
+  caret by script and reaches controls outside the editing frame as a VoiceOver user does
+  (stop interacting, then keyboard focus or the item chooser).
+- `tests/devices/` runs one session on both phones: tap into the document, type with the device
+  keyboard, make text bold from the toolbar, undo, and insert a horizontal rule from the Insert
+  menu. Before each tap a transparent probe measures where browser bars and the software keyboard
+  put the page; the page itself is only read. Failed runs keep a device screenshot and the
+  editor's input events.
+- Limits: these are real operating systems, browsers and screen readers, but in an emulator and a
+  simulator. Physical touch hardware and device performance, TalkBack, iOS VoiceOver and real
+  composition keyboards (Japanese, Chinese) still need sessions on devices. Composition itself is
+  covered with synthetic events and CDP in `tests/editor.spec.js` and `tests/track-changes.spec.js`.
 
 ## Quality gates
 

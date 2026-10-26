@@ -12,12 +12,14 @@ kabul/ret), kısıtlı düzenleme alanları, canlı imleçler ve varlık listesi
 Mermaid diyagramları, koyu tema, çökme sonrası toparlama, çevrimdışı çalışma (PWA), AI
 yanıt akışı, `<studio-editor>` Web Component ve `studio-editor/lite` paketi. Kod tarafında
 `RichEditor.vue` modüllere bölündü; ESLint, API tip kayması denetimi ve TypeScript kontrolü
-CI'ya eklendi; npm yayın iş akışı hazırlandı (yayın yapılmadı).
-[Kapsam ve sınırlar](PLATFORM-FEATURES.tr.md).
+CI'ya eklendi. Paket GitHub Packages'ta `@metinweb/studio-editor` adıyla yayımlandı ve
+gerçek bir CMS'te (CodeCMS) TinyMCE'nin yerine uçtan uca kullanıldı. NVDA ve VoiceOver ile
+ekran okuyucu testleri, Android emülatöründe Chrome ve iOS simülatöründe Safari testleri her
+gönderimde çalışır. [Kapsam ve sınırlar](PLATFORM-FEATURES.tr.md).
 
 Hâlâ açık olanlar: biçim değişikliklerinin izlenmesi ve Word revizyonlarıyla alışveriş,
-güvenilir eş zamanlı yapısal düzenleme, gerçek cihaz/IME/ekran okuyucu kabul testleri,
-gerçek bir CMS kurulumunda kullanım geri bildirimi ve npm yayını.
+güvenilir eş zamanlı yapısal düzenleme, fiziksel telefonlarda, TalkBack ve iOS VoiceOver ile
+ve kompozisyonlu klavyelerle kabul testleri ve npmjs.org yayını (`NPM_TOKEN` gerekir).
 
 ## Uygulama durumu — 0.1.0-beta.10
 

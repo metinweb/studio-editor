@@ -37,7 +37,8 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'], viewport: { width: 1440, height: 1100 } },
     },
     // Phone profiles (mobile user agent, touch, device viewport and scale) for mobile-*.spec.js.
-    // They exercise the Chromium and WebKit engines; physical devices still need manual checks.
+    // They exercise the Chromium and WebKit engines; real Android and iOS browsers run in
+    // playwright.devices.config.js and screen readers in playwright.screen-reader.config.js.
     { name: 'mobile-chrome', testMatch: mobileSpecs, use: { ...devices['Pixel 7'] } },
     { name: 'mobile-safari', testMatch: mobileSpecs, use: { ...devices['iPhone 14'] } },
   ],

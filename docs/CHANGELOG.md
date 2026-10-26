@@ -1,5 +1,11 @@
 # Changelog
 
+## October 26, 2026 — Real screen readers and mobile browsers
+
+- Added a workflow that runs editing sessions with NVDA (Chromium, Windows) and VoiceOver (WebKit, macOS) through Guidepup and asserts on what they speak. Each run keeps the transcript, VoiceOver's item text and the key and input events the editor received.
+- Added device tests that run the same touch session in Chrome on an Android 15 emulator, with taps and keys through Android's input system, and in Mobile Safari on an iOS 26 Simulator through Appium/XCUITest, typing on the iOS software keyboard.
+- Fixed: NVDA read "Pending save. Saving… All changes saved" after every typed character. The save label is no longer a live region; only saves the user requests are announced, and failures keep the error alert.
+
 ## October 26, 2026 — 0.1.0-beta.12: review, protection and platform
 
 - Added track changes: typing, deleting, replacing, paragraph breaks and joins become authored suggestions with accept/reject (per change and all), a review panel tab, host-enforced mode and `user` identity. Plain-text paste, cut, find & replace, AI replacements and IME composition are tracked; formatting and structure commands are refused while tracking. Published HTML, DOCX and Markdown omit unresolved suggestions.

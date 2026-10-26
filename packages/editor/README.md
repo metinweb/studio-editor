@@ -208,6 +208,6 @@ History retains the current document and up to 79 reversible changes, with an ap
 - The legacy IndexedDB name `tinymce-studio` is kept for data compatibility. TinyMCE is not an engine dependency.
 - English and Turkish interfaces are included. Built-in templates follow the selected language. Custom content, custom provider errors and user-created template names remain as supplied; unmapped diagnostic messages may use their source language.
 - The image Worker is bundled; CSP deployments need `worker-src blob:`. Unsupported environments use the main thread.
-- Chromium, Firefox and WebKit are tested. Physical mobile keyboards and screen readers still require device testing.
+- Chromium, Firefox and WebKit are tested. CI also runs editing sessions with NVDA (Windows) and VoiceOver (macOS), in Chrome on an Android emulator and in Safari on an iOS Simulator. Physical phones, TalkBack, iOS VoiceOver and composition keyboards (Japanese, Chinese) still require device testing.
 
 See `index.d.ts` for exported types. `LICENSE` contains the MIT license; `THIRD_PARTY_NOTICES.txt` contains dependency licenses.

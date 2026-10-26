@@ -259,8 +259,11 @@ Anlamsal işlem modeli, kalıcı sürüm geçmişi, CRDT ve değişiklik izleme 
   ve hazır şablon içerikleri Türkçe kalabilir.
 - Resim düzenleme: 8192 px kenar / 16 MP; medya dosyası: 12 MB.
   Uzak görsellerin düzenlenmesi CORS iznine bağlıdır.
-- Modern Chromium, Firefox ve WebKit motorları hedeflenir. Gerçek iOS/Android
-  klavye ve ekran okuyucu doğrulaması henüz tamamlanmadı.
+- Modern Chromium, Firefox ve WebKit motorları hedeflenir. CI ayrıca NVDA
+  (Windows) ve VoiceOver (macOS) ile, Android emülatöründeki Chrome'da ve iOS
+  simülatöründeki Safari'de düzenleme oturumları çalıştırır. Fiziksel telefonlar,
+  TalkBack, iOS VoiceOver ve kompozisyonlu klavyeler (Japonca, Çince) hâlâ
+  cihazda doğrulanmalıdır.
 
 `LICENSE` projenin MIT lisansını; `THIRD_PARTY_NOTICES.txt`
 paketlenen bağımlılıkların kendi lisanslarını içerir.
