@@ -97,6 +97,18 @@ async function openSafari() {
       const key = await driver.$(`~${name}`)
       return (await key.isExisting()) ? key : driver.$(`~${name.toUpperCase()}`)
     },
+    // iOS starts with its English keyboard; like a user, switch with the globe button until
+    // `ready(driver)` sees the wanted keyboard. The button's name is localized, so it is found as the
+    // first button after the keyboard that is not dictation (native context).
+    async chooseKeyboard(ready) {
+      for (let attempt = 0; attempt < 3 && !(await ready(driver)); attempt++) {
+        await driver
+          .$('(//XCUIElementTypeKeyboard/following::XCUIElementTypeButton[@name!="dictation"])[1]')
+          .click()
+        await driver.pause(500)
+      }
+      return ready(driver)
+    },
     async keep(name, failed) {
       const path = test.info().outputPath(`${name}.png`)
       await driver.saveScreenshot(path)
@@ -136,6 +148,13 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
 
 // Real input methods: Turkish letters from the Turkish Q keyboard, and Japanese and Chinese text
 // composed from Latin keys and committed by tapping the input method's candidate.
+// The English keyboard has a blank space bar; Japanese and Chinese ones name it (空白, 空格).
+const englishKeyboard = async (driver) => {
+  const space = await driver.$('//XCUIElementTypeKeyboard//*[@name="space"]')
+  return (await space.isExisting()) && !(await space.getAttribute('label'))?.trim()
+}
+const inputMethod = async (driver) =>
+  (await driver.$('//XCUIElementTypeKeyboard').isExisting()) && !(await englishKeyboard(driver))
 const keyboards = [
   {
     name: 'turkish-q',
@@ -143,6 +162,7 @@ const keyboards = [
     language: 'tr',
     locale: 'tr_TR',
     keys: 'çğışöü',
+    ready: async (driver) => (await driver.$('~ç')).isExisting(),
   },
   {
     name: 'japanese-romaji',
@@ -151,6 +171,7 @@ const keyboards = [
     locale: 'ja_JP',
     keys: 'nihon',
     candidate: '日本',
+    ready: inputMethod,
   },
   {
     name: 'chinese-pinyin',
@@ -159,6 +180,7 @@ const keyboards = [
     locale: 'zh_CN',
     keys: 'nihao',
     candidate: '你好',
+    ready: inputMethod,
   },
 ]
 
@@ -182,6 +204,7 @@ test('Turkish, Japanese and Chinese keyboards type into the editor in Safari on 
           await tapElement(safari.device, { selector: 'p', editor: true, text: 'Bir hikâye' })
           await expect.poll(async () => (await state()).focused).toBe(true)
           await safari.native(async () => {
+            expect(await safari.chooseKeyboard(keyboard.ready), keyboard.name).toBe(true)
             for (const character of keyboard.keys) await (await safari.key(character)).click()
             if (keyboard.candidate) await (await safari.key(keyboard.candidate)).click()
           })
