@@ -33,7 +33,7 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
     await test.info().attach(name, { path, contentType: 'image/png' })
   }
   const load = async () => {
-    await driver.url('http://127.0.0.1:4173/')
+    await driver.url('http://127.0.0.1:4173/?lang=tr')
     await driver.waitUntil(
       () =>
         driver.execute(
@@ -57,8 +57,7 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
     return (await key.isExisting()) ? key : driver.$(`~${name.toUpperCase()}`)
   }
   try {
-    await load()
-    await driver.execute(() => localStorage.setItem('studio-locale', 'tr'))
+    // The first visit creates the welcome document in the interface language.
     await load()
     const { width, height } = await native(() => driver.getWindowSize())
     console.log('Browser:', await driver.execute(() => navigator.userAgent), `${width}x${height}`)

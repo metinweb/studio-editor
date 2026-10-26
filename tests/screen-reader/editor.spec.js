@@ -17,6 +17,15 @@ const activeLabel = (page) =>
     const element = document.activeElement
     return element.dataset.label || element.getAttribute('aria-label') || element.textContent.trim()
   })
+// Selects the element's contents, or puts the caret at its end.
+const select = (locator, collapse = false) =>
+  locator.evaluate((element, collapse) => {
+    const range = element.ownerDocument.createRange()
+    range.selectNodeContents(element)
+    if (collapse) range.collapse(false)
+    element.ownerDocument.getSelection().removeAllRanges()
+    element.ownerDocument.getSelection().addRange(range)
+  }, collapse)
 async function spoken(screenReader, action) {
   const { spokenPhrase, itemText } = await screenReader.capture(action)
   return `${spokenPhrase}\n${itemText}`
@@ -64,13 +73,18 @@ test('the document, typing and the bold toggle are announced', async ({ page, sc
   const document = await spoken(screenReader, () => body(page).locator('h1').click())
   // NVDA reads the frame and editor labels; VoiceOver reads the line and the text area role.
   expect(document).toMatch(mac ? /text area/ : /Belge (içeriği|düzenleme alanı)/)
-  await screenReader.press('End')
+  // VoiceOver uses Home/End to move its own cursor (and keyboard focus) through the page, so on
+  // macOS the caret and selection are set by script. Enter, typing and Space are real keys.
+  if (mac) await select(body(page).locator('h1'), true)
+  else await screenReader.press('End')
   await screenReader.press('Enter')
   await screenReader.type('ekran okuyucu')
-  await expect(body(page).locator('p', { hasText: 'ekran okuyucu' })).toHaveCount(1)
+  const typed = body(page).locator('p', { hasText: 'ekran okuyucu' })
+  await expect(typed).toHaveCount(1)
   // Autosave after each character must not be read aloud.
   expect(await heard(screenReader)).not.toMatch(/Kaydediliyor|Kaydedilmeyi bekliyor/)
-  await screenReader.press('Shift+Home')
+  if (mac) await select(typed)
+  else await screenReader.press('Shift+Home')
   const bold = page.getByRole('button', { name: 'Kalın', exact: true })
   expect(await spoken(screenReader, () => bold.focus())).toContain('Kalın')
   await screenReader.press('Space')

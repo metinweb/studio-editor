@@ -12,6 +12,21 @@ function installed(pkg) {
     return false
   }
 }
+const focusedWindow = () => adb('shell', 'dumpsys', 'window').match(/mCurrentFocus=.*/)?.[0] || ''
+// Busy emulators show "… isn't responding" for system apps; choose Wait so taps reach Chrome.
+function dismissNotResponding() {
+  for (let attempt = 0; attempt < 5 && /Not Responding/.test(focusedWindow()); attempt++) {
+    adb('shell', 'uiautomator', 'dump', '/sdcard/window.xml')
+    const wait = adb('shell', 'cat', '/sdcard/window.xml').match(
+      /resource-id="android:id\/aerr_wait"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/,
+    )
+    if (!wait) adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+    else {
+      const [left, top, right, bottom] = wait.slice(1).map(Number)
+      adb('shell', 'input', 'tap', Math.round((left + right) / 2), Math.round((top + bottom) / 2))
+    }
+  }
+}
 
 test('touch and key input edit the document in Chrome on Android', async () => {
   const [device] = await android.devices()
@@ -44,12 +59,15 @@ test('touch and key input edit the document in Chrome on Android', async () => {
       await editWithTouch({
         evaluate: (fn, arg) => page.evaluate(fn, arg),
         screen: async () => ({ width, height }),
-        tap: async ({ x, y }) => adb('shell', 'input', 'tap', x, y),
+        tap: async ({ x, y }) => {
+          dismissNotResponding()
+          adb('shell', 'input', 'tap', x, y)
+        },
         type: async (text) => adb('shell', 'input', 'text', text.replaceAll(' ', '%s')),
       })
     } catch (error) {
       await screenshot('android-failure')
-      console.log(adb('shell', 'dumpsys', 'window').match(/mCurrentFocus=.*/)?.[0])
+      console.log(focusedWindow())
       throw error
     }
     await screenshot('android-chrome')
