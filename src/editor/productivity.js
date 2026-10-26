@@ -17,6 +17,7 @@ export const writingCommands = [
   { id: 'media', label: 'Medya kütüphanesi', en: 'Media library', hint: '↗', action: true },
   { id: 'embed', label: 'Bağlantıdan medya ekle', en: 'Embed media', hint: '↗', action: true },
   { id: 'science', label: 'Matematik ve kimya', en: 'Math & chemistry', hint: '∑', action: true },
+  { id: 'diagram', label: 'Diyagram (Mermaid)', en: 'Diagram (Mermaid)', hint: '⇢', action: true },
   { id: 'templates', label: 'Şablon kütüphanesi', en: 'Templates', hint: '↗', action: true },
 ]
 function paragraph(editor) {

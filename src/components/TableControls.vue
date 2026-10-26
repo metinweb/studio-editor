@@ -1,11 +1,11 @@
 <script setup>
+import { keepSelection } from './rich-editor/keyboard.js'
 import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import {
   TableProperties,
   Table2,
   Rows3,
   Columns3,
-  Trash2,
   ArrowUp,
   ArrowDown,
   ArrowLeft,
@@ -334,7 +334,7 @@ defineExpose({
       <button
         :aria-label="t('Tablo özellikleri')"
         :title="t('Tablo özellikleri')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="openProperties"
       >
         <TableProperties :size="18" />
@@ -342,7 +342,7 @@ defineExpose({
       <button
         :aria-label="t('Tabloyu sil')"
         :title="t('Tabloyu sil')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('command', 'table', 'deleteTable')"
       >
         <Table2 :size="18" /><span class="quick-remove">×</span>
@@ -354,7 +354,7 @@ defineExpose({
           :aria-label="t(action.label)"
           :title="t(action.title || action.label)"
           :disabled="!state.canEditTable"
-          @pointerdown.prevent
+          @pointerdown="keepSelection"
           @click="emit('command', 'table', action.command)"
         >
           <component :is="action.icon" :size="18" /><component
@@ -369,7 +369,7 @@ defineExpose({
         :aria-label="t('Hücre biçimi')"
         :title="t('Hücre biçimi')"
         :disabled="!state.canEditTable"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('cell-format')"
       >
         <Paintbrush :size="18" />
@@ -378,7 +378,7 @@ defineExpose({
         :aria-label="t('Seçili hücreleri birleştir')"
         :title="t('Seçili hücreleri birleştir')"
         :disabled="!state.canMergeCells"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('command', 'mergeCells')"
       >
         <Merge :size="18" />
@@ -387,7 +387,7 @@ defineExpose({
         :aria-label="t('Hücreyi ayır')"
         :title="t('Hücreyi ayır')"
         :disabled="!state.canSplitCell"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('command', 'splitCell')"
       >
         <Split :size="18" />
@@ -395,7 +395,7 @@ defineExpose({
       <button
         :aria-label="t('Diğer tablo işlemleri')"
         :title="t('Sırala, hücre birleştir veya ayır')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('options', $event)"
       >
         <Ellipsis :size="18" />

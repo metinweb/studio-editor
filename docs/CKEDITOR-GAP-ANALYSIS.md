@@ -1,5 +1,7 @@
 # CKEditor 5 / Studio özellik farkları
 
+26 Ekim 2026 güncellemesi: otomatik değişiklik izleme (metin ekleme/silme ve paragraf bölme/birleştirme), kısıtlı düzenleme alanları, canlı imleçler ve varlık listesi, sayfa görünümü, Mermaid diyagramları, çökme sonrası otomatik toparlama ve koyu tema eklendi. Kapsam ve sınırlar: [platform özellikleri](PLATFORM-FEATURES.tr.md). Aşağıdaki tablo araştırma anının durumunu kaydeder.
+
 27 Eylül 2026 güncellemesi: Word içe aktarma, dipnotlar, bağlantı hedefleri, değişken alanları ve yeni düzenleme araçları eklendi. Güncel kapsam ve kalan farklar [TinyMCE karşılaştırmasında](TINYMCE-COMPARISON.md) açıklanır. Aşağıdaki kayıtlar önceki geliştirme tarihlerini yansıtır.
 
 Araştırma sonrası güncelleme: Zengin medya gömme [MEDIA-EMBED.md](MEDIA-EMBED.md) kapsamında geliştirildi. Ardından canlı başlık gezgini, görev listeleri, bahsetmeler, içerik stilleri ve genişletilmiş slash menüsü eklendi: [DAILY-WRITING.md](DAILY-WRITING.md). Aşağıdaki tablo araştırma anının durumunu kaydeder; güncel uygulama kapsamı bu iki belgede açıklanır.

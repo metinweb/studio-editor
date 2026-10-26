@@ -30,6 +30,9 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "playwright test",
     "test:unit": "node --test scripts/tests/*.test.mjs",
+    "lint": "eslint . && node scripts/check-api.mjs",
+    "typecheck": "tsc -p tsconfig.types.json",
+    "check": "npm run lint && npm run typecheck && npm run test:unit",
     "benchmark:history": "node scripts/benchmark-history.mjs",
     "benchmark:browser": "npm run build:library && node scripts/benchmark-browser.mjs",
     "format": "prettier --write src tests scripts docs packages examples *.js *.json *.md index.html"
@@ -43,11 +46,12 @@
     "@mathjax/mathjax-tex-font": "^4.1.3",
     "@mathjax/src": "^4.1.3",
     "codemirror": "^6.0.2",
-    "dompurify": "^3.4.15",
+    "dompurify": "^3.4.17",
     "fflate": "^0.8.3",
     "idb": "^8.0.3",
     "mammoth": "^1.13.0",
     "marked": "^18.0.14",
+    "mermaid": "^12.2.0",
     "openchemlib": "^9.25.0",
     "pinia": "^4.0.3",
     "turndown": "^7.2.4",
@@ -57,10 +61,16 @@
     "yjs": "^13.6.33"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
     "@vitejs/plugin-vue": "^6.0.9",
+    "eslint": "^10.13.0",
+    "eslint-plugin-vue": "^10.11.1",
+    "globals": "^17.13.0",
+    "postcss": "^8.5.31",
     "prettier": "^3.9.9",
     "typescript": "^7.0.2",
-    "vite": "^8.3.0"
+    "vite": "^8.3.5"
   }
 }

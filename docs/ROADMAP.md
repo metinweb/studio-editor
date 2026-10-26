@@ -4,6 +4,21 @@ Araştırma tarihi: **24 Eylül 2026**. Ürün belgeleri ve mevcut kaynak kodu b
 incelendi. Bu dosyadaki "öneri" ve "hedef" ifadeleri henüz uygulanmamış işleri
 gösterir. Rakiplerin özellikleri bizim editörde bulunduğu anlamına gelmez.
 
+## Uygulama durumu — 0.1.0-beta.12
+
+Beta.12 ile aşağıdaki listede açık kalan başlıkların bir bölümü uygulandı:
+otomatik değişiklik izleme (metin ekleme/silme, paragraf bölme/birleştirme, yazar ve
+kabul/ret), kısıtlı düzenleme alanları, canlı imleçler ve varlık listesi, sayfa görünümü,
+Mermaid diyagramları, koyu tema, çökme sonrası toparlama, çevrimdışı çalışma (PWA), AI
+yanıt akışı, `<studio-editor>` Web Component ve `studio-editor/lite` paketi. Kod tarafında
+`RichEditor.vue` modüllere bölündü; ESLint, API tip kayması denetimi ve TypeScript kontrolü
+CI'ya eklendi; npm yayın iş akışı hazırlandı (yayın yapılmadı).
+[Kapsam ve sınırlar](PLATFORM-FEATURES.tr.md).
+
+Hâlâ açık olanlar: biçim değişikliklerinin izlenmesi ve Word revizyonlarıyla alışveriş,
+güvenilir eş zamanlı yapısal düzenleme, gerçek cihaz/IME/ekran okuyucu kabul testleri,
+gerçek bir CMS kurulumunda kullanım geri bildirimi ve npm yayını.
+
 ## Uygulama durumu — 0.1.0-beta.10
 
 Beta.10 ile aşağıdaki araştırma listesinin 12 başlığında uygulama yapıldı.

@@ -1,6 +1,6 @@
 <script setup>
 import { useEditorLocale } from '../lib/editor-locale'
-const { t, locale } = useEditorLocale()
+const { t } = useEditorLocale()
 import { ref } from 'vue'
 import AppDialog from './AppDialog.vue'
 import { useWorkspace } from '../stores/workspace'

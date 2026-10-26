@@ -22,6 +22,10 @@ const configurable = [
   'bodyClass',
   'features',
   'documentSession',
+  'theme',
+  'restricted',
+  'trackChanges',
+  'user',
 ]
 
 /** Enhance one existing textarea. No router, workspace or persistence is installed. */
@@ -188,6 +192,7 @@ export async function mountStudioEditor(target, options = {}) {
               options.onBodyClassChange?.(value)
             },
             onSave: (html) => options.onSave?.(html, instance),
+            onCrash: (crash) => options.onCrash?.(crash),
             onReady: (editor) => {
               api = editor
               source.value = api.getHTML()

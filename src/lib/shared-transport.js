@@ -40,6 +40,7 @@ export function connectSharedRoom({
   onStatus = () => {},
   onPresence = () => {},
   onRole = () => {},
+  getSelection = () => null,
 }) {
   const endpoint = `${url.replace(/\/$/, '')}/rooms/${encodeURIComponent(room)}`
   let timer,
@@ -60,6 +61,9 @@ export function connectSharedRoom({
         Authorization: `Bearer ${await getToken()}`,
         'Content-Type': 'application/json',
       }
+      // The local caret travels with every sync so peers can draw it.
+      const selection = JSON.stringify(getSelection() ?? null)
+      if (selection.length <= 1024) headers['X-Studio-Selection'] = encodeURIComponent(selection)
       const read = await fetch(endpoint, { headers, signal: controller.signal })
       if (!read.ok) throw Object.assign(new Error(`HTTP ${read.status}`), { status: read.status })
       let data = await read.json()

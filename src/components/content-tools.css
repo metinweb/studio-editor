@@ -69,7 +69,7 @@
 .review-eyebrow {
   font-size: 9px;
   letter-spacing: 1.6px;
-  color: #9786b1;
+  color: #6a5a86;
   display: block;
   margin-bottom: 7px;
 }
@@ -90,7 +90,7 @@
   gap: 6px;
   flex: 1;
   font-size: 11px;
-  color: #8c8596;
+  color: #625b6d;
   padding: 10px 5px;
   border-bottom: 2px solid transparent;
 }
@@ -112,7 +112,7 @@
 .review-note {
   font-size: 11px;
   line-height: 1.7;
-  color: #9690a0;
+  color: #635d6e;
   margin: 0 0 14px;
 }
 .comment-compose {
@@ -166,7 +166,7 @@
   align-items: center;
   gap: 6px;
   font-size: 10px;
-  color: #98909f;
+  color: #635d6b;
   margin: 16px 0;
 }
 .review-filter input {
@@ -179,14 +179,14 @@
 }
 .review-empty strong {
   display: block;
-  color: #877895;
+  color: #66587a;
   font-size: 12px;
   margin: 12px 0 6px;
 }
 .review-empty p {
   font-size: 11px;
   line-height: 1.8;
-  color: #a09aa8;
+  color: #67616f;
 }
 .comment-card {
   background: white;
@@ -541,4 +541,49 @@
   gap: 6px;
   font-size: 12px;
   margin-bottom: 12px;
+}
+.track-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+.track-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.track-bulk .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.change-card .comment-author {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.change-type {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+}
+.change-card ins {
+  color: #0b6b35;
+  background: rgba(22, 163, 74, 0.12);
+}
+.change-card del {
+  color: #b42318;
+}
+.track-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #0b6b35;
 }

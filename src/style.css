@@ -12,7 +12,7 @@
   font-weight: 400;
   --accent: #2563eb;
   --accent-light: #eaf2ff;
-  --muted: #8c929f;
+  --muted: #626b7a;
   --border: #e9eaf0;
   --sidebar: 232px;
 }
@@ -243,7 +243,7 @@ button:disabled:hover {
 }
 .workspace-label small {
   font-size: 10px;
-  color: #959aa5;
+  color: #626b7a;
   display: block;
   margin-top: 3px;
 }
@@ -264,7 +264,7 @@ button:disabled:hover {
   font-size: 9px;
   letter-spacing: 1.4px;
   font-weight: 650;
-  color: #a0a5af;
+  color: #626b7a;
   margin: 30px 11px 13px;
 }
 .nav-item {
@@ -378,7 +378,7 @@ button:disabled:hover {
   min-height: 28px;
   padding: 3px 5px;
   border-radius: 5px;
-  color: #64748b;
+  color: #556274;
   font-size: 11px;
 }
 .document-favorite:hover,
@@ -511,7 +511,7 @@ button:disabled:hover {
 .local-note p {
   font-size: 10px;
   line-height: 1.7;
-  color: #9ba1ac;
+  color: #626b7a;
   margin-top: 5px;
 }
 .help-link {
@@ -547,7 +547,7 @@ button:disabled:hover {
 .profile small {
   display: block;
   font-size: 10px;
-  color: #a0a5af;
+  color: #626b7a;
   margin-top: 3px;
 }
 .profile > .online-dot {
@@ -578,7 +578,7 @@ button:disabled:hover {
   align-items: center;
   gap: 13px;
   font-size: 11px;
-  color: #969ba6;
+  color: #626b7a;
 }
 .breadcrumb strong {
   font-weight: 500;
@@ -596,7 +596,7 @@ button:disabled:hover {
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #8b929c;
+  color: #626b7a;
   font-size: 10px;
 }
 .local-badge span {
@@ -604,6 +604,29 @@ button:disabled:hover {
   height: 5px;
   border-radius: 50%;
   background: #93b49e;
+}
+.offline-badge {
+  color: #9a6a12;
+}
+.offline-badge span {
+  background: #d99a22;
+}
+.app-update {
+  position: fixed;
+  z-index: 60;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 12px 10px 14px;
+  border: 1px solid #d8dee8;
+  border-radius: 12px;
+  background: #fff;
+  color: #253343;
+  font-size: 13px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
 }
 .mobile-menu {
   display: none;
@@ -680,7 +703,7 @@ button:disabled:hover {
   align-items: center;
   gap: 9px;
   margin-top: 7px;
-  color: #9b9fac;
+  color: #626b7a;
   font-size: 10px;
 }
 .draft-badge {
@@ -741,8 +764,19 @@ button:disabled:hover {
   color: #2563eb;
 }
 .editor-surface {
+  display: flex;
+  flex-direction: column;
   height: max(480px, calc(100dvh - 205px));
   min-height: 480px;
+}
+.editor-surface > .native-editor {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+.editor-surface > .watchdog-notice {
+  flex: none;
+  margin: 8px;
 }
 .editor-status {
   display: flex;
@@ -751,7 +785,7 @@ button:disabled:hover {
   border-top: 1px solid var(--border);
   padding: 9px 15px;
   font-size: 11px;
-  color: #748092;
+  color: #5f6b7f;
   gap: 10px;
 }
 .save-state {
@@ -1186,7 +1220,7 @@ button:disabled:hover {
   font-size: 10px;
   display: block;
   margin-top: 16px;
-  color: #8a8096;
+  color: #625a6f;
 }
 .text-input {
   display: block;
@@ -1583,4 +1617,7 @@ button:disabled:hover {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+:root[data-studio-theme='dark'] {
+  color-scheme: dark;
 }

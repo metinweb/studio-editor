@@ -1,4 +1,5 @@
 <script setup>
+import { keepSelection } from './rich-editor/keyboard.js'
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import { Film, Trash2, AlignLeft, AlignCenter, AlignRight } from '@lucide/vue'
 import { readMediaEmbed } from '../lib/media-embed.js'
@@ -164,7 +165,7 @@ onBeforeUnmount(() => {
       role="toolbar"
       :aria-label="t('Gömülü medya araçları')"
       :style="position"
-      @pointerdown.prevent
+      @pointerdown="keepSelection"
     >
       <button
         :aria-label="t('Gömülü medyayı düzenle')"

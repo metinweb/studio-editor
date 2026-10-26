@@ -2,3 +2,7 @@ process.env.NODE_ENV = 'production'
 const { build } = await import('vite')
 await build({ configFile: 'vite.library.config.js' })
 await build({ configFile: 'vite.browser.config.js' })
+process.env.STUDIO_LITE_TARGET = 'library'
+await build({ configFile: 'vite.lite.config.js' })
+process.env.STUDIO_LITE_TARGET = 'browser'
+await build({ configFile: 'vite.lite.config.js' })

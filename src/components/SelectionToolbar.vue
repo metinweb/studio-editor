@@ -1,8 +1,11 @@
 <script setup>
+import { keepSelection } from './rich-editor/keyboard.js'
+import { useEditorTheme } from '../lib/theme.js'
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Bold, Italic, Underline, Link, MessageSquare, Quote } from '@lucide/vue'
 import { currentRange } from '../editor/selection'
 import { useEditorLocale } from '../lib/editor-locale'
+const theme = useEditorTheme()
 const props = defineProps({
   engine: Object,
   state: Object,
@@ -77,6 +80,7 @@ onBeforeUnmount(() => {
     ><div
       v-if="position"
       class="selection-quickbar studio-editor-scope"
+      :data-studio-theme="theme"
       role="toolbar"
       :aria-label="t('Seçili metin araçları')"
       :style="position"
@@ -87,7 +91,7 @@ onBeforeUnmount(() => {
         :aria-label="t('Hızlı {name}', { name: t(tool.label) })"
         :title="t(tool.label)"
         :aria-pressed="!!state[tool.id]"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('command', 'inline', tool.id)"
       >
         <component :is="tool.icon" :size="17" />
@@ -97,7 +101,7 @@ onBeforeUnmount(() => {
         v-if="insertEnabled"
         :aria-label="t('Hızlı bağlantı')"
         :title="t('Bağlantı ekle')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('link')"
       >
         <Link :size="17" /></button
@@ -105,7 +109,7 @@ onBeforeUnmount(() => {
         v-if="formatEnabled"
         :aria-label="t('Hızlı alıntı')"
         :title="t('Alıntı')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('command', 'block', 'blockquote')"
       >
         <Quote :size="17" /></button
@@ -113,7 +117,7 @@ onBeforeUnmount(() => {
         v-if="reviewEnabled"
         :aria-label="t('Hızlı yorum')"
         :title="t('Yorum ekle')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('comment')"
       >
         <MessageSquare :size="17" />

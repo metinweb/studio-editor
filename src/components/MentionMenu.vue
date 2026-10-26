@@ -1,7 +1,10 @@
 <script setup>
+import { keepSelection } from './rich-editor/keyboard.js'
+import { useEditorTheme } from '../lib/theme.js'
 import { computed, ref, watch, onBeforeUnmount, onMounted, nextTick } from 'vue'
 import { useEditorLocale } from '../lib/editor-locale'
 import { validMention } from '../editor/writing-widgets.js'
+const theme = useEditorTheme()
 const props = defineProps({
   engine: Object,
   frame: Object,
@@ -94,6 +97,7 @@ defineExpose({ key: handleKey })
       v-if="query !== null"
       ref="menu"
       class="studio-mention-menu studio-editor-scope"
+      :data-studio-theme="theme"
       :style="position"
       role="listbox"
       :aria-label="t('Bahsetme önerileri')"
@@ -104,7 +108,7 @@ defineExpose({ key: handleKey })
         :key="item.id || 'new'"
         role="option"
         :aria-selected="selected === index"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="apply(item)"
       >
         <span class="mention-avatar" aria-hidden="true">@</span

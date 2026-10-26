@@ -1,5 +1,13 @@
 <script setup>
-import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onErrorCaptured,
+  onMounted,
+  onBeforeUnmount,
+  ref,
+  watch,
+} from 'vue'
 import {
   BookOpen,
   ChevronRight,
@@ -28,8 +36,11 @@ import {
   X,
   Check,
   Circle,
+  RefreshCw,
 } from '@lucide/vue'
 import RichEditor from './components/RichEditor.vue'
+import WatchdogNotice from './components/WatchdogNotice.vue'
+import { createEditorWatchdog, recoverableHtml } from './lib/watchdog.js'
 import AppDialog from './components/AppDialog.vue'
 import { useWorkspace } from './stores/workspace'
 import { useMedia } from './stores/media'
@@ -37,9 +48,21 @@ import { cleanHtml, downloadHtml, renderDocument, plainText } from './lib/conten
 import { createDocumentFilter, normalizeTags, searchKey } from './lib/document-library'
 import { provideEditorLocale } from './lib/editor-locale'
 import { workspaceLocale } from './lib/workspace-locale'
+import { workspaceTheme } from './lib/workspace-theme.js'
+import { applyWorkspaceUpdate, online, pendingUpdate } from './lib/pwa.js'
+import { provideEditorTheme, useResolvedTheme } from './lib/theme.js'
 import { normalizeContentCss, normalizeBodyClass } from './lib/content-css.js'
 
 const locale = workspaceLocale
+const resolvedTheme = useResolvedTheme(() => workspaceTheme.value)
+provideEditorTheme(resolvedTheme)
+watch(
+  resolvedTheme,
+  (theme) => {
+    if (typeof document !== 'undefined') document.documentElement.dataset.studioTheme = theme
+  },
+  { immediate: true },
+)
 const contentCss = ref([])
 const bodyClass = ref('')
 try {
@@ -81,6 +104,23 @@ const DocumentTags = defineAsyncComponent(() => import('./components/DocumentTag
 const workspace = useWorkspace()
 const media = useMedia()
 const editor = ref(null)
+async function updateWorkspace() {
+  await workspace.save()
+  if (!workspace.dirty) applyWorkspaceUpdate()
+}
+const watchdog = createEditorWatchdog()
+function editorCrashed(error) {
+  const html = recoverableHtml(() => editor.value?.getHTML(), workspace.active?.content)
+  if (workspace.active && html !== workspace.active.content) workspace.update({ content: html })
+  watchdog.crash(error)
+}
+onErrorCaptured((error, instance) => {
+  for (let node = instance; node; node = node.$parent)
+    if (node.$?.type === RichEditor) {
+      editorCrashed(error)
+      return false
+    }
+})
 const editorReady = ref(false)
 const modal = ref(null)
 const sidebarOpen = ref(false)
@@ -246,6 +286,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="studio">
+    <div v-if="pendingUpdate" class="app-update" role="status">
+      <RefreshCw :size="15" />{{ t('Studio’nun yeni bir sürümü hazır.') }}
+      <button class="button primary" @click="updateWorkspace">
+        {{ t('Güncelle ve yenile') }}
+      </button>
+    </div>
     <button
       v-if="sidebarOpen"
       class="sidebar-overlay"
@@ -271,6 +317,14 @@ onBeforeUnmount(() => {
         <select v-model="locale" :aria-label="t('Arayüz dili')">
           <option value="en" lang="en">English</option>
           <option value="tr" lang="tr">Türkçe</option>
+        </select>
+      </label>
+      <label class="workspace-language">
+        <span>{{ t('Görünüm teması') }}</span>
+        <select v-model="workspaceTheme" :aria-label="t('Görünüm teması')">
+          <option value="auto">{{ t('Sistem') }}</option>
+          <option value="light">{{ t('Açık') }}</option>
+          <option value="dark">{{ t('Koyu') }}</option>
         </select>
       </label>
       <button class="button primary new-document" :disabled="!workspace.ready" @click="newDocument">
@@ -415,7 +469,10 @@ onBeforeUnmount(() => {
           <button class="button subtle import-button" @click="importInput?.click()">
             <Upload :size="16" /> {{ t('HTML içe aktar') }}
           </button>
-          <span class="local-badge"><span></span> {{ t('Yerel çalışma alanı') }}</span
+          <span v-if="!online" class="local-badge offline-badge" role="status"
+            ><span></span> {{ t('Çevrimdışı · bu tarayıcıda kaydediliyor') }}</span
+          >
+          <span v-else class="local-badge"><span></span> {{ t('Yerel çalışma alanı') }}</span
           ><button class="icon-button" :aria-label="t('Kısa rehber')" @click="modal = 'help'">
             <CircleHelp :size="19" />
           </button>
@@ -469,7 +526,11 @@ onBeforeUnmount(() => {
                 <button
                   class="document-tags-button"
                   @click="modal = 'tags'"
-                  :aria-label="t('Belge etiketlerini düzenle')"
+                  :aria-label="`${
+                    activeTags.length
+                      ? t('{count} etiket', { count: activeTags.length })
+                      : t('Etiket ekle')
+                  } · ${t('Belge etiketlerini düzenle')}`"
                 >
                   <Tags :size="14" />
                   {{
@@ -516,13 +577,19 @@ onBeforeUnmount(() => {
         <div class="editor-layout" :class="{ 'without-details': !detailsOpen }">
           <section class="editor-card" :aria-label="t('Belge düzenleyici')">
             <div class="editor-surface">
+              <WatchdogNotice
+                :status="watchdog.status.value"
+                @dismiss="watchdog.dismiss()"
+                @restart="watchdog.restart()"
+              />
               <RichEditor
+                v-if="watchdog.status.value !== 'failed'"
                 :content-css="contentCss"
                 :body-class="bodyClass"
                 @update:body-class="saveBodyClass"
                 @update:content-css="saveContentCss"
                 :locale="locale"
-                :key="workspace.activeId"
+                :key="`${workspace.activeId}:${watchdog.generation.value}`"
                 ref="editor"
                 :model-value="workspace.active.content"
                 :block-ids="workspace.active.blockIds"
@@ -532,6 +599,7 @@ onBeforeUnmount(() => {
                 @source="modal = 'source'"
                 @save="workspace.save()"
                 @ready="editorInitialized"
+                @crash="editorCrashed"
               />
             </div>
             <footer class="editor-status">

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Studio Editor · Web component</title>
+    <link rel="stylesheet" id="editor-styles" href="./editor/studio-editor.css" />
+    <style>
+      body {
+        margin: 0;
+        background: #f5f6f8;
+        color: #192436;
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 1080px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      h1 {
+        letter-spacing: -0.04em;
+        font-size: clamp(28px, 5vw, 42px);
+        line-height: 1.2;
+      }
+      .intro {
+        max-width: 720px;
+        color: #586578;
+      }
+      label {
+        display: block;
+        font-weight: 650;
+        margin: 24px 0 10px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 20px 0;
+        align-items: center;
+      }
+      .actions button {
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 1px solid #ccd3df;
+        background: white;
+        font: inherit;
+        cursor: pointer;
+      }
+      .actions button[type='submit'] {
+        background: #215bdd;
+        color: white;
+        border-color: #215bdd;
+      }
+      pre {
+        overflow: auto;
+        padding: 20px;
+        background: #192436;
+        color: #e4ebf6;
+        border-radius: 12px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>STUDIO EDITOR / WEB COMPONENT</p>
+      <h1 id="title">One tag, any framework.</h1>
+      <p class="intro">
+        <code>&lt;studio-editor&gt;</code> is a form-associated custom element. It submits its HTML
+        under its <code>name</code>, takes part in reset and validation, and works in PHP, React,
+        Angular or plain HTML pages without a Vue application.
+      </p>
+      <form id="article-form">
+        <label id="content-label">Article content</label>
+        <studio-editor
+          id="editor"
+          name="content"
+          required
+          height="460"
+          aria-labelledby="content-label"
+          placeholder="Write your article…"
+        >
+          <template
+            ><h2>Hello from a web component</h2>
+            <p>Edit me.</p></template
+          >
+        </studio-editor>
+        <div class="actions">
+          <button type="submit">Inspect form data</button>
+          <button type="reset">Reset content</button>
+          <button type="button" id="readonly">Toggle readonly</button>
+          <output id="status" aria-live="polite">Loading editor…</output>
+        </div>
+      </form>
+      <h2>Submitted HTML</h2>
+      <pre id="result">Nothing submitted yet.</pre>
+    </main>
+    <script type="module">
+      const build =
+        new URLSearchParams(location.search).get('build') === 'lite' ? 'editor-lite' : 'editor'
+      document.querySelector('#editor-styles').href = `./${build}/studio-editor.css`
+      const { defineStudioEditorElement } = await import(`./${build}/studio-editor.js`)
+      defineStudioEditorElement()
+      const element = document.querySelector('#editor')
+      const form = document.querySelector('#article-form')
+      const status = document.querySelector('#status')
+      window.events = []
+      for (const type of ['input', 'change', 'studio-save'])
+        element.addEventListener(type, () => window.events.push(type))
+      element.addEventListener('input', () => (status.textContent = 'Content changed — not saved'))
+      element.addEventListener('studio-save', () => form.requestSubmit())
+      form.addEventListener('submit', (event) => {
+        event.preventDefault()
+        document.querySelector('#result').textContent = new FormData(form).get('content')
+        status.textContent = 'Form data inspected — nothing sent to a server'
+      })
+      form.addEventListener('invalid', () => (status.textContent = 'Please enter content'), true)
+      document.querySelector('#readonly').addEventListener('click', () => {
+        element.toggleAttribute('readonly')
+      })
+      await element.whenReady()
+      status.textContent = build === 'editor-lite' ? 'Lite editor ready' : 'Editor ready'
+    </script>
+  </body>
+</html>

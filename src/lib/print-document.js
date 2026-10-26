@@ -1,13 +1,6 @@
 import { publicHtml, documentCss, escapeHtml } from './content'
-export function printOptions(options = {}) {
-  return {
-    size: options.size === 'Letter' ? 'Letter' : 'A4',
-    landscape: !!options.landscape,
-    margin: Math.max(10, Math.min(40, Number(options.margin) || 20)),
-    header: String(options.header || '').slice(0, 200),
-    footer: String(options.footer || '').slice(0, 200),
-  }
-}
+import { printOptions } from './page-options.js'
+export { printOptions }
 export function renderPrintDocument(html, options = {}) {
   const value = printOptions(options)
   return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="script-src 'none';object-src 'none';base-uri 'none'"><title>${escapeHtml(value.header || 'Studio')}</title><style>${documentCss}

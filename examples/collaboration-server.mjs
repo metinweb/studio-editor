@@ -4,6 +4,28 @@ import { resolve, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createSharedDocument } from '../src/editor/shared-document.js'
 
+// Presence carets: { start: { block, offset }, end: { block, offset } } or null.
+function readSelection(header) {
+  if (typeof header !== 'string' || header.length > 3072) return null
+  try {
+    const value = JSON.parse(decodeURIComponent(header))
+    const valid = (point) =>
+      point &&
+      typeof point.block === 'string' &&
+      point.block.length <= 100 &&
+      Number.isInteger(point.offset) &&
+      point.offset >= 0 &&
+      point.offset <= 10000000
+    return value && valid(value.start) && valid(value.end)
+      ? {
+          start: { block: value.start.block, offset: value.start.offset },
+          end: { block: value.end.block, offset: value.end.offset },
+        }
+      : null
+  } catch {
+    return null
+  }
+}
 export async function createCollaborationServer({
   directory,
   authorize,
@@ -22,7 +44,7 @@ export async function createCollaborationServer({
     if (req.headers.origin === origin)
       Object.assign(headers, {
         'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-Studio-Selection',
         'Access-Control-Allow-Methods': 'GET, PUT, POST, OPTIONS',
         Vary: 'Origin',
       })
@@ -91,6 +113,7 @@ export async function createCollaborationServer({
           name: current.name,
           role: current.role,
           lastSeen: now,
+          selection: readSelection(req.headers['x-studio-selection']),
         })
         const response = (bytes) => ({
           update: Buffer.from(bytes).toString('base64'),

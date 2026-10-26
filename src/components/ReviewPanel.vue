@@ -10,9 +10,35 @@ import {
   CornerDownRight,
   ArrowUpRight,
   Trash2,
+  GitCompareArrows,
 } from '@lucide/vue'
-const props = defineProps({ engine: Object, state: Object, tab: String })
-const emit = defineEmits(['close', 'tab'])
+const props = defineProps({
+  engine: Object,
+  state: Object,
+  tab: String,
+  trackEnforced: Boolean,
+})
+const emit = defineEmits(['close', 'tab', 'track'])
+const changes = computed(() => {
+  props.state
+  return props.engine?.trackedChanges() || []
+})
+const visibleChanges = computed(() =>
+  changes.value.filter((item) =>
+    matchesQuery(`${item.inserted} ${item.deleted} ${item.authorName} ${item.author}`),
+  ),
+)
+const changeLabels = {
+  insert: 'Ekleme',
+  delete: 'Silme',
+  replace: 'Değiştirme',
+  split: 'Yeni paragraf',
+  join: 'Paragrafları birleştirme',
+}
+function resolveChange(id, accept) {
+  const done = accept ? props.engine.acceptChange(id) : props.engine.rejectChange(id)
+  error.value = done ? '' : t('Değişiklik artık belgede yok.')
+}
 const draft = ref('')
 const error = ref('')
 const replies = ref({})
@@ -95,6 +121,7 @@ function exportReport() {
     })),
     comments: threads.value,
     suggestions: suggestions.value,
+    trackedChanges: changes.value,
   }
   const url = URL.createObjectURL(
     new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }),
@@ -143,6 +170,8 @@ function fix(issue, index) {
       <button :aria-pressed="tab === 'comments'" @click="emit('tab', 'comments')">
         <MessageSquare :size="14" /> {{ t('Yorumlar') }}
         <b>{{ threads.filter((t) => !t.resolved).length }}</b></button
+      ><button :aria-pressed="tab === 'changes'" @click="emit('tab', 'changes')">
+        <GitCompareArrows :size="14" /> {{ t('Değişiklikler') }} <b>{{ changes.length }}</b></button
       ><button :aria-pressed="tab === 'check'" @click="emit('tab', 'check')">
         <ScanEye :size="15" /> {{ t('Denetim') }} <b>{{ issues.length }}</b>
       </button>
@@ -235,6 +264,83 @@ function fix(issue, index) {
             <CornerDownRight :size="16" />
           </button>
         </form>
+      </article>
+    </div>
+    <div class="review-scroll" v-else-if="tab === 'changes'">
+      <label v-if="!trackEnforced" class="track-toggle"
+        ><input
+          type="checkbox"
+          :checked="state.trackChanges"
+          :disabled="!engine?.editable"
+          @change="emit('track', $event.target.checked)"
+        />
+        {{ t('Değişiklikleri izle') }}</label
+      >
+      <p class="review-note">
+        {{
+          t(
+            'İzleme açıkken eklenen metin yeşil, silinen metin üstü çizili kırmızı görünür. Kabul edilene kadar yayınlanan HTML değişmez.',
+          )
+        }}
+      </p>
+      <div v-if="changes.length" class="track-bulk">
+        <button
+          class="button"
+          :disabled="!engine?.editable"
+          @click="engine.resolveAllChanges(true)"
+        >
+          <Check :size="14" /> {{ t('Tümünü kabul et') }}</button
+        ><button
+          class="button"
+          :disabled="!engine?.editable"
+          @click="engine.resolveAllChanges(false)"
+        >
+          <X :size="14" /> {{ t('Tümünü reddet') }}
+        </button>
+      </div>
+      <p v-if="error" class="review-error" role="alert">{{ error }}</p>
+      <div v-if="!visibleChanges.length" class="review-empty">
+        <GitCompareArrows :size="28" /><strong>{{
+          reviewQuery ? t('Sonuç yok') : t('İzlenen değişiklik yok')
+        }}</strong>
+        <p>
+          {{
+            t('Değişiklik izlemeyi açın; yazdıklarınız ve sildikleriniz öneri olarak kaydedilir.')
+          }}
+        </p>
+      </div>
+      <article
+        v-for="change in visibleChanges"
+        :key="change.id"
+        class="comment-card change-card"
+        :data-change-type="change.type"
+      >
+        <div class="comment-author">
+          <span class="change-type">{{ t(changeLabels[change.type]) }}</span>
+          <span>{{ change.authorName || change.author }}</span>
+          <time v-if="change.time">{{
+            new Date(change.time).toLocaleString(locale, {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          }}</time>
+        </div>
+        <p v-if="change.deleted">
+          <del>{{ change.deleted }}</del>
+        </p>
+        <p v-if="change.inserted && ['insert', 'replace'].includes(change.type)">
+          <ins>{{ change.inserted }}</ins>
+        </p>
+        <div class="comment-actions">
+          <button @click="engine.focusChange(change.id)">{{ t('Belgede göster') }}</button>
+          <button :disabled="!engine?.editable" @click="resolveChange(change.id, true)">
+            <Check :size="14" />{{ t('Kabul et') }}</button
+          ><button :disabled="!engine?.editable" @click="resolveChange(change.id, false)">
+            <X :size="14" />{{ t('Reddet') }}
+          </button>
+        </div>
       </article>
     </div>
     <div class="review-scroll" v-else-if="tab === 'suggestions'">

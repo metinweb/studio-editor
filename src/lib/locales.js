@@ -7,6 +7,7 @@ import { documentToolMessages } from './document-tool-messages.js'
 import { writingMessages } from './writing-messages.js'
 import { advancedDocumentMessages } from './advanced-document-messages.js'
 import { navigationReviewMessages } from './navigation-review-messages.js'
+import { platformMessages } from './platform-messages.js'
 export const englishMessages = Object.freeze({
   'AI yazım yardımcısı': 'AI writing assistant',
   'CMS sürüm geçmişi': 'CMS version history',
@@ -36,6 +37,7 @@ export const englishMessages = Object.freeze({
   ...writingMessages,
   ...advancedDocumentMessages,
   ...navigationReviewMessages,
+  ...platformMessages,
   'Görev listesi': 'Task list',
   'İçerik stilleri': 'Content styles',
   'Belge başlıkları': 'Document outline',

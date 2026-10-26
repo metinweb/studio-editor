@@ -218,7 +218,7 @@ test('paragraph indentation, custom font size, level six and typography are edit
   await body(page).locator('p').selectText()
   await button(page, 'Girintiyi artır').click()
   await expect(body(page).locator('p')).toHaveCSS('margin-inline-start', '24px')
-  await button(page, 'Yazı boyutu').click()
+  await page.getByRole('button', { name: /^Yazı boyutu:/ }).click()
   await page.getByRole('spinbutton', { name: 'Özel yazı boyutu' }).fill('23.5')
   await button(page, 'Yazı boyutunu uygula').click()
   await expect(body(page).locator('span')).toHaveCSS('font-size', '23.5px')

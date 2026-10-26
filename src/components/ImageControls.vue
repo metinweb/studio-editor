@@ -1,4 +1,5 @@
 <script setup>
+import { keepSelection } from './rich-editor/keyboard.js'
 import { useEditorLocale } from '../lib/editor-locale'
 const { t } = useEditorLocale()
 import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
@@ -231,7 +232,7 @@ onBeforeUnmount(() => {
         class="image-edit-action"
         :aria-label="t('Resmi düzenle')"
         :title="t('Kırp, döndür ve renkleri düzenle')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('edit')"
       >
         <Crop :size="17" /><span>{{ t('Düzenle') }}</span>
@@ -242,7 +243,7 @@ onBeforeUnmount(() => {
         :key="item.value"
         :aria-label="t(item.label)"
         :title="t(item.label)"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('command', 'image', { align: item.value })"
       >
         <component :is="item.icon" :size="17" />
@@ -252,7 +253,7 @@ onBeforeUnmount(() => {
         :key="width"
         :aria-label="width"
         :title="t('Genişlik: {width}', { width })"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('command', 'image', { width })"
       >
         {{ width }}
@@ -262,7 +263,7 @@ onBeforeUnmount(() => {
         :aria-label="t('Oranı koru')"
         :title="t('Oranı koru · Shift ile geçici olarak değiştir')"
         :aria-pressed="locked"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="locked = !locked"
       >
         <LockKeyhole v-if="locked" :size="16" /><UnlockKeyhole v-else :size="16" />
@@ -270,7 +271,7 @@ onBeforeUnmount(() => {
       <button
         :aria-label="t('Görsel özellikleri')"
         :title="t('Görsel özellikleri')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('properties')"
       >
         <SlidersHorizontal :size="17" />
@@ -278,7 +279,7 @@ onBeforeUnmount(() => {
       <button
         :aria-label="t('Görseli sil')"
         :title="t('Görseli sil')"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="emit('command', 'removeImage')"
       >
         <Trash2 :size="17" />

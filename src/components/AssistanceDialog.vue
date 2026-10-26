@@ -14,7 +14,8 @@ const c = (en, tr) => (locale.value === 'tr' ? tr : en)
 const snapshot = shallowRef(null),
   error = ref(''),
   busy = ref(false),
-  result = ref(null)
+  result = ref(null),
+  streamed = ref('')
 const instruction = ref(''),
   action = ref('rewrite'),
   language = ref(locale.value)
@@ -38,6 +39,7 @@ async function run() {
   const epoch = generation
   error.value = ''
   result.value = null
+  streamed.value = ''
   busy.value = true
   controller = new AbortController()
   timeout = setTimeout(() => {
@@ -61,7 +63,14 @@ async function run() {
           'Önce CMS içinde bir yardım servisi adaptörü bağlayın.',
         ),
       )
-    const response = await method.call(props.adapter, input, { signal: controller.signal })
+    // Adapters may stream partial text; the final response is still validated before review.
+    const onText = (text) => {
+      if (epoch === generation && typeof text === 'string') streamed.value = text.slice(0, 100000)
+    }
+    const response = await method.call(props.adapter, input, {
+      signal: controller.signal,
+      ...(props.kind === 'ai' ? { onText } : {}),
+    })
     if (epoch !== generation) return
     result.value = validateAssistanceResult(response, props.kind, input.text)
   } catch (failure) {
@@ -141,8 +150,21 @@ function apply(text, issue = null) {
       </label>
       <p v-if="error" class="error-banner" role="alert">{{ error }}</p>
       <p v-if="busy" role="status">
-        {{ c('Waiting for your service…', 'Servis yanıtı bekleniyor…') }}
+        {{
+          streamed
+            ? c('Receiving response…', 'Yanıt alınıyor…')
+            : c('Waiting for your service…', 'Servis yanıtı bekleniyor…')
+        }}
       </p>
+      <div
+        v-if="busy && streamed"
+        class="assistance-stream"
+        aria-live="off"
+        :aria-label="c('Incoming AI response', 'Gelen AI yanıtı')"
+        aria-busy="true"
+      >
+        {{ streamed }}
+      </div>
       <template v-if="result">
         <h3>{{ c('Review result', 'Sonucu inceleyin') }}</h3>
         <textarea
@@ -220,6 +242,16 @@ function apply(text, issue = null) {
   max-height: 180px;
   overflow: auto;
   overflow-wrap: anywhere;
+}
+.assistance-stream {
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  padding: 10px 12px;
+  border: 1px dashed #c7d2e2;
+  border-radius: 8px;
+  background: #f8fafc;
 }
 .assistance-issue {
   padding: 12px 0;

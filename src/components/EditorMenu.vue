@@ -41,7 +41,7 @@ async function back(level) {
   path.value = path.value.slice(0, level - 1)
   await nextTick()
   buttons(level - 1)
-    .find((button) => button.getAttribute('aria-label') === t(parent.label))
+    .find((button) => button.dataset.label === t(parent.label))
     ?.focus({ preventScroll: true })
 }
 function keys(event, level) {
@@ -49,7 +49,7 @@ function keys(event, level) {
   const list = buttons(level),
     index = list.indexOf(event.target)
   const item = panes.value[level].children.find(
-    (entry) => t(entry.label) === event.target.getAttribute('aria-label'),
+    (entry) => t(entry.label) === event.target.dataset.label,
   )
   if (event.key === 'Escape' && level) {
     event.preventDefault()
@@ -76,8 +76,7 @@ function keys(event, level) {
   } else if (event.key.length === 1 && event.key !== ' ' && !event.ctrlKey && !event.metaKey) {
     const ordered = [...list.slice(index + 1), ...list.slice(0, index + 1)]
     const match = ordered.find((button) =>
-      button
-        .getAttribute('aria-label')
+      (button.dataset.label || '')
         .toLocaleLowerCase(locale.value)
         .startsWith(event.key.toLocaleLowerCase(locale.value)),
     )
@@ -115,7 +114,13 @@ function keys(event, level) {
         </div>
         <button
           role="menuitem"
-          :aria-label="t(item.label)"
+          :data-label="t(item.label)"
+          :aria-label="item.shortcut ? undefined : t(item.label)"
+          :aria-keyshortcuts="
+            item.shortcut
+              ? item.shortcut.replace('Ctrl', 'Control').replaceAll(' ', '+')
+              : undefined
+          "
           :aria-haspopup="item.children ? 'menu' : undefined"
           :aria-expanded="item.children ? path[level]?.label === item.label : undefined"
           :disabled="item.disabled"
@@ -127,7 +132,7 @@ function keys(event, level) {
             class="editor-menu-icon"
           ></span
           ><span class="editor-menu-label">{{ t(item.label) }}</span
-          ><kbd v-if="item.shortcut">{{ item.shortcut }}</kbd
+          ><kbd v-if="item.shortcut" aria-hidden="true">{{ item.shortcut }}</kbd
           ><Check v-if="item.active" :size="15" /><ChevronRight v-if="item.children" :size="15" />
         </button>
       </template>

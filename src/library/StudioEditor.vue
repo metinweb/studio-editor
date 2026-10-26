@@ -2,6 +2,7 @@
 import {
   computed,
   defineAsyncComponent,
+  onErrorCaptured,
   onMounted,
   onBeforeUnmount,
   provide,
@@ -9,6 +10,9 @@ import {
   watch,
 } from 'vue'
 import RichEditor from '../components/RichEditor.vue'
+import WatchdogNotice from '../components/WatchdogNotice.vue'
+import { createEditorWatchdog, recoverableHtml } from '../lib/watchdog.js'
+import { provideEditorTheme, useResolvedTheme } from '../lib/theme.js'
 import { useMedia } from '../stores/media'
 import { publicHtml } from '../lib/content'
 import { createMediaService, mediaServiceKey } from '../lib/media-service'
@@ -40,6 +44,13 @@ const props = defineProps({
   bodyClass: { type: String, default: '' },
   features: { type: Object, default: () => ({}) },
   documentSession: Object,
+  /** Interface theme; documents keep their own colors. */
+  theme: { type: String, default: 'light' },
+  restricted: Boolean,
+  /** Record edits as suggestions; users cannot turn it off while set. */
+  trackChanges: Boolean,
+  /** Author of tracked changes. */
+  user: Object,
 })
 const emit = defineEmits([
   'update:modelValue',
@@ -55,8 +66,30 @@ const emit = defineEmits([
   'update:contentCss',
   'content-css-status',
   'update:bodyClass',
+  'crash',
+  'selection-change',
 ])
 const editor = ref(null)
+// The last HTML reported by the editor; a restarted editor is rebuilt from it.
+const content = ref(props.modelValue)
+watch(
+  () => props.modelValue,
+  (value) => {
+    content.value = value
+  },
+)
+const watchdog = createEditorWatchdog()
+function crashed(error) {
+  const html = recoverableHtml(() => editor.value?.getHTML(), content.value)
+  content.value = html
+  modal.value = null
+  const recovered = watchdog.crash(error)
+  emit('crash', { error, recovered, html })
+}
+onErrorCaptured((error) => {
+  crashed(error)
+  return false
+})
 const commandVersion = ref(0)
 const slashCommands = computed(() => {
   commandVersion.value
@@ -66,6 +99,8 @@ const slashCommands = computed(() => {
   return commands.list().filter((command) => !command.id.startsWith('studio/'))
 })
 provideEditorLocale(props)
+const resolvedTheme = useResolvedTheme(() => props.theme)
+provideEditorTheme(resolvedTheme)
 const modal = ref(null)
 const locked = computed(() => props.readonly || props.disabled)
 watch(
@@ -103,6 +138,7 @@ const height = computed(() =>
   typeof props.height === 'number' ? `${props.height}px` : props.height,
 )
 function changed(html) {
+  content.value = html
   emit('update:modelValue', html)
   emit('change', html)
 }
@@ -118,7 +154,13 @@ function insertMedia(item) {
   modal.value = null
 }
 function applySource(html) {
-  if (locked.value || !featureEnabled(props.features, 'source')) return
+  if (
+    locked.value ||
+    !featureEnabled(props.features, 'source') ||
+    editor.value?.isRestricted() ||
+    editor.value?.isTrackingChanges()
+  )
+    return
   editor.value?.replace(html)
   modal.value = null
 }
@@ -129,6 +171,12 @@ const api = {
     transactionListeners.add(listener)
     return () => transactionListeners.delete(listener)
   },
+  subscribeSelection: (listener) => {
+    selectionListeners.add(listener)
+    return () => selectionListeners.delete(listener)
+  },
+  getSelectionAnchor: () => editor.value?.getSelectionAnchor() || null,
+  setRemoteSelections: (users) => editor.value?.setRemoteSelections(users),
   registerPlugin: (plugin) => {
     const remove = commands.register(plugin)
     commandVersion.value++
@@ -149,7 +197,7 @@ const api = {
   getModel: () => editor.value?.getModel(),
   setModel: (model) => editor.value?.setModel(model),
   applyOperations: (transaction) => editor.value?.applyOperations(transaction) || false,
-  getHTML: () => editor.value?.getHTML() || props.modelValue,
+  getHTML: () => editor.value?.getHTML() || content.value,
   getPublicHTML: () => publicHtml(api.getHTML()),
   getInlineHTML: () => editor.value?.getInlineHTML() || '',
   setHTML: (html) => editor.value?.replace(html),
@@ -163,15 +211,31 @@ const api = {
   },
   openMedia,
   openScience: () => editor.value?.openScience(),
+  openDiagram: () => editor.value?.openDiagram(),
   openContentStyles: () => editor.value?.openContentStyles(),
   openAssistant: (kind) => editor.value?.openAssistant(kind),
   openVersionHistory: () => editor.value?.openVersionHistory(),
   openPageEmbed: () => editor.value?.openPageEmbed(),
   openUiElement: (kind = 'form') => editor.value?.openUiElement(kind),
+  markEditableRegion: (name) => editor.value?.markEditableRegion(name) || false,
+  removeEditableRegion: () => editor.value?.removeEditableRegion() || false,
+  getEditableRegions: () => editor.value?.getEditableRegions() || [],
+  focusEditableRegion: (backward) => editor.value?.focusEditableRegion(backward) || false,
+  getTrackedChanges: () => editor.value?.getTrackedChanges() || [],
+  acceptChange: (id) => editor.value?.acceptChange(id) || false,
+  rejectChange: (id) => editor.value?.rejectChange(id) || false,
+  acceptAllChanges: () => editor.value?.acceptAllChanges() || false,
+  rejectAllChanges: () => editor.value?.rejectAllChanges() || false,
   getDocument: () => editor.value?.getDocument(),
   getHistoryStats: () => editor.value?.getHistoryStats(),
 }
 const transactionListeners = new Set()
+const selectionListeners = new Set()
+function publishSelection(selection) {
+  emit('selection-change', selection)
+  for (const listener of selectionListeners) listener(selection)
+}
+onBeforeUnmount(() => selectionListeners.clear())
 function publishTransaction(transaction) {
   emit('transaction', transaction)
   for (const listener of transactionListeners) listener(transaction)
@@ -199,6 +263,7 @@ defineExpose(api)
 <template>
   <div
     class="studio-editor-scope studio-editor-embed"
+    :data-studio-theme="resolvedTheme"
     :style="{ height }"
     @submit.stop
     @click.capture="
@@ -207,9 +272,16 @@ defineExpose(api)
       }
     "
   >
+    <WatchdogNotice
+      :status="watchdog.status.value"
+      @dismiss="watchdog.dismiss()"
+      @restart="watchdog.restart()"
+    />
     <RichEditor
+      v-if="watchdog.status.value !== 'failed'"
+      :key="watchdog.generation.value"
       ref="editor"
-      :model-value="modelValue"
+      :model-value="content"
       :mentions="mentions"
       :allow-create-mention="allowCreateMention"
       :slash-commands="slashCommands"
@@ -230,6 +302,9 @@ defineExpose(api)
       :body-class="bodyClass"
       :features="features"
       :document-session="documentSession"
+      :restricted="restricted"
+      :track-changes="trackChanges"
+      :user="user"
       @update:body-class="emit('update:bodyClass', $event)"
       @update:content-css="emit('update:contentCss', $event)"
       @content-css-status="emit('content-css-status', $event)"
@@ -242,11 +317,13 @@ defineExpose(api)
       @source="api.openSource"
       @media="openMedia"
       @transaction="publishTransaction"
+      @crash="crashed"
+      @selection-change="publishSelection"
     />
     <SourceEditor
       v-if="modal === 'source'"
       :content="api.getHTML()"
-      :readonly="locked"
+      :readonly="locked || !!editor?.isRestricted() || !!editor?.isTrackingChanges()"
       @apply="applySource"
       @close="modal = null"
     />

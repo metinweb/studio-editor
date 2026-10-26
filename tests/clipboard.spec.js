@@ -123,3 +123,27 @@ test('oversized paste leaves the document and undo history unchanged', async ({ 
   await expect(body(page)).toHaveText('Başlangıç')
   await expect(page.getByText('Pano içeriği çok büyük; HTML içe aktarmayı kullanın.')).toBeVisible()
 })
+// Found while integrating Studio into the CodeCMS admin: pasted <b> was not recognized as
+// bold, a blank remainder paragraph stayed after pasted lists and sequential Word lists
+// carried redundant value attributes.
+test('pasted Word marks and lists are normalized for the editor', async ({ page }) => {
+  await setup(page)
+  await paste(page, {
+    html: '<p class="MsoNormal"><b>Kalın başlık</b> ve <i>eğik</i></p><p style="mso-list:l0 level1 lfo1"><span style="mso-list:Ignore">1. </span>Bir</p><p style="mso-list:l0 level1 lfo1"><span style="mso-list:Ignore">2. </span>İki</p><p style="mso-list:l0 level1 lfo1"><span style="mso-list:Ignore">5. </span>Beş</p>',
+  })
+  await expect(body(page).locator('strong')).toHaveText('Kalın başlık')
+  await expect(body(page).locator('em')).toHaveText('eğik')
+  await expect(body(page).locator('b, i')).toHaveCount(0)
+  const values = await body(page)
+    .locator('ol > li')
+    .evaluateAll((items) => items.map((item) => item.getAttribute('value')))
+  expect(values).toEqual([null, null, '5'])
+  // No blank, caret-less paragraph is left after the pasted list.
+  const html = await body(page).evaluate((root) => root.innerHTML)
+  expect(html).not.toMatch(/<p><\/p>/)
+  await body(page).locator('strong').click()
+  await expect(page.getByRole('button', { name: 'Kalın', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+})

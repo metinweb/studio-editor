@@ -1,0 +1,85 @@
+name: Publish npm package
+
+# Runs for version tags (v0.1.0-beta.12, v1.0.0, …) or a manual dispatch.
+# The source package stays "private": verified copies of the release tarball are published.
+# - GitHub Packages: always, as @metinweb/studio-editor, with the workflow's GITHUB_TOKEN.
+# - npmjs.org: as studio-editor with provenance, only when the NPM_TOKEN secret is set.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Pack and verify without publishing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Verify and publish studio-editor
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      PUBLISH: ${{ github.event_name == 'push' || inputs.dry-run == false }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run package:release
+      - name: Verify the installed tarball
+        run: |
+          npm exec -- node scripts/verify-release.mjs
+          npx playwright test --config playwright.package.config.js --project=chromium
+      - name: Check that the tag matches the package version
+        if: github.event_name == 'push'
+        run: |
+          version=$(node -p "require('./packages/editor/package.json').version")
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "Tag $GITHUB_REF_NAME does not match $version"; exit 1; }
+      - name: Stage publishable copies
+        run: |
+          rm -rf .publish && mkdir -p .publish/npm .publish/github
+          tar -xzf release/studio-editor-*.tgz -C .publish/npm
+          tar -xzf release/studio-editor-*.tgz -C .publish/github
+          (cd .publish/npm/package && npm pkg delete private)
+          (cd .publish/github/package && npm pkg delete private && npm pkg set name=@metinweb/studio-editor)
+          tag=latest
+          case "$(node -p "require('./packages/editor/package.json').version")" in *-*) tag=beta ;; esac
+          echo "DIST_TAG=$tag" >> "$GITHUB_ENV"
+      - name: Publish to GitHub Packages
+        working-directory: .publish/github/package
+        env:
+          GITHUB_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '@metinweb:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=%s\n' "$GITHUB_PACKAGES_TOKEN" > .npmrc
+          if [ "$PUBLISH" = "true" ]; then
+            npm publish --registry https://npm.pkg.github.com --tag "$DIST_TAG"
+          else
+            npm publish --dry-run --registry https://npm.pkg.github.com --tag "$DIST_TAG"
+          fi
+      - name: Publish to npmjs.org (needs the NPM_TOKEN secret)
+        if: env.NPM_TOKEN != ''
+        working-directory: .publish/npm/package
+        run: |
+          printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" > .npmrc
+          if [ "$PUBLISH" = "true" ]; then
+            npm publish --provenance --access public --tag "$DIST_TAG"
+          else
+            npm publish --dry-run --provenance --access public --tag "$DIST_TAG"
+          fi

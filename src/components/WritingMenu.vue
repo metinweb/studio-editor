@@ -1,7 +1,10 @@
 <script setup>
+import { keepSelection } from './rich-editor/keyboard.js'
+import { useEditorTheme } from '../lib/theme.js'
 import { computed, ref, watch, nextTick } from 'vue'
 import { writingCommands } from '../editor/productivity'
 import { useEditorLocale } from '../lib/editor-locale'
+const theme = useEditorTheme()
 const props = defineProps({
   engine: Object,
   query: { type: String, default: null },
@@ -68,6 +71,7 @@ defineExpose({ key })
       v-if="query !== null"
       ref="menu"
       class="studio-writing-menu studio-editor-scope"
+      :data-studio-theme="theme"
       :style="position"
       role="menu"
       :aria-label="locale === 'en' ? 'Insert block' : 'Blok ekle'"
@@ -78,7 +82,7 @@ defineExpose({ key })
         :key="item.id"
         role="menuitem"
         :class="{ active: selected === index }"
-        @pointerdown.prevent
+        @pointerdown="keepSelection"
         @click="apply(item)"
       >
         <span>{{ locale === 'en' ? item.en : item.label }}</span

@@ -1,5 +1,9 @@
 import { cleanHtml, escapeHtml } from '../lib/content'
-import { installFeaturePolicy } from '../lib/feature-policy.js'
+import {
+  featureMethods,
+  installFeaturePolicy,
+  installRestrictedPolicy,
+} from '../lib/feature-policy.js'
 import { History } from './history'
 import { documentMatches } from './document-search.js'
 import { outlineTools } from './outline-tools.js'
@@ -21,6 +25,13 @@ import { normalizeWritingWidgets } from './writing-widgets.js'
 import { normalizeDocumentFields } from './document-fields.js'
 import { documentTools } from './document-tools.js'
 import { writingAssistance } from './writing-assistance.js'
+import { restrictedEditing } from './restricted-editing.js'
+import {
+  trackChangeTools,
+  installTrackPolicy,
+  normalizeTrackedChanges,
+  trackedNotice,
+} from './track-changes.js'
 import { normalizeTableFormulas } from '../lib/table-formulas.js'
 import { readMediaEmbed, parseMediaEmbed } from '../lib/media-embed.js'
 import { modelFromDOM } from './model-bridge.js'
@@ -77,6 +88,7 @@ export class StudioEditor {
       onPaste = () => {},
       onNotice = () => {},
       onWritingKey = () => false,
+      onError = null,
       pasteMode = 'keep',
       tablePasteStyle = 'target',
       readonly = false,
@@ -97,6 +109,7 @@ export class StudioEditor {
       onPaste,
       onNotice,
       onWritingKey,
+      onError,
     }
     this.revision = 0
     this.pasteMode = pasteMode
@@ -137,6 +150,7 @@ export class StudioEditor {
     this.listen(root, 'copy', (event) => this.cellClipboard(event))
     this.listen(root, 'compositionstart', () => {
       if (!this.editable) return
+      if (this.trackChanges) this.startTrackedComposition()
       this.composing = true
       this.before = this.snapshot()
       this.history.checkpoint(this.before)
@@ -145,6 +159,7 @@ export class StudioEditor {
     this.listen(root, 'compositionend', () => {
       if (!this.editable) return
       this.composing = false
+      if (this.trackChanges) this.finishTrackedComposition()
       this.commit(this.before)
       this.before = null
     })
@@ -182,8 +197,19 @@ export class StudioEditor {
   }
 
   listen(target, type, callback) {
-    target.addEventListener(type, callback)
-    this.listeners.push(() => target.removeEventListener(type, callback))
+    // With an error handler (the watchdog), a failing listener is reported instead of leaving
+    // the browser to log it while the editor keeps running in an unknown state.
+    const handler = this.callbacks.onError
+      ? (event) => {
+          try {
+            return callback(event)
+          } catch (error) {
+            if (!this.destroyed) this.callbacks.onError(error, type)
+          }
+        }
+      : callback
+    target.addEventListener(type, handler)
+    this.listeners.push(() => target.removeEventListener(type, handler))
   }
   destroy() {
     this.destroyed = true
@@ -403,6 +429,16 @@ export class StudioEditor {
     const styleElement = firstText || element || this.root
     const typography = this.doc.defaultView.getComputedStyle(styleElement)
     const state = {
+      trackChanges: !!this.trackChanges,
+      trackedChangeCount: this.root.querySelector('[data-studio-change]')
+        ? new Set(
+            [...this.root.querySelectorAll('[data-studio-change-id]')].map((node) =>
+              node.getAttribute('data-studio-change-id'),
+            ),
+          ).size
+        : 0,
+      restricted: !!this.restricted,
+      editableRegion: !!this.regionAt(element),
       taskList: !!element?.closest('ul[data-studio-task-list="true"]'),
       contentStyle: block?.dataset.studioStyle || '',
       mentionQuery: this.mentionQuery()?.query ?? null,
@@ -460,6 +496,8 @@ export class StudioEditor {
     normalizeWritingWidgets(this.root)
     normalizeDocumentFields(this.root, true)
     normalizeTableFormulas(this.root)
+    normalizeTrackedChanges(this.root)
+    if (this.restricted && !this.guardRestricted(before)) return
     const caret = currentRange(this.root)
     if (
       caret?.collapsed &&
@@ -548,7 +586,19 @@ export class StudioEditor {
     })
     selection?.restore()
     this.cellSelection = null
-    this.commit(before, kind === 'penTyping' ? 'insertText' : null)
+    // Host and model updates may change locked content in restricted mode.
+    this.trustedChange = external
+    try {
+      // Typing-like commands share undo steps with ordinary typing.
+      const group = ['penTyping', 'trackInsert'].includes(kind)
+        ? 'insertText'
+        : kind === 'trackDelete'
+          ? 'deleteContentBackward'
+          : null
+      this.commit(before, group)
+    } finally {
+      this.trustedChange = false
+    }
     this.operationKind = null
   }
   undo() {
@@ -571,6 +621,13 @@ export class StudioEditor {
     const before = this.snapshot()
     const snapshot = this.history.move(direction)
     if (!snapshot) return
+    if (!this.restrictedSnapshotAllowed(snapshot)) {
+      this.history.move(-direction)
+      this.callbacks.onNotice(
+        'Kısıtlı düzenleme: bu geri alma adımı korunan içeriği değiştirir. Önce kısıtlı modu kapatın.',
+      )
+      return
+    }
     this.pending = null
     this.root.innerHTML = snapshot.html
     restoreBlockIds(this.root, snapshot.blockIds)
@@ -608,7 +665,12 @@ export class StudioEditor {
       event.inputType === 'historyUndo' ? this.undo() : this.redo()
       return
     }
+    if (!this.restrictedInput(event)) {
+      event.preventDefault()
+      return
+    }
     if (this.composing || event.isComposing) return
+    if (this.trackedInput(event)) return
     if (this.markdownInput(event)) return
     if (this.penInput(event)) return
     this.cellSelection = null
@@ -730,6 +792,23 @@ export class StudioEditor {
       } else this.inline({ b: 'bold', i: 'italic', u: 'underline' }[key])
     }
     if (mod && key === 'v') this.plainPaste = event.shiftKey
+    if (event.key === 'Tab' && this.restricted) {
+      event.preventDefault()
+      this.focusEditableRegion(event.shiftKey)
+      return
+    }
+    // Select all stays inside the current region; the rest of the document is locked.
+    if (mod && key === 'a' && this.restricted) {
+      const region = this.regionAt(currentRange(this.root)?.startContainer)
+      if (region) {
+        event.preventDefault()
+        const range = this.doc.createRange()
+        range.selectNodeContents(region)
+        selectRange(this.root, range)
+        this.rememberSelection()
+        return
+      }
+    }
     if (event.key === 'Tab') {
       if (this.context()?.closest('td,th')) {
         event.preventDefault()
@@ -1081,6 +1160,17 @@ export class StudioEditor {
       ? this.doc.createDocumentFragment()
       : range.createContextualFragment(cleanHtml(html))
     if (plain) fragment.append(this.doc.createTextNode(html))
+    // Pasted and inserted HTML uses the same marks as loaded documents (<b> → <strong>),
+    // so toolbar state and toggles recognize it.
+    else
+      for (const [oldTag, tag] of Object.entries(aliases))
+        for (const node of fragment.querySelectorAll(oldTag)) {
+          const replacement = this.doc.createElement(tag)
+          for (const attribute of node.attributes)
+            replacement.setAttribute(attribute.name, attribute.value)
+          replacement.append(...node.childNodes)
+          node.replaceWith(replacement)
+        }
     const last = fragment.lastChild
     if (!last) return
     const hasBlock = [...fragment.childNodes].some(
@@ -1094,7 +1184,13 @@ export class StudioEditor {
       const tail = this.doc.createElement('p')
       tail.append(tailRange.extractContents())
       block.after(fragment)
-      if (tail.childNodes.length) last.after(tail)
+      // An empty remainder is dropped after text blocks; after a table or figure it stays as
+      // an editable paragraph so the caret can move below it.
+      const emptyTail = blank(tail)
+      if (!emptyTail || /^(TABLE|FIGURE|HR|PRE|BLOCKQUOTE)$/.test(last.nodeName)) {
+        if (emptyTail) tail.innerHTML = '<br>'
+        last.after(tail)
+      }
       if (blank(block)) block.remove()
     } else range.insertNode(fragment)
     caretAfter(this.root, last)
@@ -1102,10 +1198,27 @@ export class StudioEditor {
     if (last.nodeType === 1 && last.tagName === 'IMG') this.selectImage(last)
   }
   insert(html) {
+    if (this.trackChanges) return this.trackedInsertHtml(html)
     this.transaction((range) => this.insertFragment(html, range))
   }
   insertText(text) {
+    if (this.trackChanges) return this.trackedInsertHtml(escapeHtml(text))
     this.transaction((range) => this.insertFragment(text, range, true))
+  }
+  /** While tracking, only plain text can be inserted (as an insertion suggestion). */
+  trackedInsertHtml(html) {
+    if (!this.editable) return false
+    const template = this.doc.createElement('template')
+    template.innerHTML = html
+    if (template.content.querySelector('*:not(br)')) {
+      this.callbacks.onNotice(trackedNotice)
+      return false
+    }
+    for (const br of template.content.querySelectorAll('br')) br.replaceWith('\n')
+    const range = this.range()
+    if (!range) return false
+    this.trackedInsert(range.cloneRange(), template.content.textContent)
+    return true
   }
   link({ href, text, blank: newWindow }) {
     const url = safeLink(href)
@@ -1392,9 +1505,36 @@ export class StudioEditor {
   }
   paste(event) {
     event.preventDefault()
-    const mode = this.plainPaste ? 'text' : this.pasteMode
+    let mode = this.plainPaste ? 'text' : this.pasteMode
     this.plainPaste = false
     if (!this.editable) return
+    if (this.trackChanges) {
+      // Suggestions hold text only: pasted formatting and files are not tracked.
+      const text = (event.clipboardData?.getData('text/plain') || '').replace(/\r\n?/g, '\n')
+      const range = currentRange(this.root)
+      if (text && range) this.trackedInsert(range.cloneRange(), text.slice(0, 200000))
+      return
+    }
+    if (this.restricted) {
+      // Only text into a region: inline regions cannot hold pasted blocks or files.
+      const range = currentRange(this.root)
+      const region = range && this.regionAt(range.startContainer)
+      if (!region || region !== this.regionAt(range.endContainer)) {
+        this.callbacks.onNotice('Kısıtlı düzenleme: yalnızca vurgulu alanlar değiştirilebilir.')
+        return
+      }
+      mode = region.tagName === 'DIV' && mode !== 'text' ? 'clean' : 'text'
+      this.rememberSelection()
+      const prepared = this.prepareClipboard(
+        {
+          html: event.clipboardData?.getData('text/html') || '',
+          text: event.clipboardData?.getData('text/plain') || '',
+        },
+        mode,
+      )
+      if (prepared) this.insertPaste(prepared)
+      return
+    }
     this.rememberSelection()
     const files = [...(event.clipboardData?.files || [])]
     const prepared = this.prepareClipboard(
@@ -1416,7 +1556,7 @@ export class StudioEditor {
     else this.insertPaste(prepared)
   }
   drop(event) {
-    if (!this.editable) {
+    if (!this.editable || this.restricted || this.trackChanges) {
       event.preventDefault()
       return
     }
@@ -1461,6 +1601,8 @@ export class StudioEditor {
   }
   replaceMatches(query, replacement, all = false, sensitive = false, options = {}) {
     let count = 0
+    if (this.trackChanges)
+      return this.trackedReplaceMatches(query, replacement, all, sensitive, options)
     this.transaction((range) => {
       const candidates = this.matches(query, sensitive, options)
       const matches = all
@@ -1494,4 +1636,8 @@ Object.assign(StudioEditor.prototype, dailyWriting)
 
 Object.assign(StudioEditor.prototype, documentTools)
 Object.assign(StudioEditor.prototype, writingAssistance)
+Object.assign(StudioEditor.prototype, restrictedEditing)
+Object.assign(StudioEditor.prototype, trackChangeTools)
 installFeaturePolicy(StudioEditor.prototype)
+installRestrictedPolicy(StudioEditor.prototype)
+installTrackPolicy(StudioEditor.prototype, Object.values(featureMethods).flat())

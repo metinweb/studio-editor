@@ -74,7 +74,10 @@ function wordLists(parent, doc, metadata, formats) {
     }
     ignored.forEach((el) => el.remove())
     const item = doc.createElement('li')
-    if (number) item.setAttribute('value', String(number.value))
+    // Keep explicit numbers only where Word's numbering skips; sequential lists stay clean.
+    const container = stack[level - 1]
+    const expected = Number(container.getAttribute('start') || 1) + container.children.length
+    if (number && number.value !== expected) item.setAttribute('value', String(number.value))
     if (node.hasAttribute('style')) item.setAttribute('style', node.getAttribute('style'))
     item.append(...node.childNodes)
     stack[level - 1].append(item)

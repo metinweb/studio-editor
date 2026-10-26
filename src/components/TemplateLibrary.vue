@@ -48,7 +48,7 @@ const templates = [
 const html = computed(() => {
   const custom = store.items.find((t) => t.id === selected.value)
   if (custom) return custom.html
-  const heading = `<p style="color:#7953bd;font:12px sans-serif;letter-spacing:2px">${escapeHtml(t(selected.value === 'meeting' ? 'TOPLANTI NOTLARI' : selected.value === 'article' ? 'EDİTORYAL' : 'PROJE ÖZETİ'))}</p><h1>${escapeHtml(title.value || t('Başlıksız'))}</h1><p style="color:#8c929f;font-size:14px">${escapeHtml(owner.value)} · ${new Date().toLocaleDateString(locale.value)}</p><hr>`
+  const heading = `<p style="color:#7953bd;font:12px sans-serif;letter-spacing:2px">${escapeHtml(t(selected.value === 'meeting' ? 'TOPLANTI NOTLARI' : selected.value === 'article' ? 'EDİTORYAL' : 'PROJE ÖZETİ'))}</p><h1>${escapeHtml(title.value || t('Başlıksız'))}</h1><p style="color:#626b7a;font-size:14px">${escapeHtml(owner.value)} · ${new Date().toLocaleDateString(locale.value)}</p><hr>`
   if (locale.value === 'en') {
     const content = {
       meeting:

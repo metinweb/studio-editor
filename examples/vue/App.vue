@@ -21,7 +21,11 @@ const editor = ref(null)
 const secondEditor = ref(null)
 const sharedReady = ref(false),
   connected = ref(true)
-let sharedA, sharedB, bindingA, bindingB
+let sharedA,
+  sharedB,
+  bindingA,
+  bindingB,
+  stopCarets = []
 async function startShared() {
   if (sharedReady.value) return
   const { createSharedDocument, bindSharedDocument } = await loadCollaboration()
@@ -43,6 +47,15 @@ async function startShared() {
   const onError = (error) => (modelError.value = error.message)
   bindingA = bindSharedDocument(editor.value, sharedA, { onError })
   bindingB = bindSharedDocument(secondEditor.value, sharedB, { onError })
+  // Presence: each editor draws the other's caret. A real transport sends these selections.
+  const share = (from, to, user) =>
+    from.subscribeSelection((selection) => {
+      if (connected.value) to.setRemoteSelections([{ ...user, selection }])
+    })
+  stopCarets = [
+    share(editor.value, secondEditor.value, { id: 'first', name: 'Birinci editör' }),
+    share(secondEditor.value, editor.value, { id: 'second', name: 'İkinci editör' }),
+  ]
   sharedReady.value = true
 }
 function toggleConnection() {
@@ -53,6 +66,7 @@ function toggleConnection() {
   }
 }
 onBeforeUnmount(() => {
+  stopCarets.forEach((stop) => stop())
   bindingA?.dispose()
   bindingB?.dispose()
   sharedA?.destroy()

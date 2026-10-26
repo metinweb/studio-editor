@@ -15,6 +15,10 @@ export function cmsPremiumTests(test, expect) {
             label: 'Test fixture',
             generate: async (input, context) => {
               window.calls.push(input)
+              if (window.streaming) {
+                context.onText?.('Streaming partial')
+                return new Promise((resolve) => (window.finish = resolve))
+              }
               if (window.delayed)
                 return new Promise((resolve) => {
                   window.finish = resolve
@@ -47,6 +51,26 @@ export function cmsPremiumTests(test, expect) {
       selection.addRange(range)
     })
   }
+  test('streamed AI text appears while it arrives and is reviewed before applying', async ({
+    page,
+  }) => {
+    await start(page)
+    await page.evaluate(() => (window.streaming = true))
+    await select(page)
+    await page.evaluate(() => window.editor.openAssistant())
+    const dialog = page.getByRole('dialog', { name: 'AI writing assistant' })
+    await dialog.getByRole('button', { name: 'Run', exact: true }).click()
+    await expect(dialog.getByLabel('Incoming AI response')).toHaveText('Streaming partial')
+    await expect(dialog.getByRole('status')).toHaveText('Receiving response…')
+    await expect(dialog.getByRole('button', { name: 'Replace selection' })).toHaveCount(0)
+    await page.evaluate(() => window.finish({ text: 'Streaming partial, complete' }))
+    await expect(dialog.getByRole('textbox', { name: 'AI result' })).toHaveValue(
+      'Streaming partial, complete',
+    )
+    await expect(dialog.getByLabel('Incoming AI response')).toHaveCount(0)
+    await dialog.getByRole('button', { name: 'Replace selection' }).click()
+    await expect(body(page)).toHaveText('Streaming partial, complete')
+  })
   test('AI is explicit, applies literal text, and creates one undo step', async ({ page }) => {
     await start(page)
     await select(page)

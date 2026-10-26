@@ -2,6 +2,7 @@ import { marked } from 'marked'
 import TurndownService from 'turndown'
 import { gfm } from 'turndown-plugin-gfm'
 import { cleanHtml } from './content'
+import { resolveChanges } from '../editor/track-changes.js'
 
 export function importMarkdown(source) {
   if (source.length > 200000) throw new Error('Markdown metni en fazla 200.000 karakter olabilir.')
@@ -18,6 +19,8 @@ export function importMarkdown(source) {
 export function exportMarkdown(html) {
   const doc = document.implementation.createHTMLDocument('')
   doc.body.innerHTML = cleanHtml(html)
+  // Markdown cannot carry suggestions; export the document without unresolved changes.
+  resolveChanges(doc.body, false)
   for (const control of doc.body.querySelectorAll('[data-studio-task-control]')) control.remove()
   for (const item of doc.body.querySelectorAll('li[data-studio-checked]')) {
     const input = doc.createElement('input')

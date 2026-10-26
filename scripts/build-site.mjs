@@ -15,6 +15,11 @@ await cp(path.join(root, 'examples/html'), path.join(output, 'integration'), { r
 await cp(path.join(root, 'packages/editor/dist/browser'), path.join(output, 'integration/editor'), {
   recursive: true,
 })
+await cp(
+  path.join(root, 'packages/editor/dist/lite/browser'),
+  path.join(output, 'integration/editor-lite'),
+  { recursive: true },
+)
 const pkg = JSON.parse(await readFile(path.join(root, 'packages/editor/package.json'), 'utf8'))
 if (pkg.license !== 'MIT') throw new Error('Site metadata must declare the MIT license')
 const licenseFile = 'LICENSE'

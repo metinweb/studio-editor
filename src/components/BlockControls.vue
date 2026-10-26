@@ -1,4 +1,5 @@
 <script setup>
+import { keepSelection } from './rich-editor/keyboard.js'
 import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { GripVertical, ArrowUp, ArrowDown } from '@lucide/vue'
 import { blockId } from '../editor/identity'
@@ -149,7 +150,7 @@ onBeforeUnmount(() => {
     :style="box"
     role="group"
     :aria-label="tr('Blok kontrolleri', 'Block controls')"
-    @pointerdown.prevent
+    @pointerdown="keepSelection"
   >
     <button
       :title="tr('Bloğu yukarı taşı', 'Move block up')"

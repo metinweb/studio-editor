@@ -27,6 +27,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - run: npm run lint
+      - run: npm run typecheck
       - run: npm run test:unit
       - run: npm run build:site
       - run: npm run test:site
@@ -51,7 +53,7 @@ jobs:
           path: site-dist
 
   browsers:
-    name: Browser tests (${{ matrix.browser }} ${{ matrix.shard }})
+    name: Browser tests (${{ matrix.project || matrix.browser }} ${{ matrix.shard }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -70,6 +72,13 @@ jobs:
             shard: 3/4
           - browser: webkit
             shard: 4/4
+          # Phone profiles: Pixel 7 (Chromium) and iPhone 14 (WebKit) for tests/mobile-*.spec.js.
+          - browser: chromium
+            project: mobile-chrome
+            shard: 1/1
+          - browser: webkit
+            project: mobile-safari
+            shard: 1/1
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -79,7 +88,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npm run build
-      - run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }} --workers=1 --timeout=60000 --max-failures=3 --reporter=list
+      - run: npx playwright test --project=${{ matrix.project || matrix.browser }} --shard=${{ matrix.shard }} --workers=1 --timeout=60000 --max-failures=3 --reporter=list
       - name: Upload browser failure traces
         if: failure()
         uses: actions/upload-artifact@v7

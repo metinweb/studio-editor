@@ -1,3 +1,5 @@
+import { liteBuild } from './build/flags.js'
+
 /** Command policy, independent from toolbar layout and HTML sanitization. */
 export const featureMethods = {
   formatting:
@@ -25,8 +27,14 @@ export const featureNames = [
   'language',
   'pageEmbed',
   'uiElements',
+  'wordImport',
+  'restrictedEditing',
+  'diagrams',
 ]
+/** Features whose dependencies are not bundled in studio-editor/lite. */
+export const liteExcludedFeatures = ['science', 'wordImport', 'diagrams']
 export function featureEnabled(features, name) {
+  if (liteBuild && liteExcludedFeatures.includes(name)) return false
   return features?.[name] !== false
 }
 export function installFeaturePolicy(prototype) {
@@ -40,6 +48,32 @@ export function installFeaturePolicy(prototype) {
       }
     }
   }
+}
+/** Commands that stay available in restricted mode; everything else changes structure. */
+export const restrictedMethods = new Set([
+  'inline',
+  'clearFormat',
+  'changeCase',
+  'copyFormat',
+  'applyFormat',
+  'typography',
+  'penInput',
+  'link',
+  'unlink',
+  'autoLink',
+  'undo',
+  'redo',
+])
+export function installRestrictedPolicy(prototype) {
+  for (const methods of Object.values(featureMethods))
+    for (const method of methods) {
+      if (restrictedMethods.has(method)) continue
+      const original = prototype[method]
+      prototype[method] = function (...args) {
+        if (this.restricted) return false
+        return original.apply(this, args)
+      }
+    }
 }
 export const dialogFeatures = {
   ai: 'ai',
@@ -58,8 +92,28 @@ export const dialogFeatures = {
   pageEmbed: 'pageEmbed',
   uiElement: 'uiElements',
   cmsHistory: 'history',
+  importWord: 'wordImport',
+  editableRegion: 'restrictedEditing',
+  diagram: 'diagrams',
 }
 export function menuFeature(label) {
+  if (label === 'Word dosyası içe aktar') return 'wordImport'
+  if (label === 'Diyagram (Mermaid)') return 'diagrams'
+  if (
+    [
+      'Değişiklikleri izle',
+      'İzlenen değişiklikler',
+      'Tüm değişiklikleri kabul et',
+      'Tüm değişiklikleri reddet',
+    ].includes(label)
+  )
+    return 'review'
+  if (
+    ['Düzenlenebilir alan yap', 'Düzenlenebilir alanı kaldır', 'Kısıtlı düzenleme modu'].includes(
+      label,
+    )
+  )
+    return 'restrictedEditing'
   if (['Form oluşturucu', 'Slider oluşturucu', 'Akordeon oluşturucu'].includes(label))
     return 'uiElements'
   if (label === 'Web sayfası göm') return 'pageEmbed'

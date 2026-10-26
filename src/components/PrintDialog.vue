@@ -1,13 +1,21 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import AppDialog from './AppDialog.vue'
 import { useEditorLocale } from '../lib/editor-locale'
 import { renderPrintDocument, printDocument } from '../lib/print-document'
 const { t } = useEditorLocale()
-const props = defineProps({ html: String })
-defineEmits(['close'])
-const options = ref({ size: 'A4', landscape: false, margin: 20, header: '', footer: '' }),
-  error = ref('')
+const props = defineProps({ html: String, settings: Object })
+const emit = defineEmits(['close', 'update:settings'])
+const options = ref({
+  size: 'A4',
+  landscape: false,
+  margin: 20,
+  header: '',
+  footer: '',
+  ...props.settings,
+})
+const error = ref('')
+watch(options, (value) => emit('update:settings', { ...value }), { deep: true })
 const preview = computed(() => renderPrintDocument(props.html, options.value))
 async function print() {
   try {
@@ -26,7 +34,7 @@ async function docx() {
 }
 </script>
 <template>
-  <AppDialog :title="t('Sayfa düzeni ve dışa aktarım')" wide @close="$emit('close')">
+  <AppDialog :title="t('Sayfa düzeni ve dışa aktarım')" wide @close="emit('close')">
     <div class="studio-print-layout">
       <div class="studio-print-options">
         <label

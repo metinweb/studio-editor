@@ -1,5 +1,21 @@
 # Changelog
 
+## October 26, 2026 — 0.1.0-beta.12: review, protection and platform
+
+- Added track changes: typing, deleting, replacing, paragraph breaks and joins become authored suggestions with accept/reject (per change and all), a review panel tab, host-enforced mode and `user` identity. Plain-text paste, cut, find & replace, AI replacements and IME composition are tracked; formatting and structure commands are refused while tracking. Published HTML, DOCX and Markdown omit unresolved suggestions.
+- Added restricted editing: inline and block editable regions with optional names, a preview mode, host-enforced `restricted`, Tab navigation, region-scoped select all and a commit guard that reverts any change to locked content.
+- Added live cursors and presence: portable selections, `subscribeSelection`, `setRemoteSelections`, caret/selection overlays with name labels, a status-bar presence list and caret sharing in the HTTP transport and reference server.
+- Added page view with print page size, margins and orientation, computed page boundaries and a page counter; page setup is shared with printing and DOCX export.
+- Added Mermaid diagrams (lazy-loaded, strict security level) with examples, live preview, syntax errors, alternative text, double-click editing and a slash command.
+- Added a build-time dark theme for menus, toolbars, panels and dialogs; the standalone workspace offers System/Light/Dark and embeds accept `theme`.
+- Added crash recovery: failing editor handlers or components restart the editor from its last HTML, repeated failures stop it with a restart button, and hosts receive `crash` events.
+- Added an installable, offline-capable standalone workspace (manifest, icons, service worker with update prompt and background caching of optional features).
+- Added AI response streaming through `onText`, `createHttpAssistanceAdapter({ stream: true })` and `readAssistanceStream`.
+- Added the form-associated `<studio-editor>` web component and the `studio-editor/lite` build without MathJax, OpenChemLib, Mammoth and Mermaid.
+- Integrated Studio into a real CMS (CodeCMS: Vue 3 + Pinia 3 admin, Express + MongoDB, Nuxt site) in place of TinyMCE and verified writing, Word paste, media upload, saving, reopening, dark mode and public rendering end to end. Fixes found there: Pinia 3 is accepted as a peer; pasted `<b>`/`<i>` become `<strong>`/`<em>`; no blank paragraph remains after pasting a list; sequential Word lists drop redundant `value` numbers; the document sheet stays white in dark interfaces.
+- Added axe-core accessibility checks (no serious or critical WCAG 2.1 A/AA violations in the workspace, menus, review panel and key dialogs in both themes) with the contrast and label-in-name fixes they required, and Pixel 7 / iPhone 14 device projects. Fixed toolbar and menu buttons not responding to taps in WebKit (iPhone), where a prevented `pointerdown` cancels the click.
+- Split `RichEditor.vue` into focused modules, added ESLint, an API declaration drift check, a TypeScript check and an npm publish workflow with provenance. Updated DOMPurify to 3.4.17 and Vite to 8.3.5 for published security advisories.
+
 ## September 30, 2026 — UI builder experience
 
 - Redesigned the form, slider and accordion builders with a compact item outline, focused property editor, persistent item actions and a debounced live preview on wide screens. Phone layouts separate ordering, editing and preview while keeping save actions visible.

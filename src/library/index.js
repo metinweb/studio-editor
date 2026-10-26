@@ -3,6 +3,7 @@ import './library.css'
 
 export { default as StudioEditor } from './StudioEditor.vue'
 export { mountStudioEditor } from './mount.js'
+export { defineStudioEditorElement } from './web-component.js'
 export { cleanHtml, publicHtml, renderDocument, documentCss } from '../lib/content'
 export { mapSelection, mapOffset } from '../editor/operations.js'
 export { englishMessages } from '../lib/locales.js'
@@ -13,7 +14,7 @@ export { createDocumentSession } from '../lib/document-storage.js'
 export { createAutosaveSession } from '../lib/autosave.js'
 export { bindDocumentSession } from '../lib/cms-binding.js'
 export { createHttpDocumentAdapter } from '../lib/http-document-adapter.js'
-export { createHttpAssistanceAdapter } from '../lib/assistance.js'
+export { createHttpAssistanceAdapter, readAssistanceStream } from '../lib/assistance.js'
 export {
   uiElementHtml,
   normalizeUiElement,

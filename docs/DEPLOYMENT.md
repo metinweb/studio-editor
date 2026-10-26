@@ -9,8 +9,11 @@ Proje MIT lisansıyla açık kaynaktır. Tanıtım ve demo için [GitHub Pages y
 2. HTTPS üzerinden servis edin. Yerel test için localhost HTTP kullanılabilir.
    ZIP'i doğrudan veya `file://` üzerinden açmayın.
 3. Kök veya alt klasörde çalışır; örneğin `/editor/`. Göreli asset yolları vardır.
-4. `index.html` için `Cache-Control: no-cache`; içerik özetli `assets/*`
-   dosyaları için `Cache-Control: public, max-age=31536000, immutable` uygundur.
+4. `index.html`, `sw.js` ve `manifest.webmanifest` için `Cache-Control: no-cache`;
+   içerik özetli `assets/*` dosyaları için `Cache-Control: public, max-age=31536000, immutable`
+   uygundur. `sw.js` uygulamayı çevrimdışı kullanım için önbelleğe alır; yeni sürüm kullanıcı
+   **Güncelle ve yenile** diyene kadar bekler. Service worker yalnız HTTPS veya localhost üzerinde
+   kaydolur ve başka alan adlarına giden istekleri ele almaz.
    Yayın değişiminde eski asset'leri açık oturumlar kapanana kadar koruyun.
 5. `X-Content-Type-Options: nosniff` ve uygun bir Referrer-Policy yapılandırın.
    CSP kullanılacaksa `srcdoc` içindeki inline belge stilleri, `data:` medya,

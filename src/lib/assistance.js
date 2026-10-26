@@ -31,10 +31,70 @@ export function validateAssistanceResult(result, kind, text) {
     }),
   }
 }
+const maxOutput = 100000
+/**
+ * Reads a Server-Sent Events response. Each data line is JSON: {"delta": "..."} appends,
+ * {"text": "..."} replaces the accumulated text and {"error": "..."} fails. [DONE] or the
+ * end of the stream finishes. onText receives the accumulated text after every event.
+ */
+export async function readAssistanceStream(response, { onText = () => {}, signal } = {}) {
+  if (!response.body) throw new Error('Streaming is not supported by this response.')
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+  let buffer = '',
+    text = '',
+    done = false
+  const abort = () => reader.cancel().catch(() => {})
+  signal?.addEventListener('abort', abort, { once: true })
+  function event(block) {
+    const data = block
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.slice(5).replace(/^ /, ''))
+      .join('\n')
+    if (!data) return
+    if (data.trim() === '[DONE]') {
+      done = true
+      return
+    }
+    let message
+    try {
+      message = JSON.parse(data)
+    } catch {
+      throw new Error('Invalid assistance stream event.')
+    }
+    if (typeof message?.error === 'string') throw new Error(message.error.slice(0, 500))
+    if (typeof message?.text === 'string') text = message.text
+    else if (typeof message?.delta === 'string') text += message.delta
+    else throw new Error('Invalid assistance stream event.')
+    if (text.length > maxOutput) throw new Error('Assistance response is too large.')
+    onText(text)
+  }
+  try {
+    while (!done) {
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
+      const chunk = await reader.read()
+      if (chunk.done) break
+      buffer += chunk.value
+      const blocks = buffer.split(/\r?\n\r?\n/)
+      buffer = blocks.pop()
+      for (const block of blocks) {
+        event(block)
+        if (done) break
+      }
+    }
+    if (!done && buffer.trim()) event(buffer)
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
+  } finally {
+    signal?.removeEventListener('abort', abort)
+    if (done) abort()
+  }
+  return { text }
+}
 export function createHttpAssistanceAdapter({
   baseUrl,
   getToken = () => '',
   label = 'Your CMS',
+  stream = false,
   fetch: request = globalThis.fetch,
 }) {
   const url = new URL(baseUrl)
@@ -47,23 +107,31 @@ export function createHttpAssistanceAdapter({
   )
     throw new TypeError('Invalid assistance API URL.')
   const root = url.href.replace(/\/$/, '')
-  async function call(kind, input, { signal }) {
+  async function call(kind, input, { signal, onText }) {
     if (!input.text || input.text.length > maxText)
       throw new Error('Select up to 20,000 characters.')
     const token = await getToken()
     if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
+    const streaming = stream && kind === 'ai'
     const response = await request(`${root}/${kind}`, {
       method: 'POST',
       credentials: 'same-origin',
       signal,
       headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json',
+        Accept: streaming ? 'text/event-stream, application/json' : 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(input),
     })
     if (!response.ok) throw new Error(`Assistance service returned HTTP ${response.status}.`)
+    // A streaming request still accepts a plain JSON reply.
+    if (streaming && /^text\/event-stream\b/i.test(response.headers.get('content-type') || ''))
+      return validateAssistanceResult(
+        await readAssistanceStream(response, { onText, signal }),
+        kind,
+        input.text,
+      )
     const raw = await response.text()
     if (raw.length > 512000) throw new Error('Assistance response is too large.')
     return validateAssistanceResult(JSON.parse(raw), kind, input.text)
@@ -121,6 +189,8 @@ export function replaceAssistance(engine, snapshot, value, issue = null) {
     if (range.toString() !== snapshot.text.slice(issue.offset, issue.offset + issue.length))
       return false
   }
+  // With track changes on, the rewrite becomes a replacement suggestion.
+  if (engine.trackChanges) return engine.trackedReplace(range, value)
   engine.transaction(
     () => {
       range.deleteContents()

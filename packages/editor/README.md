@@ -26,7 +26,7 @@ npm run package:release
 In your Vue application, install the generated tarball and its peer dependencies:
 
 ```sh
-npm install /path/to/studio-editor/release/studio-editor-0.1.0-beta.11.tgz vue@^3.5 pinia@^4
+npm install /path/to/studio-editor/release/studio-editor-0.1.0-beta.12.tgz vue@^3.5 pinia@^4  # Pinia 3 is also supported
 ```
 
 Register Pinia once in your application entry:
@@ -80,6 +80,10 @@ Options can change at runtime without resetting document content or history. Cha
 | `blockIds`               | Saved block IDs. Store `transaction.blockIdsAfter` alongside HTML.                                                                                 |
 | `mentions`               | Local mention suggestions. No user directory or notification service is provided.                                                                  |
 | `allowCreateMention`     | Allow creation of local mentions.                                                                                                                  |
+| `theme`                  | `light` (default), `dark` or `auto` for menus, toolbars, panels and dialogs. The document keeps its own colors.                                    |
+| `restricted`             | Only `data-studio-editable` regions can change; users cannot leave the mode.                                                                       |
+| `trackChanges`           | Record insertions, deletions and paragraph breaks as suggestions; users cannot turn it off.                                                        |
+| `user`                   | `{ id, name }` author of tracked changes.                                                                                                          |
 
 Toolbar groups: `history`, `typography`, `format`, `color`, `align`, `lists`, `insert`, `tools`, `review`.
 Menu IDs: `file`, `edit`, `view`, `insert`, `format`, `table`, `tools`.
@@ -102,26 +106,31 @@ Unknown menu/group IDs are hidden. Tool visibility is not authorization; use `re
 
 Use the API after `ready`. The event receives a `StudioEditorApi` object; the component ref also exposes it.
 
-| Event or method                                 | Result                                                                              |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `update:modelValue`, `change`                   | Updated HTML, including review metadata.                                            |
-| `ready`                                         | Editor API, ready for use.                                                          |
-| `save`                                          | Current HTML on Ctrl/⌘+S or the save command. The host application must persist it. |
-| `transaction`                                   | Revisioned HTML change, selection and block mapping data for edits/undo/redo.       |
-| `paste`                                         | `{ source, mode, rows, columns, warnings, inserted }`; no HTML payload.             |
-| `upload-progress`, `upload-error`               | Custom media provider progress (0–100) and error message.                           |
-| `getHTML()`                                     | Document HTML with review metadata.                                                 |
-| `getPublicHTML()`                               | Sanitized publication HTML without review metadata.                                 |
-| `setHTML(html)`                                 | Replace with sanitized HTML; undoable.                                              |
-| `insertHTML(html)`                              | Insert sanitized HTML at the selection.                                             |
-| `focus()`, `undo()`, `redo()`                   | Focus and editing history.                                                          |
-| `openMedia()`, `openSource()`, `refreshMedia()` | Built-in media/source tools and media refresh.                                      |
-| `getDocument()`                                 | Session snapshot `{ schemaVersion: 1, revision, html, blockIds }`.                  |
-| `getModel()`, `setModel(model)`                 | Structured schema-2 document model.                                                 |
-| `applyOperations(batch)`                        | Apply revision-checked structured operations; rejects stale revisions.              |
-| `getHistoryStats()`                             | Undo/redo counts, `patchBytes` and `documentBytes`; not heap usage.                 |
-| `registerPlugin(plugin)`                        | Register trusted application commands; returns a disposer.                          |
-| `executeCommand(id, ...args)`, `getCommands()`  | Execute or inspect registered commands.                                             |
+| Event or method                                        | Result                                                                              |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `update:modelValue`, `change`                          | Updated HTML, including review metadata.                                            |
+| `ready`                                                | Editor API, ready for use.                                                          |
+| `save`                                                 | Current HTML on Ctrl/⌘+S or the save command. The host application must persist it. |
+| `transaction`                                          | Revisioned HTML change, selection and block mapping data for edits/undo/redo.       |
+| `paste`                                                | `{ source, mode, rows, columns, warnings, inserted }`; no HTML payload.             |
+| `upload-progress`, `upload-error`                      | Custom media provider progress (0–100) and error message.                           |
+| `getHTML()`                                            | Document HTML with review metadata.                                                 |
+| `getPublicHTML()`                                      | Sanitized publication HTML without review metadata.                                 |
+| `setHTML(html)`                                        | Replace with sanitized HTML; undoable.                                              |
+| `insertHTML(html)`                                     | Insert sanitized HTML at the selection.                                             |
+| `focus()`, `undo()`, `redo()`                          | Focus and editing history.                                                          |
+| `openMedia()`, `openSource()`, `refreshMedia()`        | Built-in media/source tools and media refresh.                                      |
+| `getDocument()`                                        | Session snapshot `{ schemaVersion: 1, revision, html, blockIds }`.                  |
+| `getModel()`, `setModel(model)`                        | Structured schema-2 document model.                                                 |
+| `applyOperations(batch)`                               | Apply revision-checked structured operations; rejects stale revisions.              |
+| `getHistoryStats()`                                    | Undo/redo counts, `patchBytes` and `documentBytes`; not heap usage.                 |
+| `registerPlugin(plugin)`                               | Register trusted application commands; returns a disposer.                          |
+| `crash`                                                | `{ error, recovered, html }` after an automatic restart or a stop.                  |
+| `getTrackedChanges()`, `acceptChange(id)`              | Tracked suggestions and their resolution; also `rejectChange`, `*AllChanges`.       |
+| `markEditableRegion(name)`, `getEditableRegions()`     | Restricted-editing regions; also `removeEditableRegion`, `focusEditableRegion`.     |
+| `subscribeSelection(fn)`, `setRemoteSelections(users)` | Portable local caret and collaborators' cursors.                                    |
+| `openDiagram()`                                        | Mermaid diagram dialog (not in `studio-editor/lite`).                               |
+| `executeCommand(id, ...args)`, `getCommands()`         | Execute or inspect registered commands.                                             |
 
 ```js
 const model = api.getModel()
@@ -144,6 +153,10 @@ dispose()
 ```
 
 This command API runs trusted application code; it is not a plugin sandbox.
+
+## Web component and lite build
+
+`defineStudioEditorElement()` registers a form-associated `<studio-editor>` element for pages without Vue: it submits its HTML under `name`, follows form reset and `required`, and takes options as attributes or properties. `studio-editor/lite` (and `studio-editor/lite/browser`) is the same API without MathJax, OpenChemLib, Mammoth and Mermaid. See [platform features](../../docs/PLATFORM-FEATURES.md) for attributes, events and sizes.
 
 ## Paste and tables
 
@@ -189,7 +202,7 @@ History retains the current document and up to 79 reversible changes, with an ap
 
 ## Integration notes
 
-- ESM only, with Vue 3.5+ and Pinia 4 peer dependencies. No CJS/UMD global build.
+- ESM only, with Vue 3.5+ and Pinia 3 or 4 peer dependencies. No CJS/UMD global build; the `browser` and `lite/browser` builds bundle Vue and Pinia.
 - Import CSS once. Styles are scoped under `.studio-editor-scope`, without resetting the host page. This is not Shadow DOM isolation.
 - The module can be imported in SSR, but mount the editor on the client (for example with Nuxt `ClientOnly`).
 - The legacy IndexedDB name `tinymce-studio` is kept for data compatibility. TinyMCE is not an engine dependency.

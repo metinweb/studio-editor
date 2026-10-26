@@ -18,7 +18,6 @@ import {
   Check,
   Undo2,
   Image,
-  ListChecks,
   Type,
   Mail,
   Phone,

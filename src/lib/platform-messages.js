@@ -1,0 +1,80 @@
+// English messages for robustness, protection, review and layout features (Turkish keys).
+export const platformMessages = {
+  'Editör bir hata nedeniyle yeniden başlatıldı. İçeriğiniz korundu.':
+    'The editor restarted after an error. Your content was preserved.',
+  'Editör tekrarlanan hatalar nedeniyle durduruldu.': 'The editor stopped after repeated errors.',
+  'İçeriğiniz korunuyor ve kaydedilebilir. Sorun devam ederse sayfayı yenilemeden önce içeriği dışa aktarın.':
+    'Your content is preserved and can be saved. If the problem continues, export the content before reloading the page.',
+  'Editörü yeniden başlat': 'Restart editor',
+  'Görünüm teması': 'Appearance',
+  Sistem: 'System',
+  Açık: 'Light',
+  Koyu: 'Dark',
+  'Studio’nun yeni bir sürümü hazır.': 'A new version of Studio is ready.',
+  'Güncelle ve yenile': 'Update and reload',
+  'Çevrimdışı · bu tarayıcıda kaydediliyor': 'Offline · saving in this browser',
+  'Kısıtlı düzenleme': 'Restricted editing',
+  'Düzenlenebilir alan yap': 'Make editable region',
+  'Düzenlenebilir alanı kaldır': 'Remove editable region',
+  'Kısıtlı düzenleme modu': 'Restricted editing mode',
+  'Sonraki düzenlenebilir alan': 'Next editable region',
+  'Önceki düzenlenebilir alan': 'Previous editable region',
+  'Kısıtlı düzenleme · Tab ile sonraki alan': 'Restricted editing · Tab to the next region',
+  'Kısıtlı düzenleme: yalnızca vurgulu alanlar değiştirilebilir.':
+    'Restricted editing: only highlighted regions can be changed.',
+  'Kısıtlı düzenleme: bu geri alma adımı korunan içeriği değiştirir. Önce kısıtlı modu kapatın.':
+    'Restricted editing: this undo step changes protected content. Turn off restricted mode first.',
+  'Kısıtlı düzenleme modunda yalnızca bu alanlar değiştirilebilir. Bir paragraf içindeki seçim satır içi alan, birden fazla blok seçimi blok alanı olur.':
+    'In restricted editing mode only these regions can be changed. A selection inside one paragraph becomes an inline region; a selection across blocks becomes a block region.',
+  'Alan adı (isteğe bağlı)': 'Region name (optional)',
+  'Örn. musteri_adi': 'e.g. customer_name',
+  'Alanı oluştur': 'Create region',
+  'Diyagram (Mermaid)': 'Diagram (Mermaid)',
+  'Sayfa görünümü': 'Page view',
+  'Değişiklikleri izle': 'Track changes',
+  'İzlenen değişiklikler': 'Tracked changes',
+  'Tüm değişiklikleri kabul et': 'Accept all changes',
+  'Tüm değişiklikleri reddet': 'Reject all changes',
+  Değişiklikler: 'Changes',
+  'Değişiklikler izleniyor · {count} öneri': 'Tracking changes · {count} suggestions',
+  'Değişiklik izleme açık: yalnızca metin ekleme ve silme önerilebilir. Biçim ve yapı değişiklikleri için izlemeyi kapatın.':
+    'Track changes is on: only text insertions and deletions can be suggested. Turn tracking off for formatting and structure changes.',
+  'İzleme açıkken eklenen metin yeşil, silinen metin üstü çizili kırmızı görünür. Kabul edilene kadar yayınlanan HTML değişmez.':
+    'While tracking, inserted text is green and deleted text is struck through in red. Published HTML does not change until a suggestion is accepted.',
+  'Tümünü kabul et': 'Accept all',
+  'Tümünü reddet': 'Reject all',
+  'İzlenen değişiklik yok': 'No tracked changes',
+  'Değişiklik izlemeyi açın; yazdıklarınız ve sildikleriniz öneri olarak kaydedilir.':
+    'Turn on track changes to record your insertions and deletions as suggestions.',
+  Ekleme: 'Insertion',
+  Silme: 'Deletion',
+  Değiştirme: 'Replacement',
+  'Yeni paragraf': 'New paragraph',
+  'Paragrafları birleştirme': 'Join paragraphs',
+  'Değişiklik artık belgede yok.': 'The change is no longer in the document.',
+  'Sayfa {page}': 'Page {page}',
+  'Sayfa {current} / {total}': 'Page {current} / {total}',
+  'Diyagram örnekleri': 'Diagram examples',
+  'Akış şeması': 'Flowchart',
+  'Sıralama diyagramı': 'Sequence',
+  Gantt: 'Gantt',
+  'Sınıf diyagramı': 'Class',
+  'Durum diyagramı': 'State',
+  'Pasta grafik': 'Pie',
+  'Mermaid kaynağı': 'Mermaid source',
+  'Diyagramın kısa açıklaması': 'Short description of the diagram',
+  'Diyagram alternatif metni': 'Diagram alternative text',
+  'Diyagram görsel olarak kaydedilir ve kaynağı belgede saklanır; düzenlemek için çift tıklayın.':
+    'The diagram is saved as an image with its source kept in the document; double-click it to edit.',
+  'Diyagram önizlemesi': 'Diagram preview',
+  'Diyagram çiziliyor…': 'Drawing diagram…',
+  'Diyagramı güncelle': 'Update diagram',
+  'Diyagramı ekle': 'Insert diagram',
+  'Diyagram kaynağını yazın.': 'Enter the diagram source.',
+  'Diyagram kaynağı en fazla 20.000 karakter olabilir.':
+    'Diagram source can be up to 20,000 characters.',
+  'Alan adı harfle başlamalı; yalnızca harf, rakam, nokta, alt çizgi ve tire içerebilir.':
+    'The name must start with a letter and contain only letters, digits, dots, underscores and hyphens.',
+  'Bu seçim düzenlenebilir alan yapılamadı. Mevcut bir alanın dışında metin veya bloklar seçin.':
+    'This selection cannot become an editable region. Select text or blocks outside existing regions.',
+}

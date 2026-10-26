@@ -22,6 +22,8 @@ const fontLicenses = {
     'LPPL-1.3c.txt',
   ],
 }
+// Declared license missing from package.json; the bundled license file is the authority.
+const undeclaredLicenses = { 'khroma@2.1.0': 'MIT' }
 const sections = [
   'STUDIO EDITOR — THIRD-PARTY NOTICES',
   `Generated from the installed production dependency tree. Includes peer dependencies. Each component retains its own license. Studio Editor project license: ${project.license}.`,
@@ -45,12 +47,20 @@ for (const [relative, metadata] of Object.entries(lock.packages).sort()) {
   const entry = {
     name: pkg.name,
     version: pkg.version,
-    license: pkg.license || metadata.license || 'UNKNOWN',
+    license:
+      pkg.license ||
+      metadata.license ||
+      undeclaredLicenses[`${pkg.name}@${pkg.version}`] ||
+      'UNKNOWN',
     licenseFiles: files,
   }
+  // Where each component's source code is available (required by EPL-2.0 for elkjs).
+  const repository = typeof pkg.repository === 'string' ? pkg.repository : pkg.repository?.url
+  if (repository) entry.repository = repository.replace(/^git\+/, '')
   inventory.push(entry)
   sections.push(
-    `\n${'='.repeat(72)}\n${pkg.name}@${pkg.version}\nDeclared license: ${entry.license}`,
+    `\n${'='.repeat(72)}\n${pkg.name}@${pkg.version}\nDeclared license: ${entry.license}` +
+      (entry.repository ? `\nSource: ${entry.repository}` : ''),
   )
   for (const file of files)
     sections.push(`\n--- ${file} ---\n${await readFile(path.join(licenseDirectory, file), 'utf8')}`)

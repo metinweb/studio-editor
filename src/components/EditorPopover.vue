@@ -1,6 +1,8 @@
 <script setup>
+import { useEditorTheme } from '../lib/theme.js'
 import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 
+const theme = useEditorTheme()
 const props = defineProps({ anchor: Object, label: String })
 const emit = defineEmits(['close'])
 const panel = ref(null)
@@ -73,6 +75,7 @@ onBeforeUnmount(() => {
     <div
       ref="panel"
       class="editor-popover studio-editor-scope"
+      :data-studio-theme="theme"
       :style="position"
       :aria-label="label"
       @keydown.esc="escape"

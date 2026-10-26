@@ -1,5 +1,7 @@
 # Studio Editor
 
+Beta.12 yenilikleri: [değişiklikleri izleme, kısıtlı düzenleme, canlı imleçler, sayfa görünümü, Mermaid diyagramları, koyu tema, çökme sonrası toparlama, çevrimdışı çalışma alanı, AI yanıt akışı, `<studio-editor>` Web Component ve hafif (lite) paket](docs/PLATFORM-FEATURES.tr.md).
+
 Yeni: [düz HTML form, slider ve akordeon oluşturucuları](docs/UI-ELEMENTS.tr.md). Sürükleyerek sıralama, mobil önizleme ve ek widget çalışma zamanı gerektirmeyen HTML çıktı. [Canlı UI örneği](https://metinweb.github.io/studio-editor/integration/ui.html).
 
 Yeni: `mountStudioEditor` ile HTML form entegrasyonu; Vue için `v-model`; içerik alanına harici CSS ekleme ayarları. Kurulum, açılabilen/gizlenebilen özellikler ve örnekler: [Türkçe CMS entegrasyon rehberi](docs/CMS-INTEGRATION.tr.md) · [Canlı HTML örneği](https://metinweb.github.io/studio-editor/integration/).
@@ -18,7 +20,7 @@ Varsayılan dil İngilizcedir. Yan menüdeki **Interface language → Türkçe**
 
 Studio, **TinyMCE kullanmayan** bir Vue 3 + Pinia içerik uygulamasıdır. Görsel editörün motoru bu proje içinde yazılmıştır; TinyMCE, TipTap, ProseMirror, Lexical veya başka bir hazır görsel editöre dayanmaz. HTML kaynak kodu penceresinde CodeMirror, HTML temizlemede DOMPurify kullanılmaya devam eder. Dolayısıyla uygulamanın tamamı bağımlılıksız değildir.
 
-İki dağıtım hazırlanır: bağımsız web uygulaması ve Vue bileşeni. Proje [MIT lisansıyla](LICENSE) açık kaynaktır. Vue paketi henüz npm'ye yayımlanmadı; kaynak veya yerel `.tgz` üzerinden kullanılabilir.
+İki dağıtım hazırlanır: bağımsız web uygulaması ve Vue bileşeni. Proje [MIT lisansıyla](LICENSE) açık kaynaktır. Vue paketi henüz npm'ye yayımlanmadı; kaynak veya yerel `.tgz` üzerinden kullanılabilir. Etiketle tetiklenen yayın iş akışı [yayın belgesinde](docs/RELEASE.md) anlatılır.
 
 - [TinyMCE karşılaştırması ve güncel özellik kapsamı](docs/TINYMCE-COMPARISON.md)
 - [Araştırma ve öncelikli yol haritası](docs/ROADMAP.md)
@@ -200,7 +202,7 @@ HTML, DOMPurify ile temizlenir; script, olay işleyicileri, iframe/object/embed,
 Bu, çalışan ilk bağımsız sürümdür; TinyMCE'nin bütün özelliklerinin birebir karşılığı değildir:
 
 - Yatay/dikey hücre birleştirme, dikdörtgen hücre seçimi ve birleşik tablolarda satır/sütun işlemleri desteklenir. İç içe ve düzensiz tablolarda bazı işlemler koruma amacıyla kapatılır; ayrıntılar [tablo belgesindedir](docs/TABLES.md).
-- Karmaşık Word/Excel yapıştırmalarının birebir biçim korunması, tam otomatik değişiklik izleme, DOCX içe aktarma ve gelişmiş sayfalama yoktur. DOCX dışa aktarma ve tarayıcı PDF yazdırma mevcuttur. Yjs tabanlı ortak düzenleme deneysel aşamadadır.
+- Karmaşık Word/Excel yapıştırmalarının birebir biçim korunması yoktur. Değişiklik izleme metin ekleme/silme ve paragraf bölme/birleştirmeyi kapsar; izleme açıkken biçim ve yapı komutları reddedilir, DOCX çıktısında Word revizyonları bulunmaz. Sayfa görünümündeki sınırlar ekran tahminidir; son kırılımları yazdırma motoru belirler. DOCX içe/dışa aktarma ve tarayıcı PDF yazdırma mevcuttur. Yjs tabanlı ortak düzenleme deneyseldir; canlı imleçler varlık verisinden çizilir. Ayrıntılar: [platform özellikleri](docs/PLATFORM-FEATURES.tr.md).
 - Temel IME kompozisyon akışı otomatik test edilir; tüm mobil klavyeler ve işletim sistemi IME'leri için cihaz testi yapılmış değildir.
 - Geri alma geçmişi aktif editör oturumuna aittir; belge değişince veya sayfa yenilenince sıfırlanır. Belgenin içeriği kalıcıdır.
 - Büyük belge ve medya senaryoları için tarayıcı ölçümleri [performans belgesinde](docs/BROWSER-PERFORMANCE.md) bulunur; bütün fiziksel cihazlar için bir performans garantisi değildir.

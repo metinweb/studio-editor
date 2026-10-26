@@ -1,5 +1,7 @@
 # İşlem ve medya mimarisi
 
+> Ekim 2026: `RichEditor.vue` arayüzü `src/components/rich-editor/` altındaki menü, araç çubuğu, açılır menü, diyalog ve bul-değiştir modüllerine bölündü; ortak durum `provide/inject` ile paylaşılır. Motor eklentileri `restricted-editing.js`, `track-changes.js` ve `presence.js` ile genişledi. Ayrıntılar: [platform özellikleri](PLATFORM-FEATURES.tr.md).
+
 ## Beta.10 uzantıları
 
 Yerel `transaction`/`getDocument` şema 1 HTML sözleşmesi sürer. Eklenen şema 2

@@ -1,6 +1,6 @@
 <script setup>
 import { useEditorLocale } from '../lib/editor-locale'
-const { t, locale } = useEditorLocale()
+const { t } = useEditorLocale()
 import { computed, ref } from 'vue'
 import { Plus, X } from '@lucide/vue'
 import AppDialog from './AppDialog.vue'

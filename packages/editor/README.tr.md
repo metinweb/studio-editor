@@ -93,7 +93,7 @@ Bu paket henüz npm kayıt deposunda yayımlanmadı; aşağıdaki kurulum yerel 
 ## Kurulum
 
 ```sh
-npm install ./studio-editor-0.1.0-beta.11.tgz vue@^3.5 pinia@^4
+npm install ./studio-editor-0.1.0-beta.12.tgz vue@^3.5 pinia@^4  # Pinia 3 de desteklenir
 ```
 
 Uygulama girişinde Pinia kurun (zaten varsa ikinci kez kurmayın):
@@ -238,7 +238,7 @@ Anlamsal işlem modeli, kalıcı sürüm geçmişi, CRDT ve değişiklik izleme 
 
 ## Entegrasyon sınırları
 
-- ESM paketi; Vue 3.5+ ve Pinia 4 eş bağımlılıktır. CJS/UMD/CDN global sürümü yoktur.
+- ESM paketi; Vue 3.5+ ve Pinia 3 veya 4 eş bağımlılıktır. CJS/UMD global sürümü yoktur; `browser` ve `lite/browser` derlemeleri Vue ve Pinia içerir.
 - CSS'i bir kez içe aktarın. Kütüphane stilleri `.studio-editor-scope` ile
   sınırlıdır; `body`, `h1`, `button` gibi ana sayfa öğelerini sıfırlamaz.
   Ana sitenin agresif `!important` kurallarına karşı Shadow DOM yalıtımı sağlamaz.

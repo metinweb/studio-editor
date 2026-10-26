@@ -63,7 +63,7 @@ test('typography menus preview fonts, apply to selection and reflect caret and u
     '<p><span style="font-family:Arial,sans-serif;font-size:24px">Arial metin</span></p><p>Varsayılan metin</p>',
   )
   await body(page).locator('span').selectText()
-  const font = page.getByRole('button', { name: 'Yazı tipi', exact: true })
+  const font = page.getByRole('button', { name: new RegExp('^Yazı tipi:') })
   await expect(font).toContainText('Arial')
   await expect(page.locator('.native-toolbar select')).toHaveCount(0)
   await font.click()
@@ -80,13 +80,13 @@ test('typography menus preview fonts, apply to selection and reflect caret and u
   await page.keyboard.press('Enter')
   await expect(font).toContainText('Verdana')
   await expect(body(page).locator('span').last()).toHaveCSS('font-family', 'Verdana, sans-serif')
-  await page.getByRole('button', { name: 'Yazı boyutu', exact: true }).click()
+  await page.getByRole('button', { name: new RegExp('^Yazı boyutu:') }).click()
   await page.getByRole('menuitemradio', { name: '32 px', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Yazı boyutu', exact: true })).toContainText(
+  await expect(page.getByRole('button', { name: new RegExp('^Yazı boyutu:') })).toContainText(
     '32 px',
   )
   await page.getByRole('button', { name: 'Geri al', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Yazı boyutu', exact: true })).toContainText(
+  await expect(page.getByRole('button', { name: new RegExp('^Yazı boyutu:') })).toContainText(
     '24 px',
   )
   await body(page).locator('p').last().click()
@@ -192,11 +192,11 @@ test('mobile floating table tools and typography menus fit the viewport', async 
   const rect = await page.locator('.table-quick-toolbar').boundingBox()
   expect(rect.x).toBeGreaterThanOrEqual(0)
   expect(rect.x + rect.width).toBeLessThanOrEqual(390)
-  await page.getByRole('button', { name: 'Yazı tipi', exact: true }).click()
+  await page.getByRole('button', { name: new RegExp('^Yazı tipi:') }).click()
   const popup = await page.locator('.editor-popover').boundingBox()
   expect(popup.x + popup.width).toBeLessThanOrEqual(390)
   await page.getByRole('menuitemradio', { name: 'Verdana', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Yazı tipi', exact: true })).toContainText(
+  await expect(page.getByRole('button', { name: new RegExp('^Yazı tipi:') })).toContainText(
     'Verdana',
   )
   await expect

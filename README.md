@@ -1,5 +1,7 @@
 # Studio Editor
 
+New in beta.12: [track changes, restricted editing, live cursors, page view, Mermaid diagrams, dark theme, crash recovery, offline workspace, AI streaming, a `<studio-editor>` web component and a lite build](docs/PLATFORM-FEATURES.md).
+
 New: [native HTML form, slider and accordion builders](docs/UI-ELEMENTS.md) with drag ordering and no published widget runtime. [Try the UI playground](https://metinweb.github.io/studio-editor/integration/ui.html).
 
 New: native HTML form integration with `mountStudioEditor`, Vue `v-model`, and external content stylesheet settings. Setup, configurable features and examples: [CMS integration guide](docs/CMS-INTEGRATION.md) · [Live HTML example](https://metinweb.github.io/studio-editor/integration/).
@@ -34,9 +36,12 @@ Studio combines a standalone writing app with an embeddable Vue component. The e
 - Word/Docs HTML and Excel/Sheets table paste with keep-formatting, clean and plain-text modes.
 - Media library with image cropping, rotation, color adjustments and PNG/JPEG/WebP output.
 - Comments, replies, selected-text suggestions, templates and basic accessibility checks.
+- [Track changes](docs/PLATFORM-FEATURES.md#track-changes) with accept/reject, [restricted editing](docs/PLATFORM-FEATURES.md#restricted-editing) regions and live collaborator cursors.
+- [Page view](docs/PLATFORM-FEATURES.md#page-view), [Mermaid diagrams](docs/PLATFORM-FEATURES.md#mermaid-diagrams), dark theme and crash recovery.
 - HTML source editing, sandboxed previews, HTML/DOCX export and browser PDF printing.
 - Local documents, favorites, tags, full-text search, persistent versions and workspace backups.
-- Vue `v-model`, HTML/JSON APIs, configurable toolbars, plugin commands and media adapters.
+- Vue `v-model`, a form-associated `<studio-editor>` web component, a lite build, HTML/JSON APIs, configurable toolbars, plugin commands and media adapters.
+- Installable offline workspace (PWA) and streamed AI responses through your own adapter.
 - English by default, with a persistent English/Türkçe selector and localized built-in templates.
 
 ## Quick start
@@ -75,8 +80,8 @@ The [Turkish website](https://metinweb.github.io/studio-editor/tr/) and [Turkish
 
 The standalone app stores documents and media in IndexedDB, in the current browser profile and origin. No account or cloud synchronization is configured by default. Clearing browser data removes local documents; export a full workspace backup first. Remote media may load from external providers.
 
-- Collaboration uses an optional Yjs binding and example server. Concurrent structural editing and live cursors are not production-ready.
-- Suggestions apply to selected text; this is not automatic tracking of every change.
+- Collaboration uses an optional Yjs binding and example server. Live cursors are drawn from presence data; concurrent structural editing is not production-ready.
+- Track changes covers text insertions, deletions and paragraph breaks; formatting and structure commands are refused while tracking, and DOCX export does not contain Word revisions.
 - DOCX import preserves semantic content with a preview and conversion notes; exact Word layout fidelity is not implemented.
 - Accessibility checks are basic content checks, not a WCAG compliance certification.
 - Real device, mobile keyboard and screen-reader testing remains necessary.
@@ -84,6 +89,8 @@ The standalone app stores documents and media in IndexedDB, in the current brows
 ## Development and tests
 
 ```sh
+npm run lint        # ESLint and the API declaration drift check
+npm run typecheck   # TypeScript against packages/editor/index.d.ts
 npm run test:unit
 npx playwright install chromium firefox webkit
 npm run build
@@ -92,7 +99,7 @@ npm test
 
 For package verification, use `npm run package:release` followed by `npm run verify:release`. For the landing page and its demo, use `npm run build:site`, `npm run test:site` and `npm run preview:site`.
 
-GitHub Actions runs unit tests, all three browser projects, library builds and landing-page checks. Successful runs on `main` publish the website and demo to GitHub Pages. Pull requests run checks without deploying.
+GitHub Actions runs lint, type checks, unit tests, all three browser projects, library builds and landing-page checks. Successful runs on `main` publish the website and demo to GitHub Pages. Pull requests run checks without deploying. Version tags run [the npm publish workflow](docs/RELEASE.md), which needs an `NPM_TOKEN` secret.
 
 ## Documentation
 

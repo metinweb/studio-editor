@@ -98,7 +98,9 @@ test('placeholder stays outside HTML and locale/options update without resetting
   expect(await content.evaluate((el) => el.ownerDocument.documentElement.lang)).toBe('en')
   await expect(content).toHaveText('Hello')
   await page.getByLabel('Sade araçlar', { exact: true }).check()
-  await expect(embed(page).getByRole('button', { name: 'Font family', exact: true })).toHaveCount(0)
+  await expect(embed(page).getByRole('button', { name: new RegExp('^Font family:') })).toHaveCount(
+    0,
+  )
   await expect(embed(page).getByRole('button', { name: 'File', exact: true })).toHaveCount(0)
   await expect(embed(page).getByRole('button', { name: 'Insert', exact: true })).toBeVisible()
   await expect(embed(page).getByRole('button', { name: 'Bold', exact: true })).toBeVisible()

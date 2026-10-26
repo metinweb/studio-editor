@@ -6,6 +6,7 @@ import { normalizeUiElements } from './ui-elements.js'
 import { normalizeDocumentFields } from '../editor/document-fields.js'
 import { normalizeTableFormulas } from './table-formulas.js'
 import { normalizeWritingWidgets } from '../editor/writing-widgets.js'
+import { resolveChanges } from '../editor/track-changes.js'
 
 export { documentCss }
 
@@ -98,8 +99,10 @@ export function renderDocument(document) {
 }
 
 // Review conversations belong to the workspace, not the published document.
+// Unresolved tracked changes are not part of it either: they publish as rejected.
 export function publicHtml(html) {
   const doc = new DOMParser().parseFromString(cleanHtml(html), 'text/html')
+  resolveChanges(doc.body, false)
   normalizeUiElements(doc.body, 'public')
   doc
     .querySelectorAll('[data-studio-thread],[data-studio-resolved],[data-studio-suggestion]')
@@ -130,7 +133,7 @@ export function downloadHtml(document) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-export const welcomeContent = `<p style="color: #8870c7; font-size: 12px; letter-spacing: 2px;"><strong>STUDIO'YA HOŞ GELDİNİZ</strong></p>
+export const welcomeContent = `<p style="color: #6c52b3; font-size: 12px; letter-spacing: 2px;"><strong>STUDIO'YA HOŞ GELDİNİZ</strong></p>
 <h1>İyi fikirler, boş bir<br>sayfayla başlar.</h1>
 <p>Bir hikâye, bir rehber ya da aklınızdaki bir sonraki büyük fikir. Burası, kelimelerinize yer açan çalışma alanınız.</p>
 <hr>
@@ -141,7 +144,7 @@ export const welcomeContent = `<p style="color: #8870c7; font-size: 12px; letter
 <ul><li><strong>Görsel editör:</strong> Düşüncelerinizi kolayca sayfaya taşıyın.</li><li><strong>Medya kütüphanesi:</strong> Görsel, video ve ses dosyalarınızı tek yerde toplayın.</li><li><strong>Kaynak kodu:</strong> HTML’i renklendirilmiş kod editöründe düzenleyin.</li></ul>
 <p>Hazırsanız, bu sayfayı kendi hikâyenizle değiştirebilirsiniz.</p>`
 
-export const welcomeContentEn = `<p style="color: #8870c7; font-size: 12px; letter-spacing: 2px;"><strong>WELCOME TO STUDIO</strong></p>
+export const welcomeContentEn = `<p style="color: #6c52b3; font-size: 12px; letter-spacing: 2px;"><strong>WELCOME TO STUDIO</strong></p>
 <h1>Good ideas start<br>with a blank page.</h1>
 <p>A story, a guide, or your next big idea. This is your workspace to give your words room to grow.</p>
 <hr>

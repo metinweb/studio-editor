@@ -94,6 +94,9 @@ for (const file of [
   licenseFile,
   'dist/studio-editor.js',
   'dist/studio-editor.css',
+  'dist/lite/studio-editor.js',
+  'dist/lite/studio-editor.css',
+  'dist/lite/browser/studio-editor.js',
 ])
   await access(path.join(consumer, 'node_modules/studio-editor', file))
 async function compareInstalled(relative = 'dist') {
@@ -118,12 +121,17 @@ await cp(
   path.join(consumer, 'public/integration/editor'),
   { recursive: true },
 )
+await cp(
+  path.join(consumer, 'node_modules/studio-editor/dist/lite/browser'),
+  path.join(consumer, 'public/integration/editor-lite'),
+  { recursive: true },
+)
 // Import from the installed tarball without window: SSR-safe import, not SSR rendering.
 run(
   '--input-type=module',
   [
     '-e',
-    "const m = await import('studio-editor'); if (!m.StudioEditor || typeof m.cleanHtml !== 'function') process.exit(1)",
+    "for (const id of ['studio-editor', 'studio-editor/lite']) { const m = await import(id); if (!m.StudioEditor || typeof m.cleanHtml !== 'function' || typeof m.defineStudioEditorElement !== 'function') process.exit(1) }",
   ],
   consumer,
 )
