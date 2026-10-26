@@ -29,14 +29,33 @@ async function escape(screenReader, closed) {
 async function open(page, screenReader) {
   await page.goto('/')
   await expect(body(page)).toContainText('İyi fikirler')
+  // Records the key and input events the editor receives, to show they come from the system.
+  await body(page).evaluate((editor) => {
+    const events = (window.top.__studioInput = [])
+    for (const type of ['keydown', 'beforeinput'])
+      editor.ownerDocument.addEventListener(
+        type,
+        (event) =>
+          events.push(
+            `${type} ${event.key || event.inputType} ${event.data ?? ''} trusted=${event.isTrusted}`,
+          ),
+        true,
+      )
+  })
   await screenReader.navigateToWebContent()
 }
 
-test.afterEach(async ({ screenReader }, testInfo) => {
+test.afterEach(async ({ page, screenReader }, testInfo) => {
   const path = testInfo.outputPath('transcript.txt')
   const spokenLog = (await screenReader.spokenPhraseLog()).join('\n')
   const itemLog = (await screenReader.itemTextLog()).join('\n')
-  await writeFile(path, `Spoken:\n${spokenLog}\n\nItem text:\n${itemLog}\n`)
+  const inputLog = (await page.evaluate(() => window.__studioInput || []).catch(() => [])).join(
+    '\n',
+  )
+  await writeFile(
+    path,
+    `Spoken:\n${spokenLog}\n\nItem text:\n${itemLog}\n\nEditor input events:\n${inputLog}\n`,
+  )
   await testInfo.attach('screen-reader-transcript', { path, contentType: 'text/plain' })
 })
 

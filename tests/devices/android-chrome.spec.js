@@ -21,7 +21,16 @@ test('touch and key input edit the document in Chrome on Android', async () => {
   adb('reverse', 'tcp:4173', 'tcp:4173')
   // Lets Chrome read Playwright's command line on images that are not rooted.
   adb('shell', 'am', 'set-debug-app', '--persistent', 'com.android.chrome')
+  // Android 13+ would otherwise cover Chrome with a notification permission prompt.
+  try {
+    adb('shell', 'pm', 'grant', 'com.android.chrome', 'android.permission.POST_NOTIFICATIONS')
+  } catch {}
   const context = await device.launchBrowser()
+  const screenshot = async (name) => {
+    const path = test.info().outputPath(`${name}.png`)
+    await device.screenshot({ path })
+    await test.info().attach(name, { path, contentType: 'image/png' })
+  }
   try {
     await context.addInitScript(() => localStorage.setItem('studio-locale', 'tr'))
     const page = context.pages()[0] ?? (await context.newPage())
@@ -30,16 +39,20 @@ test('touch and key input edit the document in Chrome on Android', async () => {
     const [width, height] = (size.match(/Override size: (\d+)x(\d+)/) || size.match(/(\d+)x(\d+)/))
       .slice(1)
       .map(Number)
-    console.log('Browser:', await page.evaluate(() => navigator.userAgent))
-    await editWithTouch({
-      evaluate: (fn, arg) => page.evaluate(fn, arg),
-      screen: async () => ({ width, height }),
-      tap: async ({ x, y }) => adb('shell', 'input', 'tap', x, y),
-      type: async (text) => adb('shell', 'input', 'text', text.replaceAll(' ', '%s')),
-    })
-    const path = test.info().outputPath('android-chrome.png')
-    await device.screenshot({ path })
-    await test.info().attach('android-chrome', { path, contentType: 'image/png' })
+    console.log('Browser:', await page.evaluate(() => navigator.userAgent), `${width}x${height}`)
+    try {
+      await editWithTouch({
+        evaluate: (fn, arg) => page.evaluate(fn, arg),
+        screen: async () => ({ width, height }),
+        tap: async ({ x, y }) => adb('shell', 'input', 'tap', x, y),
+        type: async (text) => adb('shell', 'input', 'text', text.replaceAll(' ', '%s')),
+      })
+    } catch (error) {
+      await screenshot('android-failure')
+      console.log(adb('shell', 'dumpsys', 'window').match(/mCurrentFocus=.*/)?.[0])
+      throw error
+    }
+    await screenshot('android-chrome')
   } finally {
     await context.close()
     await device.close()

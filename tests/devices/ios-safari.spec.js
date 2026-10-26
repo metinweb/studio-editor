@@ -19,12 +19,29 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
       'appium:udid': process.env.IOS_UDID,
       'appium:deviceName': process.env.IOS_DEVICE,
       'appium:platformVersion': process.env.IOS_VERSION,
+      'appium:simulatorStartupTimeout': 10 * 60 * 1000,
       'appium:wdaLaunchTimeout': 10 * 60 * 1000,
       'appium:wdaConnectionTimeout': 10 * 60 * 1000,
+      'appium:webviewConnectTimeout': 60 * 1000,
       'appium:newCommandTimeout': 600,
       'appium:connectHardwareKeyboard': false,
     },
   })
+  const screenshot = async (name) => {
+    const path = test.info().outputPath(`${name}.png`)
+    await driver.saveScreenshot(path)
+    await test.info().attach(name, { path, contentType: 'image/png' })
+  }
+  const load = async () => {
+    await driver.url('http://127.0.0.1:4173/')
+    await driver.waitUntil(
+      () =>
+        driver.execute(
+          () => location.origin === 'http://127.0.0.1:4173' && document.readyState === 'complete',
+        ),
+      { timeout: 60000 },
+    )
+  }
   const native = async (action) => {
     const web = await driver.getAppiumContext()
     await driver.switchAppiumContext('NATIVE_APP')
@@ -40,23 +57,26 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
     return (await key.isExisting()) ? key : driver.$(`~${name.toUpperCase()}`)
   }
   try {
-    await driver.url('http://127.0.0.1:4173/')
+    await load()
     await driver.execute(() => localStorage.setItem('studio-locale', 'tr'))
-    await driver.refresh()
+    await load()
     const { width, height } = await native(() => driver.getWindowSize())
-    console.log('Browser:', await driver.execute(() => navigator.userAgent))
-    await editWithTouch({
-      evaluate: (fn, arg) => driver.execute(fn, arg),
-      screen: async () => ({ width, height }),
-      tap: ({ x, y }) => driver.execute('mobile: tap', { x, y }),
-      type: (text) =>
-        native(async () => {
-          for (const character of text) await (await keyboardKey(character)).click()
-        }),
-    })
-    const path = test.info().outputPath('ios-safari.png')
-    await driver.saveScreenshot(path)
-    await test.info().attach('ios-safari', { path, contentType: 'image/png' })
+    console.log('Browser:', await driver.execute(() => navigator.userAgent), `${width}x${height}`)
+    try {
+      await editWithTouch({
+        evaluate: (fn, arg) => driver.execute(fn, arg),
+        screen: async () => ({ width, height }),
+        tap: ({ x, y }) => driver.execute('mobile: tap', { x, y }),
+        type: (text) =>
+          native(async () => {
+            for (const character of text) await (await keyboardKey(character)).click()
+          }),
+      })
+    } catch (error) {
+      await screenshot('ios-failure')
+      throw error
+    }
+    await screenshot('ios-safari')
   } finally {
     await driver.deleteSession()
   }
