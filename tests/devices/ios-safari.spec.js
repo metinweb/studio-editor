@@ -158,7 +158,7 @@ const inputMethod = async (driver) =>
 const keyboards = [
   {
     name: 'turkish-q',
-    id: 'tr_TR@sw=QWERTY-Turkish;hw=Automatic',
+    id: 'tr_TR@sw=Turkish-Q;hw=Automatic',
     language: 'tr',
     locale: 'tr_TR',
     keys: 'çğışöü',
