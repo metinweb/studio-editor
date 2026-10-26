@@ -31,14 +31,15 @@ async function spoken(screenReader, action) {
   const { spokenPhrase, itemText } = await screenReader.capture(action)
   return `${spokenPhrase}\n${itemText}`
 }
-// Runs a focus change and returns what describes the new focus. VoiceOver's cursor does not always
-// follow script focus across the editing frame, so its own command moves the cursor to the
-// keyboard focus, as a VoiceOver user would, and the item text under the cursor is read.
-async function announce(screenReader, action) {
-  if (!mac) return spoken(screenReader, action)
-  await action()
-  await screenReader.perform(voiceOverKeyCodeCommands.moveCursorToKeyboardFocus)
-  return `${await screenReader.lastSpokenPhrase()}\n${await screenReader.itemText()}`
+// Runs a focus change and returns what describes the new focus, including VoiceOver's item text
+// under its cursor. VoiceOver's cursor does not follow script focus out of the editing frame;
+// `moveCursor` uses its own command for that, as a VoiceOver user would. Keys typed after that
+// command no longer reach the page, so controls reached this way are activated with VO+Space.
+async function announce(screenReader, action, moveCursor = false) {
+  const phrase = await spoken(screenReader, action)
+  if (!mac) return phrase
+  if (moveCursor) await screenReader.perform(voiceOverKeyCodeCommands.moveCursorToKeyboardFocus)
+  return `${phrase}\n${await screenReader.lastSpokenPhrase()}\n${await screenReader.itemText()}`
 }
 // Screen readers may keep the first Escape to leave their focus/interaction mode.
 async function escape(screenReader, closed) {
@@ -83,7 +84,7 @@ test('the document, typing and the bold toggle are announced', async ({ page, sc
   const document = await announce(screenReader, () => body(page).locator('h1').click())
   expect(document).toMatch(/Belge (içeriği|düzenleme alanı)/)
   // VoiceOver uses Home/End to move its own cursor (and keyboard focus) through the page, so on
-  // macOS the caret and selection are set by script. Enter, typing and Space are real keys.
+  // macOS the caret and selection are set by script. Enter and typing are real keys.
   if (mac) await select(body(page).locator('h1'), true)
   else await screenReader.press('End')
   await screenReader.press('Enter')
@@ -95,8 +96,9 @@ test('the document, typing and the bold toggle are announced', async ({ page, sc
   if (mac) await select(typed)
   else await screenReader.press('Shift+Home')
   const bold = page.getByRole('button', { name: 'Kalın', exact: true })
-  expect(await announce(screenReader, () => bold.focus())).toContain('Kalın')
-  await screenReader.press('Space')
+  expect(await announce(screenReader, () => bold.focus(), true)).toContain('Kalın')
+  if (mac) await screenReader.act()
+  else await screenReader.press('Space')
   await expect(body(page).locator('strong', { hasText: 'ekran okuyucu' })).toHaveCount(1)
   await expect(bold).toHaveAttribute('aria-pressed', 'true')
 })

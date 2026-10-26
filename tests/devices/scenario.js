@@ -1,11 +1,15 @@
-import { expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
+import { writeFile } from 'node:fs/promises'
 import {
   deviceMapping,
   editorState,
   elementCenter,
+  inputLog,
   installProbe,
+  markInput,
   probePoints,
   readProbe,
+  recordInput,
   selectEditorText,
 } from './touch.js'
 
@@ -40,26 +44,38 @@ export async function tapElement(device, target) {
 export async function editWithTouch(device) {
   const state = () => device.evaluate(editorState)
   const bold = async () => (await state()).bold.join(' ').toLowerCase()
+  const mark = (step) => device.evaluate(markInput, step)
   await expect.poll(async () => (await state()).text, { timeout: 30000 }).toContain('İyi fikirler')
   expect((await state()).horizontalScroll).toBeLessThanOrEqual(1)
+  await device.evaluate(recordInput)
+  try {
+    await tapElement(device, { selector: 'p', editor: true, text: 'Bir hikâye' })
+    await expect.poll(async () => (await state()).focused).toBe(true)
+    await mark('tapped')
+    await device.type(' dokunmatik')
+    await expect.poll(async () => (await state()).text.toLowerCase()).toContain('dokunmatik')
+    await mark('typed')
 
-  await tapElement(device, { selector: 'p', editor: true, text: 'Bir hikâye' })
-  await expect.poll(async () => (await state()).focused).toBe(true)
-  await device.type(' dokunmatik')
-  await expect.poll(async () => (await state()).text.toLowerCase()).toContain('dokunmatik')
+    expect(await device.evaluate(selectEditorText, 'dokunmatik')).toBe(true)
+    if (!(await device.evaluate(elementCenter, { selector: 'button', name: 'Kalın' })))
+      await tapElement(device, { selector: 'button', name: 'Tüm araçları göster' })
+    await tapElement(device, { selector: 'button', name: 'Kalın' })
+    await expect.poll(bold).toContain('dokunmatik')
+    await mark('bold')
+    await tapElement(device, { selector: 'button', name: 'Geri al' })
+    await expect.poll(bold).not.toContain('dokunmatik')
+    await mark('undone')
 
-  expect(await device.evaluate(selectEditorText, 'dokunmatik')).toBe(true)
-  if (!(await device.evaluate(elementCenter, { selector: 'button', name: 'Kalın' })))
-    await tapElement(device, { selector: 'button', name: 'Tüm araçları göster' })
-  await tapElement(device, { selector: 'button', name: 'Kalın' })
-  await expect.poll(bold).toContain('dokunmatik')
-  await tapElement(device, { selector: 'button', name: 'Geri al' })
-  await expect.poll(bold).not.toContain('dokunmatik')
-
-  const rules = (await state()).rules
-  await tapElement(device, { selector: '.native-menubar button', name: 'Ekle' })
-  await expect.poll(async () => (await state()).menu).toBe(true)
-  await tapElement(device, { selector: '[role="menuitem"]', name: 'Yatay çizgi' })
-  await expect.poll(async () => (await state()).rules).toBe(rules + 1)
-  expect((await state()).horizontalScroll).toBeLessThanOrEqual(1)
+    const rules = (await state()).rules
+    await tapElement(device, { selector: '.native-menubar button', name: 'Ekle' })
+    await expect.poll(async () => (await state()).menu).toBe(true)
+    await tapElement(device, { selector: '[role="menuitem"]', name: 'Yatay çizgi' })
+    await expect.poll(async () => (await state()).rules).toBe(rules + 1)
+    expect((await state()).horizontalScroll).toBeLessThanOrEqual(1)
+  } finally {
+    await mark('end').catch(() => {})
+    const path = test.info().outputPath('input-events.txt')
+    await writeFile(path, await device.evaluate(inputLog).catch((error) => String(error)))
+    await test.info().attach('input-events', { path, contentType: 'text/plain' })
+  }
 }

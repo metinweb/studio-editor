@@ -122,3 +122,35 @@ export function editorState() {
     horizontalScroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
   }
 }
+
+/** Runs in the page: records key, input and composition events inside the editor. */
+export function recordInput() {
+  if (window.__studioInput) return
+  const content = document.querySelector('.studio-editor-frame').contentDocument
+  const log = (window.__studioInput = [])
+  const types = ['keydown', 'beforeinput', 'input', 'compositionstart', 'compositionupdate']
+  for (const type of [...types, 'compositionend'])
+    content.addEventListener(
+      type,
+      (event) =>
+        log.push(
+          `${type} ${event.inputType || event.key || ''} ${JSON.stringify(event.data ?? '')}` +
+            (event.isComposing ? ' composing' : ''),
+        ),
+      true,
+    )
+}
+
+/** Runs in the page: adds a step marker with the HTML of the paragraph being edited. */
+export function markInput(step) {
+  const content = document.querySelector('.studio-editor-frame').contentDocument
+  const paragraph = [...content.querySelectorAll('p')].find((node) =>
+    node.textContent.includes('Bir hikâye'),
+  )
+  window.__studioInput?.push(`--- ${step}: ${paragraph?.innerHTML}`)
+}
+
+/** Runs in the page: the recorded events and step markers. */
+export function inputLog() {
+  return (window.__studioInput || []).join('\n')
+}
