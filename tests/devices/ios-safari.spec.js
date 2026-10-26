@@ -8,22 +8,24 @@ import { editorState, inputLog, recordInput } from './touch.js'
 // text is typed by tapping keys on the iOS software keyboard; the page is only read.
 // Needs Appium with the XCUITest driver on port 4723, `webdriverio`, and IOS_UDID/IOS_VERSION.
 const udid = process.env.IOS_UDID
-const english = 'en_US@sw=QWERTY;hw=Automatic'
-
-// The keyboard UI runs outside Safari and keeps the keyboard list it started with, so the
-// simulator restarts after the list changes. Appium boots it again for the next session.
-function useKeyboard(id) {
-  const simctl = (...args) => execFileSync('xcrun', ['simctl', ...args], { encoding: 'utf8' })
-  const write = (domain, ...value) => simctl('spawn', udid, 'defaults', 'write', domain, ...value)
-  const keyboards = () =>
-    simctl('spawn', udid, 'defaults', 'read', '.GlobalPreferences', 'AppleKeyboards')
-  write('.GlobalPreferences', 'AppleKeyboards', '-array', id)
-  write('com.apple.Preferences', 'KeyboardsCurrentAndNext', '-array', id)
-  write('com.apple.Preferences', 'KeyboardLastUsed', id)
-  simctl('shutdown', udid)
-  simctl('boot', udid)
-  simctl('bootstatus', udid, '-b')
-  console.log(`Keyboards after restart: ${keyboards().replace(/\s+/g, ' ')}`)
+const simctl = (args, options) =>
+  execFileSync('xcrun', ['simctl', ...args], { encoding: 'utf8', ...options })
+const defaults = (...args) => simctl(['spawn', udid, 'defaults', ...args])
+function restartSimulator() {
+  simctl(['shutdown', udid])
+  simctl(['boot', udid])
+  simctl(['bootstatus', udid, '-b'])
+}
+// iOS adds the system language's keyboard and starts with it, so the language and region change
+// with the keyboard. The keyboard UI runs outside Safari and reads the list when it starts, so
+// the simulator restarts; Appium connects to it again for the next session.
+function useKeyboard({ id, language, locale }) {
+  defaults('write', '.GlobalPreferences', 'AppleLanguages', '-array', language)
+  defaults('write', '.GlobalPreferences', 'AppleLocale', locale)
+  defaults('write', '.GlobalPreferences', 'AppleKeyboards', '-array', id)
+  restartSimulator()
+  const keyboards = defaults('read', '.GlobalPreferences', 'AppleKeyboards')
+  console.log(`Keyboards for ${language}: ${keyboards.replace(/\s+/g, ' ')}`)
 }
 
 async function openSafari() {
@@ -135,16 +137,26 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
 // Real input methods: Turkish letters from the Turkish Q keyboard, and Japanese and Chinese text
 // composed from Latin keys and committed by tapping the input method's candidate.
 const keyboards = [
-  { name: 'turkish-q', id: 'tr_TR@sw=QWERTY-Turkish;hw=Automatic', keys: 'çğışöü' },
+  {
+    name: 'turkish-q',
+    id: 'tr_TR@sw=QWERTY-Turkish;hw=Automatic',
+    language: 'tr',
+    locale: 'tr_TR',
+    keys: 'çğışöü',
+  },
   {
     name: 'japanese-romaji',
     id: 'ja_JP-Romaji@sw=QWERTY-Japanese;hw=Automatic',
+    language: 'ja',
+    locale: 'ja_JP',
     keys: 'nihon',
     candidate: '日本',
   },
   {
     name: 'chinese-pinyin',
     id: 'zh_Hans-Pinyin@sw=Pinyin-Simplified;hw=Automatic',
+    language: 'zh-Hans',
+    locale: 'zh_CN',
     keys: 'nihao',
     candidate: '你好',
   },
@@ -153,10 +165,11 @@ const keyboards = [
 test('Turkish, Japanese and Chinese keyboards type into the editor in Safari on iOS', async () => {
   test.skip(!udid, 'Set IOS_UDID to an iOS Simulator and start Appium')
   const occurrences = (text, word) => text.split(word).length - 1
+  const saved = defaults('export', '.GlobalPreferences', '-')
   try {
     for (const [index, keyboard] of keyboards.entries()) {
       await test.step(keyboard.name, async () => {
-        useKeyboard(keyboard.id)
+        useKeyboard(keyboard)
         const safari = await openSafari()
         const state = () => safari.device.evaluate(editorState)
         try {
@@ -195,6 +208,7 @@ test('Turkish, Japanese and Chinese keyboards type into the editor in Safari on 
       })
     }
   } finally {
-    useKeyboard(english)
+    simctl(['spawn', udid, 'defaults', 'import', '.GlobalPreferences', '-'], { input: saved })
+    restartSimulator()
   }
 })
