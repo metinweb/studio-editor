@@ -55,8 +55,12 @@ jobs:
   browsers:
     name: Browser tests (${{ matrix.project || matrix.browser }} ${{ matrix.shard }})
     runs-on: ubuntu-latest
-    # Installing WebKit's system libraries alone has taken over ten minutes on slow apt mirrors.
-    timeout-minutes: 30
+    # Browsers and their system libraries come preinstalled: installing WebKit's libraries from
+    # apt took over half an hour on slow mirrors. Keep the tag equal to the locked @playwright/test.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -87,7 +91,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npm run build
       - run: npx playwright test --project=${{ matrix.project || matrix.browser }} --shard=${{ matrix.shard }} --workers=1 --timeout=60000 --max-failures=3 --reporter=list
       - name: Upload browser failure traces
