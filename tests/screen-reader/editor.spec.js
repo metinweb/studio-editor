@@ -30,6 +30,14 @@ async function spoken(screenReader, action) {
   const { spokenPhrase, itemText } = await screenReader.capture(action)
   return `${spokenPhrase}\n${itemText}`
 }
+// VoiceOver's cursor does not follow script focus out of the editing frame; its own command moves
+// the cursor to the keyboard focus, as a VoiceOver user would.
+async function focusAndRead(screenReader, locator) {
+  if (!mac) return spoken(screenReader, () => locator.focus())
+  await locator.focus()
+  await screenReader.perform(screenReader.keyboardCommands.moveCursorToKeyboardFocus)
+  return `${await screenReader.lastSpokenPhrase()}\n${await screenReader.itemText()}`
+}
 // Screen readers may keep the first Escape to leave their focus/interaction mode.
 async function escape(screenReader, closed) {
   for (let attempt = 0; attempt < 3 && !(await closed()); attempt++)
@@ -86,7 +94,7 @@ test('the document, typing and the bold toggle are announced', async ({ page, sc
   if (mac) await select(typed)
   else await screenReader.press('Shift+Home')
   const bold = page.getByRole('button', { name: 'Kalın', exact: true })
-  expect(await spoken(screenReader, () => bold.focus())).toContain('Kalın')
+  expect(await focusAndRead(screenReader, bold)).toContain('Kalın')
   await screenReader.press('Space')
   await expect(body(page).locator('strong', { hasText: 'ekran okuyucu' })).toHaveCount(1)
   await expect(bold).toHaveAttribute('aria-pressed', 'true')
