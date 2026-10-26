@@ -3,7 +3,7 @@
 ## October 26, 2026 — Real screen readers and mobile browsers
 
 - Added a workflow that runs editing sessions with NVDA (Chromium, Windows) and VoiceOver (WebKit, macOS) through Guidepup and asserts on what they speak. Each run keeps the transcript, VoiceOver's item text and the key and input events the editor received.
-- Added device tests that run the same touch session in Chrome on an Android 15 emulator, with taps and keys through Android's input system, and in Mobile Safari on an iOS 26 Simulator through Appium/XCUITest, typing on the iOS software keyboard.
+- Added device tests that run the same touch session in Chrome on an Android 15 emulator, with taps and keys through Android's input system, and in Mobile Safari on an iOS 26 Simulator through Appium/XCUITest, typing on the iOS software keyboard. On iOS the Turkish Q keyboard also types ç ğ ı ş ö ü into the editor.
 - Fixed: NVDA read "Pending save. Saving… All changes saved" after every typed character. The save label is no longer a live region; only saves the user requests are announced, and failures keep the error alert.
 - Fixed: overlay measurements (selection toolbar, block, table, image and media controls, guides, page view, remote cursors, outline) ran in animation frames outside the editor's error handling, so a failure there escaped as an uncaught error instead of restarting the editor. Found as an intermittent CI failure of the crash recovery test; one failure is now reported per editor instance.
 

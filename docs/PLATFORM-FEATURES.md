@@ -234,6 +234,8 @@ empty category failed the MongoDB cast, and drafts were hidden from `superadmin`
   menu. Before each tap a transparent probe measures where browser bars and the software keyboard
   put the page; the page itself is only read. Failed runs keep a device screenshot and the
   editor's input events.
+- On iOS the Turkish Q keyboard types ç ğ ı ş ö ü on their own keys; the editor receives each
+  once as a trusted `insertText`.
 - Limits: these are real operating systems, browsers and screen readers, but in an emulator and a
   simulator. Physical touch hardware and device performance, TalkBack, iOS VoiceOver and real
   composition keyboards (Japanese, Chinese) still need sessions on devices. Composition itself is

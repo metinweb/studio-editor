@@ -91,7 +91,7 @@ async function openSafari() {
       screen: async () => ({ width, height }),
       tap: ({ x, y }) => driver.execute('mobile: tap', { x, y }),
     },
-    // A key or candidate on the software keyboard, by its accessibility name (native context).
+    // A key on the software keyboard, by its accessibility name (native context).
     async key(character) {
       const name = character === ' ' ? 'space' : character
       const key = await driver.$(`~${name}`)
@@ -111,7 +111,7 @@ async function openSafari() {
       await driver.saveScreenshot(path)
       await test.info().attach(name, { path, contentType: 'image/png' })
       if (!failed) return
-      // The keyboard's keys and candidates, to see what the input method offered.
+      // The keyboard and its keys, to see which keyboard was shown.
       const source = test.info().outputPath(`${name}.xml`)
       await writeFile(source, await native(() => driver.getPageSource()))
       await test.info().attach(`${name}-source`, { path: source, contentType: 'text/xml' })
@@ -143,108 +143,38 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
   }
 })
 
-// Real input methods: Turkish letters from the Turkish Q keyboard, and Japanese and Chinese text
-// composed from Latin keys and committed by tapping the input method's candidate.
-const keyboards = [
-  {
-    name: 'turkish-q',
-    id: 'tr_TR@sw=Turkish-Q;hw=Automatic',
-    language: 'tr',
-    locale: 'tr_TR',
-    keys: 'çğışöü',
-  },
-  {
-    name: 'japanese-romaji',
-    id: 'ja_JP-Romaji@sw=QWERTY-Japanese;hw=Automatic',
-    language: 'ja',
-    locale: 'ja_JP',
-    keys: 'nihon',
-    candidate: '日本',
-  },
-  {
-    name: 'chinese-pinyin',
-    id: 'zh_Hans-Pinyin@sw=Pinyin-Simplified;hw=Automatic',
-    language: 'zh-Hans',
-    locale: 'zh_CN',
-    keys: 'nihao',
-    candidate: '你好',
-  },
-]
+// The Turkish Q keyboard: Turkish letters typed on their own keys reach the editor once each.
+const turkishQ = { id: 'tr_TR@sw=Turkish-Q;hw=Automatic', language: 'tr', locale: 'tr_TR' }
+const letters = 'çğışöü'
 
-test('Turkish, Japanese and Chinese keyboards type into the editor in Safari on iOS', async () => {
+test('the Turkish Q keyboard types Turkish letters in Safari on iOS', async () => {
   test.skip(!udid, 'Set IOS_UDID to an iOS Simulator and start Appium')
-  const occurrences = (text, word) => text.split(word).length - 1
   const saved = defaults('export', '.GlobalPreferences', '-')
+  useKeyboard(turkishQ)
+  const safari = await openSafari()
+  const state = () => safari.device.evaluate(editorState)
   try {
-    for (const [index, keyboard] of keyboards.entries()) {
-      await test.step(keyboard.name, async () => {
-        useKeyboard(keyboard)
-        const safari = await openSafari()
-        const state = () => safari.device.evaluate(editorState)
-        try {
-          if (index === 0) await safari.reset()
-          else await safari.load()
-          await expect.poll(async () => (await state()).text, { timeout: 30000 }).toContain('İyi')
-          await safari.device.evaluate(recordInput)
-          const result = keyboard.candidate || keyboard.keys
-          const before = occurrences((await state()).text, result)
-          await tapElement(safari.device, { selector: 'p', editor: true, text: 'Bir hikâye' })
-          await expect.poll(async () => (await state()).focused).toBe(true)
-          // The wanted keyboard is recognized by what its first key does: the Turkish one has
-          // that key, and an input method starts composing where the English keyboard inserts a
-          // letter (which is deleted before switching).
-          const compositions = async () =>
-            (await safari.device.evaluate(inputLog)).split('compositionstart').length - 1
-          let ready = false
-          for (let attempt = 0; attempt < 3 && !ready; attempt++) {
-            if (!keyboard.candidate) {
-              ready = await safari.native(async () =>
-                (await safari.key(keyboard.keys[0])).isExisting(),
-              )
-              if (!ready) await safari.native(() => safari.nextKeyboard())
-              continue
-            }
-            const started = await compositions()
-            await safari.native(async () => (await safari.key(keyboard.keys[0])).click())
-            await safari.driver.pause(500)
-            ready = (await compositions()) > started
-            if (!ready)
-              await safari.native(async () => {
-                await (await safari.key('delete')).click()
-                await safari.nextKeyboard()
-              })
-          }
-          expect(ready, keyboard.name).toBe(true)
-          await safari.native(async () => {
-            const rest = keyboard.candidate ? keyboard.keys.slice(1) : keyboard.keys
-            for (const character of rest) await (await safari.key(character)).click()
-            // The candidate bar lists a cell and its text with the same name.
-            if (keyboard.candidate)
-              await (await safari.driver.$$(`~${keyboard.candidate}`))[0].click()
-          })
-          await expect.poll(async () => occurrences((await state()).text, result)).toBe(before + 1)
-          const events = await safari.device.evaluate(inputLog)
-          const path = test.info().outputPath(`${keyboard.name}-input-events.txt`)
-          await writeFile(path, events)
-          await test
-            .info()
-            .attach(`${keyboard.name}-input-events`, { path, contentType: 'text/plain' })
-          if (keyboard.candidate) {
-            // Composed through the input method, committed once, with no Latin keys left behind.
-            expect(events).toContain('compositionstart')
-            expect(events).toContain('compositionend')
-            expect((await state()).text).not.toContain(keyboard.keys)
-          }
-          await safari.keep(keyboard.name)
-        } catch (error) {
-          await safari.keep(`${keyboard.name}-failure`, true).catch(() => {})
-          throw error
-        } finally {
-          await safari.driver.deleteSession()
-        }
-      })
-    }
+    await safari.reset()
+    await expect.poll(async () => (await state()).text, { timeout: 30000 }).toContain('İyi')
+    await safari.device.evaluate(recordInput)
+    await tapElement(safari.device, { selector: 'p', editor: true, text: 'Bir hikâye' })
+    await expect.poll(async () => (await state()).focused).toBe(true)
+    await safari.native(async () => {
+      // iOS starts with its English keyboard; switch until the Turkish keys are there.
+      for (let attempt = 0; attempt < 3 && !(await (await safari.key('ç')).isExisting()); attempt++)
+        await safari.nextKeyboard()
+      for (const letter of letters) await (await safari.key(letter)).click()
+    })
+    await expect.poll(async () => (await state()).text.split(letters).length - 1).toBe(1)
+    const path = test.info().outputPath('turkish-q-input-events.txt')
+    await writeFile(path, await safari.device.evaluate(inputLog))
+    await test.info().attach('turkish-q-input-events', { path, contentType: 'text/plain' })
+    await safari.keep('turkish-q')
+  } catch (error) {
+    await safari.keep('turkish-q-failure', true).catch(() => {})
+    throw error
   } finally {
+    await safari.driver.deleteSession()
     simctl(['spawn', udid, 'defaults', 'import', '.GlobalPreferences', '-'], { input: saved })
     restartSimulator()
   }

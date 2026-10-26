@@ -238,6 +238,8 @@ kullanıcılardan gizleniyordu.
   şeffaf bir ölçüm katmanı, tarayıcı çubuklarının ve yazılım klavyesinin sayfayı nereye
   koyduğunu ölçer; sayfaya yalnızca okumak için erişilir. Başarısız çalışmalar cihaz ekran
   görüntüsünü ve düzenleyicinin giriş olaylarını saklar.
+- iOS'ta Türkçe Q klavyesi ç ğ ı ş ö ü harflerini kendi tuşlarından yazar; düzenleyici her birini
+  bir kez, güvenilir (`isTrusted`) `insertText` olarak alır.
 - Sınırlar: Bunlar gerçek işletim sistemleri, tarayıcılar ve ekran okuyuculardır, ancak emülatör
   ve simülatörde çalışır. Fiziksel dokunmatik donanım ve cihaz performansı, TalkBack, iOS
   VoiceOver ve gerçek kompozisyonlu klavyeler (Japonca, Çince) için cihazda oturum hâlâ

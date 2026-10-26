@@ -5,8 +5,7 @@ import { defineConfig } from '@playwright/test'
 export default defineConfig({
   testDir: './tests/devices',
   outputDir: 'test-results/devices',
-  // The iOS keyboard test restarts the simulator for each keyboard.
-  timeout: 40 * 60 * 1000,
+  timeout: 20 * 60 * 1000,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
   projects: [
