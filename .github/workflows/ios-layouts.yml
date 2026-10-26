@@ -17,11 +17,10 @@ jobs:
           ROOT=$(xcrun simctl list runtimes --json | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS']; print(r[-1]['runtimeRoot'])")
           LIB="$ROOT/System/Library"
           cd "$LIB"
-          ls TextInput/TextInput_ja.bundle TextInput/TextInput_zh.bundle TextInput/TextInput_tr.bundle
-          find . -iname '*turkish*' | sed 's|.*/||' | sort -u | head -40
-          for binary in PrivateFrameworks/TextInputCore.framework/TextInputCore PrivateFrameworks/UIKitCore.framework/UIKitCore PrivateFrameworks/TextInput.framework/TextInput PrivateFrameworks/KeyboardServices.framework/KeyboardServices; do
+          plutil -p TextInput/TextInput_tr.bundle/InputMode_tr.plist
+          plutil -p TextInput/TextInput_tr.bundle/Keyboard-tr.plist | head -60
+          plutil -p TextInput/TextInput_ja.bundle/InputMode_ja.plist | head -60
+          for binary in PrivateFrameworks/TextInputCore.framework/TextInputCore PrivateFrameworks/UIKitCore.framework/UIKitCore PrivateFrameworks/TextInput.framework/TextInput; do
             echo "== $binary"
-            [ -f "$binary" ] && strings -a "$binary" | grep -E '(Turkish|QWERTY-|Romaji|Pinyin|@sw=)' | sort -u | head -80
+            strings -a "$binary" | grep -E '(Turkish|tr_TR|tr@sw)' | sort -u | head -40
           done
-          echo "== Info.plist keys mentioning layouts"
-          for plist in TextInput/TextInput_tr.bundle/Info.plist TextInput/TextInput_ja.bundle/Info.plist; do plutil -p "$plist"; done
