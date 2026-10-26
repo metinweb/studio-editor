@@ -33,6 +33,27 @@ test('a failing editor listener restarts the editor with its latest content', as
   expect(errors).toEqual([])
 })
 
+// Overlays (selection toolbar, block and table controls…) measure in animation frames, outside
+// editor listeners. A scroll only reaches them, so a failure there must restart the editor too
+// instead of escaping as an uncaught error.
+test('a failing overlay measurement restarts the editor', async ({ page }) => {
+  const errors = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await page.goto('/')
+  await expect(body(page)).toContainText('İyi fikirler')
+  // Overlays start following scrolling once the editor has published its first state.
+  await body(page).locator('h1').click()
+  await body(page).evaluate((root) => {
+    root.ownerDocument.getSelection = () => {
+      throw new Error('Simulated overlay failure')
+    }
+    setTimeout(() => root.ownerDocument.dispatchEvent(new Event('scroll')))
+  })
+  await expect(page.getByRole('status').filter({ hasText: 'yeniden başlatıldı' })).toBeVisible()
+  await expect(body(page)).toContainText('İyi fikirler')
+  expect(errors).toEqual([])
+})
+
 test('repeated failures stop the editor until the user restarts it', async ({ page }) => {
   await page.goto('/')
   await expect(body(page)).toContainText('İyi fikirler')

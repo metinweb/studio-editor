@@ -5,6 +5,7 @@ import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Bold, Italic, Underline, Link, MessageSquare, Quote } from '@lucide/vue'
 import { currentRange } from '../editor/selection'
 import { useEditorLocale } from '../lib/editor-locale'
+import { overlayFrame } from './overlay-frame.js'
 const theme = useEditorTheme()
 const props = defineProps({
   engine: Object,
@@ -50,7 +51,7 @@ function measure() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(measure)
+  animation = overlayFrame(props.engine, measure, 'selection toolbar')
 }
 function disconnect() {
   doc?.removeEventListener('scroll', schedule, true)

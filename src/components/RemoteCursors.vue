@@ -1,6 +1,7 @@
 <script setup>
 import { nextTick, onBeforeUnmount, watch } from 'vue'
 import { presenceColor, rangeFromPortable } from '../editor/presence.js'
+import { overlayFrame } from './overlay-frame.js'
 
 // Draws collaborators' carets and selections over the editing iframe. The overlay lives
 // outside <body>, so it never enters the document, clipboard or exports.
@@ -44,7 +45,7 @@ function draw() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(draw)
+  animation = overlayFrame(props.engine, draw, 'remote cursors')
 }
 function clear() {
   doc?.removeEventListener('scroll', schedule, true)

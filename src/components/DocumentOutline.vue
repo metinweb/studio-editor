@@ -3,6 +3,7 @@ import { computed, ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import { sectionInfo } from '../editor/outline-tools.js'
 import { X, ListTree, ArrowUp, ArrowDown, IndentDecrease, IndentIncrease } from '@lucide/vue'
 import { useEditorLocale } from '../lib/editor-locale'
+import { overlayFrame } from './overlay-frame.js'
 const props = defineProps({ engine: Object, frame: Object, readonly: Boolean })
 const emit = defineEmits(['close'])
 const { t } = useEditorLocale()
@@ -81,7 +82,7 @@ function follow() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(collect)
+  animation = overlayFrame(props.engine, collect, 'outline')
 }
 function disconnect() {
   observer?.disconnect()

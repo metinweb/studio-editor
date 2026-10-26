@@ -4,6 +4,7 @@ import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { GripVertical, ArrowUp, ArrowDown } from '@lucide/vue'
 import { blockId } from '../editor/identity'
 import { useEditorLocale } from '../lib/editor-locale'
+import { overlayFrame } from './overlay-frame.js'
 const props = defineProps({ engine: Object, state: Object, frame: Object, suspended: Boolean })
 const { locale } = useEditorLocale()
 const box = ref(null),
@@ -30,7 +31,7 @@ function measure() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(measure)
+  animation = overlayFrame(props.engine, measure, 'block controls')
 }
 function disconnect() {
   doc?.removeEventListener('scroll', schedule, true)

@@ -13,6 +13,7 @@ import {
   LockKeyhole,
   UnlockKeyhole,
 } from '@lucide/vue'
+import { overlayFrame } from './overlay-frame.js'
 
 const props = defineProps({ engine: Object, state: Object, frame: Object })
 const emit = defineEmits(['command', 'edit', 'properties'])
@@ -72,7 +73,7 @@ function measure() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(measure)
+  animation = overlayFrame(props.engine, measure, 'image controls')
 }
 function disconnect() {
   observer?.disconnect()
@@ -118,7 +119,7 @@ function begin(event, corner) {
 function move(event) {
   if (!resize || resize.cancelled || event.pointerId !== resize.pointerId) return
   lastPointer = { x: event.clientX, y: event.clientY, shift: event.shiftKey }
-  if (!resizeAnimation) resizeAnimation = requestAnimationFrame(preview)
+  if (!resizeAnimation) resizeAnimation = overlayFrame(props.engine, preview, 'image resize')
 }
 function preview() {
   resizeAnimation = 0

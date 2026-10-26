@@ -3,6 +3,7 @@ import { nextTick, onBeforeUnmount, watch } from 'vue'
 import { useEditorLocale } from '../lib/editor-locale'
 import { useEditorTheme } from '../lib/theme.js'
 import { pageAt, pageBox, pageBreaks } from '../lib/page-layout.js'
+import { overlayFrame } from './overlay-frame.js'
 
 // Shows the editing body as sheets of the print page size, with computed page boundaries.
 // Everything lives outside <body>: documents, history and exports are not affected.
@@ -26,7 +27,7 @@ function clear() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(draw)
+  animation = overlayFrame(props.engine, draw, 'page view')
 }
 function install() {
   clear()

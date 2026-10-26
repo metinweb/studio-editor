@@ -18,6 +18,7 @@ import {
 } from '@lucide/vue'
 import EditorPopover from './EditorPopover.vue'
 import { useEditorLocale } from '../lib/editor-locale'
+import { overlayFrame } from './overlay-frame.js'
 const { t } = useEditorLocale()
 const props = defineProps({ engine: Object, state: Object, frame: Object, suspended: Boolean })
 const emit = defineEmits(['command', 'options', 'cell-format'])
@@ -93,7 +94,7 @@ function measure() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(measure)
+  animation = overlayFrame(props.engine, measure, 'table controls')
 }
 function disconnect() {
   observer?.disconnect()

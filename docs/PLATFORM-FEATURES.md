@@ -116,8 +116,10 @@ belong to the published page.
 
 ## Crash recovery
 
-If an editor event handler or a component inside the editor throws, the editor restarts from its
-last HTML and shows a notice. After more than three failures within a minute it stops and offers
+If an editor event handler, a component inside the editor or an overlay measurement (selection
+toolbar, block, table, image and media controls, guides, page view, remote cursors, outline)
+throws, the editor restarts from its last HTML and shows a notice. One failure is reported per
+editor instance, so a single incident counts once. After more than three failures within a minute it stops and offers
 **Restart editor**, so a deterministic error cannot loop. Hosts receive `onCrash` /
 `@crash` / `studio-crash` with `{ error, recovered, html }`. Undo history and open dialogs are
 lost on restart; content is not.

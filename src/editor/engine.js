@@ -200,16 +200,25 @@ export class StudioEditor {
     // With an error handler (the watchdog), a failing listener is reported instead of leaving
     // the browser to log it while the editor keeps running in an unknown state.
     const handler = this.callbacks.onError
-      ? (event) => {
-          try {
-            return callback(event)
-          } catch (error) {
-            if (!this.destroyed) this.callbacks.onError(error, type)
-          }
-        }
+      ? (event) => this.guard(() => callback(event), type)
       : callback
     target.addEventListener(type, handler)
     this.listeners.push(() => target.removeEventListener(type, handler))
+  }
+  /**
+   * Runs editor work outside a listener (overlay animation frames) with the same error
+   * reporting. One failure is reported per editor instance: the watchdog replaces the instance,
+   * and later errors from the failing one would count as separate crashes.
+   */
+  guard(callback, source) {
+    if (!this.callbacks.onError) return callback()
+    try {
+      return callback()
+    } catch (error) {
+      if (this.destroyed || this.failed) return
+      this.failed = true
+      this.callbacks.onError(error, source)
+    }
   }
   destroy() {
     this.destroyed = true

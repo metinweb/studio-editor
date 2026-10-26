@@ -4,6 +4,7 @@ import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import { Film, Trash2, AlignLeft, AlignCenter, AlignRight } from '@lucide/vue'
 import { readMediaEmbed } from '../lib/media-embed.js'
 import { useEditorLocale } from '../lib/editor-locale'
+import { overlayFrame } from './overlay-frame.js'
 const { t } = useEditorLocale()
 const props = defineProps({ engine: Object, state: Object, frame: Object, suspended: Boolean })
 const emit = defineEmits(['edit'])
@@ -42,7 +43,7 @@ function measure() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(measure)
+  animation = overlayFrame(props.engine, measure, 'media controls')
 }
 function disconnect() {
   observer?.disconnect()

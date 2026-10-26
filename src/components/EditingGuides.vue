@@ -1,5 +1,6 @@
 <script setup>
 import { nextTick, onBeforeUnmount, watch } from 'vue'
+import { overlayFrame } from './overlay-frame.js'
 const props = defineProps({ engine: Object, state: Object, visible: Boolean })
 let overlay, doc, animation, resize
 let disposed = false
@@ -43,7 +44,7 @@ function draw() {
 }
 function schedule() {
   cancelAnimationFrame(animation)
-  animation = requestAnimationFrame(draw)
+  animation = overlayFrame(props.engine, draw, 'editing guides')
 }
 function clear() {
   doc?.removeEventListener('scroll', schedule, true)

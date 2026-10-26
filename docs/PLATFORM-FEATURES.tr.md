@@ -115,8 +115,10 @@ içerik renkleri yayınlanacak sayfaya aittir.
 
 ## Çökme sonrası toparlama
 
-Editör içindeki bir olay işleyicisi veya bileşen hata verirse editör son HTML'iyle yeniden
-başlatılır ve bir bildirim gösterilir. Bir dakika içinde üçten fazla hata olursa editör durur ve
+Editör içindeki bir olay işleyicisi, bileşen veya kaplama ölçümü (seçim araç çubuğu; blok,
+tablo, görsel ve medya denetimleri; kılavuzlar, sayfa görünümü, uzak imleçler, ana hat) hata
+verirse editör son HTML'iyle yeniden başlatılır ve bir bildirim gösterilir. Her editör örneği
+için tek hata bildirilir; böylece tek bir olay bir kez sayılır. Bir dakika içinde üçten fazla hata olursa editör durur ve
 **Editörü yeniden başlat** düğmesi sunar; böylece tekrarlanan bir hata döngüye girmez. Uygulama
 `onCrash` / `@crash` / `studio-crash` ile `{ error, recovered, html }` bilgisini alır. Yeniden
 başlatmada geri alma geçmişi ve açık diyaloglar kaybolur, içerik kaybolmaz.
