@@ -29,6 +29,7 @@
     "verify:release": "node scripts/verify-release.mjs && playwright test --config playwright.package.config.js",
     "preview": "vite preview --host 127.0.0.1",
     "test": "playwright test",
+    "test:screen-reader": "playwright test --config playwright.screen-reader.config.js",
     "test:unit": "node --test scripts/tests/*.test.mjs",
     "lint": "eslint . && node scripts/check-api.mjs",
     "typecheck": "tsc -p tsconfig.types.json",
@@ -63,6 +64,8 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
+    "@guidepup/guidepup": "^0.35.0",
+    "@guidepup/playwright": "^0.19.1",
     "@playwright/test": "^1.63.0",
     "@vitejs/plugin-vue": "^6.0.9",
     "eslint": "^10.13.0",

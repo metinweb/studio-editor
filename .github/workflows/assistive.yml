@@ -1,0 +1,59 @@
+name: Screen readers and mobile browsers
+
+# Real assistive technology and mobile browser engines, separate from the main test workflow
+# because each job needs a macOS or Windows desktop, a simulator or an emulator.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screen-readers:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: NVDA + Chromium (Windows)
+            os: windows-2025
+            project: nvda
+            browser: chromium
+          - name: VoiceOver + WebKit (macOS)
+            os: macos-15
+            project: voiceover
+            browser: webkit
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npx -y @guidepup/setup@0.29.2 setup --ci
+      - run: npm ci
+      - run: npx -y @guidepup/setup@0.29.2 install
+      - run: npx playwright install ${{ matrix.browser }}
+      - run: npm run build
+      - run: npx playwright test --config playwright.screen-reader.config.js --project=${{ matrix.project }} --reporter=list
+      - name: Add spoken transcripts to the summary
+        if: always()
+        shell: bash
+        run: |
+          find test-results/screen-reader -name transcript.txt 2>/dev/null | sort | while read -r file; do
+            printf '### %s\n\n```text\n%s\n```\n\n' "$(basename "$(dirname "$file")")" "$(cat "$file")"
+          done >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload screen reader results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screen-reader-${{ matrix.project }}
+          path: test-results/screen-reader/
+          retention-days: 14

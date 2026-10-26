@@ -1,0 +1,91 @@
+import { screenReaderTest as test } from '@guidepup/playwright'
+import { expect } from '@playwright/test'
+import { writeFile } from 'node:fs/promises'
+
+// NVDA (Windows) or VoiceOver (macOS) reads the editor while keys go through the operating
+// system. Assertions check what the screen reader actually spoke; each test writes the full
+// transcript to its output folder.
+test.use({ screenReaderStartOptions: { capture: true } })
+
+const mac = process.platform === 'darwin'
+const body = (page) => page.frameLocator('.studio-editor-frame').locator('body')
+const transcript = async (screenReader) => (await screenReader.spokenPhraseLog()).join('\n')
+const activeLabel = (page) =>
+  page.evaluate(() => {
+    const element = document.activeElement
+    return element.dataset.label || element.getAttribute('aria-label') || element.textContent.trim()
+  })
+async function spoken(screenReader, action) {
+  const { spokenPhrase } = await screenReader.capture(action)
+  return spokenPhrase
+}
+// Screen readers may keep the first Escape to leave their focus/interaction mode.
+async function escape(screenReader, closed) {
+  for (let attempt = 0; attempt < 3 && !(await closed()); attempt++)
+    await screenReader.press('Escape')
+}
+async function open(page, screenReader) {
+  await page.goto('/')
+  await expect(body(page)).toContainText('İyi fikirler')
+  await screenReader.navigateToWebContent()
+}
+
+test.afterEach(async ({ screenReader }, testInfo) => {
+  const path = testInfo.outputPath('transcript.txt')
+  await writeFile(path, await transcript(screenReader))
+  await testInfo.attach('screen-reader-transcript', { path, contentType: 'text/plain' })
+})
+
+test('the document, typing and the bold toggle are announced', async ({ page, screenReader }) => {
+  await open(page, screenReader)
+  const document = await spoken(screenReader, () => body(page).locator('h1').click())
+  expect(document).toMatch(/Belge (içeriği|düzenleme alanı)/)
+  await screenReader.press('End')
+  await screenReader.press('Enter')
+  await screenReader.type('ekran okuyucu')
+  await expect(body(page).locator('p', { hasText: 'ekran okuyucu' })).toHaveCount(1)
+  await screenReader.press('Shift+Home')
+  const bold = page.getByRole('button', { name: 'Kalın', exact: true })
+  expect(await spoken(screenReader, () => bold.focus())).toContain('Kalın')
+  await screenReader.press('Space')
+  await expect(body(page).locator('strong', { hasText: 'ekran okuyucu' })).toHaveCount(1)
+  await expect(bold).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('menus open, move and close with announced items', async ({ page, screenReader }) => {
+  await open(page, screenReader)
+  const insert = page.locator('.native-menubar').getByRole('button', { name: 'Ekle', exact: true })
+  expect(await spoken(screenReader, () => insert.focus())).toContain('Ekle')
+  await screenReader.press('Enter')
+  await expect(page.getByRole('menu')).toBeVisible()
+  const labels = await page
+    .getByRole('menu')
+    .locator('[role=menuitem]')
+    .evaluateAll((items) => items.map((item) => item.dataset.label))
+  expect(labels).toContain(await activeLabel(page))
+  expect(await transcript(screenReader)).toContain(await activeLabel(page))
+  await screenReader.press('ArrowDown')
+  expect(await screenReader.lastSpokenPhrase()).toContain(labels[1])
+  await escape(screenReader, async () => !(await page.getByRole('menu').count()))
+  await expect(page.getByRole('menu')).toHaveCount(0)
+  await expect(insert).toBeFocused()
+})
+
+test('dialogs announce their name and return focus', async ({ page, screenReader }) => {
+  await open(page, screenReader)
+  await body(page).locator('h1').click()
+  const linkButton = page.getByRole('button', { name: 'Bağlantı ekle', exact: true })
+  const announced = await spoken(screenReader, () => linkButton.click())
+  const dialog = page.getByRole('dialog', { name: 'Bağlantı' })
+  await expect(dialog).toBeVisible()
+  expect(announced).toContain('Bağlantı')
+  expect(announced).toContain(await activeLabel(page))
+  await escape(screenReader, async () => !(await dialog.isVisible()))
+  await expect(dialog).toBeHidden()
+  // Real Ctrl/⌘+F opens the find panel and the screen reader reads its search field.
+  await body(page).locator('h1').click()
+  await screenReader.press(mac ? 'Command+f' : 'Control+f')
+  const search = page.getByRole('textbox', { name: 'Aranacak metin' })
+  await expect(search).toBeFocused()
+  expect(await transcript(screenReader)).toContain('Aranacak metin')
+})
