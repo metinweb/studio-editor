@@ -15,13 +15,13 @@ jobs:
       - name: Search the iOS runtime for keyboard layout names
         run: |
           ROOT=$(xcrun simctl list runtimes --json | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS']; print(r[-1]['runtimeRoot'])")
-          echo "$ROOT"
           LIB="$ROOT/System/Library"
-          find "$LIB" -iname '*turkish*' 2>/dev/null | head -40
-          find "$LIB" \( -iname '*romaji*' -o -iname '*pinyin*' \) 2>/dev/null | head -40
-          for framework in TextInputCore TextInput KeyboardServices UIKitCore; do
-            for binary in $(find "$LIB" -path "*$framework.framework/$framework" 2>/dev/null); do
-              echo "== $binary"
-              strings -a "$binary" | grep -E -i '(turkish|romaji|pinyin)' | sort -u | head -60
-            done
+          cd "$LIB"
+          ls TextInput/TextInput_ja.bundle TextInput/TextInput_zh.bundle TextInput/TextInput_tr.bundle
+          find . -iname '*turkish*' | sed 's|.*/||' | sort -u | head -40
+          for binary in PrivateFrameworks/TextInputCore.framework/TextInputCore PrivateFrameworks/UIKitCore.framework/UIKitCore PrivateFrameworks/TextInput.framework/TextInput PrivateFrameworks/KeyboardServices.framework/KeyboardServices; do
+            echo "== $binary"
+            [ -f "$binary" ] && strings -a "$binary" | grep -E '(Turkish|QWERTY-|Romaji|Pinyin|@sw=)' | sort -u | head -80
           done
+          echo "== Info.plist keys mentioning layouts"
+          for plist in TextInput/TextInput_tr.bundle/Info.plist TextInput/TextInput_ja.bundle/Info.plist; do plutil -p "$plist"; done
