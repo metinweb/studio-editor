@@ -97,17 +97,14 @@ async function openSafari() {
       const key = await driver.$(`~${name}`)
       return (await key.isExisting()) ? key : driver.$(`~${name.toUpperCase()}`)
     },
-    // iOS starts with its English keyboard; like a user, switch with the globe button until
-    // `ready(driver)` sees the wanted keyboard. The button's name is localized, so it is found as the
-    // first button after the keyboard that is not dictation (native context).
-    async chooseKeyboard(ready) {
-      for (let attempt = 0; attempt < 3 && !(await ready(driver)); attempt++) {
-        await driver
-          .$('(//XCUIElementTypeKeyboard/following::XCUIElementTypeButton[@name!="dictation"])[1]')
-          .click()
-        await driver.pause(500)
-      }
-      return ready(driver)
+    // iOS starts with its English keyboard; like a user, switch with the globe button. Its name
+    // is localized, so it is found as the first button after the keyboard that is not dictation
+    // (native context).
+    async nextKeyboard() {
+      await driver
+        .$('(//XCUIElementTypeKeyboard/following::XCUIElementTypeButton[@name!="dictation"])[1]')
+        .click()
+      await driver.pause(500)
     },
     async keep(name, failed) {
       const path = test.info().outputPath(`${name}.png`)
@@ -148,13 +145,6 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
 
 // Real input methods: Turkish letters from the Turkish Q keyboard, and Japanese and Chinese text
 // composed from Latin keys and committed by tapping the input method's candidate.
-// The English keyboard has a blank space bar; Japanese and Chinese ones name it (空白, 空格).
-const englishKeyboard = async (driver) => {
-  const space = await driver.$('//XCUIElementTypeKeyboard//*[@name="space"]')
-  return (await space.isExisting()) && !(await space.getAttribute('label'))?.trim()
-}
-const inputMethod = async (driver) =>
-  (await driver.$('//XCUIElementTypeKeyboard').isExisting()) && !(await englishKeyboard(driver))
 const keyboards = [
   {
     name: 'turkish-q',
@@ -162,7 +152,6 @@ const keyboards = [
     language: 'tr',
     locale: 'tr_TR',
     keys: 'çğışöü',
-    ready: async (driver) => (await driver.$('~ç')).isExisting(),
   },
   {
     name: 'japanese-romaji',
@@ -171,7 +160,6 @@ const keyboards = [
     locale: 'ja_JP',
     keys: 'nihon',
     candidate: '日本',
-    ready: inputMethod,
   },
   {
     name: 'chinese-pinyin',
@@ -180,7 +168,6 @@ const keyboards = [
     locale: 'zh_CN',
     keys: 'nihao',
     candidate: '你好',
-    ready: inputMethod,
   },
 ]
 
@@ -203,9 +190,34 @@ test('Turkish, Japanese and Chinese keyboards type into the editor in Safari on 
           const before = occurrences((await state()).text, result)
           await tapElement(safari.device, { selector: 'p', editor: true, text: 'Bir hikâye' })
           await expect.poll(async () => (await state()).focused).toBe(true)
+          // The wanted keyboard is recognized by what its first key does: the Turkish one has
+          // that key, and an input method starts composing where the English keyboard inserts a
+          // letter (which is deleted before switching).
+          const compositions = async () =>
+            (await safari.device.evaluate(inputLog)).split('compositionstart').length - 1
+          let ready = false
+          for (let attempt = 0; attempt < 3 && !ready; attempt++) {
+            if (!keyboard.candidate) {
+              ready = await safari.native(async () =>
+                (await safari.key(keyboard.keys[0])).isExisting(),
+              )
+              if (!ready) await safari.native(() => safari.nextKeyboard())
+              continue
+            }
+            const started = await compositions()
+            await safari.native(async () => (await safari.key(keyboard.keys[0])).click())
+            await safari.driver.pause(500)
+            ready = (await compositions()) > started
+            if (!ready)
+              await safari.native(async () => {
+                await (await safari.key('delete')).click()
+                await safari.nextKeyboard()
+              })
+          }
+          expect(ready, keyboard.name).toBe(true)
           await safari.native(async () => {
-            expect(await safari.chooseKeyboard(keyboard.ready), keyboard.name).toBe(true)
-            for (const character of keyboard.keys) await (await safari.key(character)).click()
+            const rest = keyboard.candidate ? keyboard.keys.slice(1) : keyboard.keys
+            for (const character of rest) await (await safari.key(character)).click()
             if (keyboard.candidate) await (await safari.key(keyboard.candidate)).click()
           })
           await expect.poll(async () => occurrences((await state()).text, result)).toBe(before + 1)
