@@ -83,7 +83,10 @@ jobs:
           profile: pixel_7
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: npx playwright test --config playwright.devices.config.js --project=android-chrome --reporter=list
+          # The launcher is not needed behind Chrome and stalls on busy runners ("isn't responding").
+          script: |
+            adb shell pm disable-user --user 0 com.google.android.apps.nexuslauncher || true
+            npx playwright test --config playwright.devices.config.js --project=android-chrome --reporter=list
       - name: Upload Android results
         if: always()
         uses: actions/upload-artifact@v7

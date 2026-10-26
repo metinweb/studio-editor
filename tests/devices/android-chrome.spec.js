@@ -73,7 +73,10 @@ test('touch and key input edit the document in Chrome on Android', async () => {
           await dismissNotResponding()
           adb('shell', 'input', 'tap', x, y)
         },
-        type: async (text) => adb('shell', 'input', 'text', text.replaceAll(' ', '%s')),
+        type: async (text) => {
+          await dismissNotResponding()
+          adb('shell', 'input', 'text', text.replaceAll(' ', '%s'))
+        },
       })
     } catch (error) {
       await screenshot('android-failure')
