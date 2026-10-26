@@ -1,0 +1,27 @@
+name: iOS keyboard layout names (temporary)
+
+on:
+  push:
+    paths: ['.github/workflows/ios-layouts.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  layouts:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Search the iOS runtime for keyboard layout names
+        run: |
+          ROOT=$(xcrun simctl list runtimes --json | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS']; print(r[-1]['runtimeRoot'])")
+          echo "$ROOT"
+          LIB="$ROOT/System/Library"
+          find "$LIB" -iname '*turkish*' 2>/dev/null | head -40
+          find "$LIB" \( -iname '*romaji*' -o -iname '*pinyin*' \) 2>/dev/null | head -40
+          for framework in TextInputCore TextInput KeyboardServices UIKitCore; do
+            for binary in $(find "$LIB" -path "*$framework.framework/$framework" 2>/dev/null); do
+              echo "== $binary"
+              strings -a "$binary" | grep -E -i '(turkish|romaji|pinyin)' | sort -u | head -60
+            done
+          done
