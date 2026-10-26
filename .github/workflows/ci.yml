@@ -55,7 +55,8 @@ jobs:
   browsers:
     name: Browser tests (${{ matrix.project || matrix.browser }} ${{ matrix.shard }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Installing WebKit's system libraries alone has taken over ten minutes on slow apt mirrors.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
