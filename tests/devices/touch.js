@@ -68,11 +68,11 @@ export function deviceMapping(points, touches) {
 }
 
 /**
- * Runs in the page: scrolls an element into view and returns its center in page coordinates.
- * `editor` looks inside the editing iframe; `name` matches the text or accessible label and
- * `text` a part of the text.
+ * Runs in the page: returns an element's center in page coordinates, scrolling it into view
+ * unless `scroll` is false. `editor` looks inside the editing iframe; `name` matches the text or
+ * accessible label and `text` a part of the text.
  */
-export function elementCenter({ selector, editor, name, text }) {
+export function elementCenter({ selector, editor, name, text, scroll = true }) {
   const frame = document.querySelector('.studio-editor-frame')
   const root = editor ? frame.contentDocument : document
   const element = [...root.querySelectorAll(selector)].find(
@@ -85,7 +85,7 @@ export function elementCenter({ selector, editor, name, text }) {
         node.textContent.trim() === name),
   )
   if (!element) return null
-  element.scrollIntoView({ block: 'center', inline: 'nearest' })
+  if (scroll) element.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   const rect = element.getBoundingClientRect()
   const origin = editor ? frame.getBoundingClientRect() : { left: 0, top: 0 }
   return { x: origin.left + rect.left + rect.width / 2, y: origin.top + rect.top + rect.height / 2 }

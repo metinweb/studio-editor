@@ -15,11 +15,13 @@ import {
 
 /**
  * Taps an element with a real touch. The page-to-screen mapping is measured again before each
- * tap because browser bars and the software keyboard move the web content.
+ * tap because browser bars and the software keyboard move the web content; the element is
+ * located again after that, once scrolling and bar animations have settled.
  */
 export async function tapElement(device, target) {
-  const center = await device.evaluate(elementCenter, target)
-  expect(center, `${target.name || target.selector} is visible`).toBeTruthy()
+  const visible = await device.evaluate(elementCenter, target)
+  expect(visible, `${target.name || target.selector} is visible`).toBeTruthy()
+  await new Promise((resolve) => setTimeout(resolve, 400))
   const points = probePoints(await device.screen())
   let touches = []
   // A system dialog or browser bubble can take a probe tap; measure again in that case.
@@ -33,6 +35,7 @@ export async function tapElement(device, target) {
     touches = await device.evaluate(readProbe)
   }
   expect(touches.map((touch) => touch.type)).toEqual(['touch', 'touch'])
+  const center = await device.evaluate(elementCenter, { ...target, scroll: false })
   await device.tap(deviceMapping(points, touches)(center))
 }
 

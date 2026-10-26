@@ -57,7 +57,14 @@ test('touch and the software keyboard edit the document in Safari on iOS', async
     return (await key.isExisting()) ? key : driver.$(`~${name.toUpperCase()}`)
   }
   try {
-    // The first visit creates the welcome document in the interface language.
+    // A retry must not find the previous attempt's document: the deletions are queued behind the
+    // open connections and run when the page reloads. The first visit then creates the welcome
+    // document in the interface language.
+    await load()
+    await driver.execute(() => {
+      localStorage.clear()
+      for (const name of ['tinymce-studio', 'studio-content-tools']) indexedDB.deleteDatabase(name)
+    })
     await load()
     const { width, height } = await native(() => driver.getWindowSize())
     console.log('Browser:', await driver.execute(() => navigator.userAgent), `${width}x${height}`)

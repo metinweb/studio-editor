@@ -37,6 +37,8 @@ test('touch and key input edit the document in Chrome on Android', async () => {
   test.skip(!device, 'No Android emulator or device is connected')
   if (!installed('com.android.chrome'))
     throw new Error('Chrome is not installed on the Android device')
+  // A fresh profile per attempt: a retry must not find the previous attempt's document.
+  adb('shell', 'pm', 'clear', 'com.android.chrome')
   adb('reverse', 'tcp:4173', 'tcp:4173')
   // Lets Chrome read Playwright's command line on images that are not rooted.
   adb('shell', 'am', 'set-debug-app', '--persistent', 'com.android.chrome')

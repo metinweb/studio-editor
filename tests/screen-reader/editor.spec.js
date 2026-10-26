@@ -32,14 +32,24 @@ async function spoken(screenReader, action) {
   return `${spokenPhrase}\n${itemText}`
 }
 // Runs a focus change and returns what describes the new focus, including VoiceOver's item text
-// under its cursor. VoiceOver's cursor does not follow script focus out of the editing frame;
-// `moveCursor` uses its own command for that, as a VoiceOver user would. Keys typed after that
-// command no longer reach the page, so controls reached this way are activated with VO+Space.
-async function announce(screenReader, action, moveCursor = false) {
+// under its cursor.
+async function announce(screenReader, action) {
   const phrase = await spoken(screenReader, action)
-  if (!mac) return phrase
-  if (moveCursor) await screenReader.perform(voiceOverKeyCodeCommands.moveCursorToKeyboardFocus)
-  return `${phrase}\n${await screenReader.lastSpokenPhrase()}\n${await screenReader.itemText()}`
+  return mac ? `${phrase}\n${await screenReader.itemText()}` : phrase
+}
+// Moves the VoiceOver cursor to a control outside the editing frame the way a VoiceOver user
+// would: stop interacting with the frame, move the cursor to the keyboard focus, and otherwise
+// pick the control by name in the item chooser. Returns the item text under the cursor.
+async function reachWithVoiceOver(screenReader, locator, name) {
+  await screenReader.stopInteracting()
+  await locator.focus()
+  await screenReader.perform(voiceOverKeyCodeCommands.moveCursorToKeyboardFocus)
+  if (!(await screenReader.itemText()).includes(name)) {
+    await screenReader.perform(voiceOverKeyCodeCommands.openItemChooser)
+    await screenReader.type(name)
+    await screenReader.press('Enter')
+  }
+  return screenReader.itemText()
 }
 // Screen readers may keep the first Escape to leave their focus/interaction mode.
 async function escape(screenReader, closed) {
@@ -96,9 +106,14 @@ test('the document, typing and the bold toggle are announced', async ({ page, sc
   if (mac) await select(typed)
   else await screenReader.press('Shift+Home')
   const bold = page.getByRole('button', { name: 'Kalın', exact: true })
-  expect(await announce(screenReader, () => bold.focus(), true)).toContain('Kalın')
-  if (mac) await screenReader.act()
-  else await screenReader.press('Space')
+  // VoiceOver activates the control under its cursor with VO+Space; NVDA users press Space.
+  if (mac) {
+    expect(await reachWithVoiceOver(screenReader, bold, 'Kalın')).toContain('Kalın')
+    await screenReader.act()
+  } else {
+    expect(await spoken(screenReader, () => bold.focus())).toContain('Kalın')
+    await screenReader.press('Space')
+  }
   await expect(body(page).locator('strong', { hasText: 'ekran okuyucu' })).toHaveCount(1)
   await expect(bold).toHaveAttribute('aria-pressed', 'true')
 })
