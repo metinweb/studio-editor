@@ -57,3 +57,78 @@ jobs:
           name: screen-reader-${{ matrix.project }}
           path: test-results/screen-reader/
           retention-days: 14
+
+  android-chrome:
+    name: Chrome on Android emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: npx playwright test --config playwright.devices.config.js --project=android-chrome --reporter=list
+      - name: Upload Android results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-chrome
+          path: test-results/devices/
+          retention-days: 14
+
+  ios-safari:
+    name: Safari on iOS Simulator
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Choose and boot an iPhone simulator
+        run: |
+          node scripts/ios-simulator.mjs | tee -a "$GITHUB_ENV"
+          IOS_UDID=$(node scripts/ios-simulator.mjs | sed -n 's/^IOS_UDID=//p')
+          xcrun simctl boot "$IOS_UDID" || true
+          xcrun simctl bootstatus "$IOS_UDID" -b
+      - name: Install and start Appium with the XCUITest driver
+        run: |
+          npm install --global appium@3.8.0
+          appium driver install xcuitest@12.17.1
+          npm install --no-save webdriverio@10.0.2
+          nohup appium --address 127.0.0.1 --port 4723 --log "$RUNNER_TEMP/appium.log" > /dev/null 2>&1 &
+          for attempt in $(seq 1 30); do
+            curl -sf http://127.0.0.1:4723/status > /dev/null && exit 0
+            sleep 2
+          done
+          exit 1
+      - run: npx playwright test --config playwright.devices.config.js --project=ios-safari --reporter=list
+      - name: Collect the Appium log
+        if: always()
+        run: cp "$RUNNER_TEMP/appium.log" test-results/devices/ 2>/dev/null || true
+      - name: Upload iOS results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-safari
+          path: test-results/devices/
+          retention-days: 14

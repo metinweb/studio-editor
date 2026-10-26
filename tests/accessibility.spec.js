@@ -62,3 +62,21 @@ test('dark theme and key dialogs have no serious automated violations', async ({
     await expect(dialog).toHaveCount(0)
   }
 })
+
+// NVDA read every autosave state after each typed character; only requested saves speak now.
+test('autosave stays quiet for screen readers and a requested save is announced', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await expect(body(page)).toContainText('İyi fikirler')
+  await body(page).locator('h1').click()
+  await page.keyboard.press('End')
+  await page.keyboard.type(' sessiz')
+  const announcement = page.locator('.save-announcement')
+  await expect(page.locator('.save-state')).toHaveText('Tüm değişiklikler kaydedildi')
+  await expect(page.locator('.save-state')).not.toHaveAttribute('role', /./)
+  await expect(announcement).toHaveAttribute('role', 'status')
+  await expect(announcement).toHaveText('')
+  await page.keyboard.press('ControlOrMeta+s')
+  await expect(announcement).toHaveText('Tüm değişiklikler kaydedildi')
+})

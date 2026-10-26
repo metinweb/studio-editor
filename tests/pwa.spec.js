@@ -28,9 +28,7 @@ test('the workspace installs for offline use and reloads without a network', asy
   await body(page).locator('h1').click()
   await page.keyboard.press('End')
   await page.keyboard.type(' çevrimdışı')
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Tüm değişiklikler kaydedildi' }),
-  ).toBeVisible()
+  await expect(page.locator('.save-state')).toHaveText('Tüm değişiklikler kaydedildi')
   await context.setOffline(true)
   await expect(page.getByRole('status').filter({ hasText: 'Çevrimdışı' })).toBeVisible()
   await page.reload()

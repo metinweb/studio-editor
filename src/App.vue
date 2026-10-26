@@ -179,6 +179,14 @@ const saveLabel = computed(() =>
         ? 'Kaydedilmeyi bekliyor'
         : 'Tüm değişiklikler kaydedildi',
 )
+// Autosave runs after every edit, so its label is not a live region; screen readers hear only
+// saves the user asked for (failures already use the error banner's alert).
+const saveAnnouncement = ref('')
+async function saveNow() {
+  saveAnnouncement.value = ''
+  await workspace.save()
+  if (!workspace.error) saveAnnouncement.value = t('Tüm değişiklikler kaydedildi')
+}
 const preview = computed(() => (workspace.active ? renderDocument(workspace.active) : ''))
 watch(
   () => workspace.activeId,
@@ -262,7 +270,7 @@ async function importHtml(event) {
 function shortcut(event) {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
     event.preventDefault()
-    workspace.save()
+    saveNow()
   }
 }
 function beforeUnload(event) {
@@ -492,7 +500,7 @@ onBeforeUnmount(() => {
         />
         <div v-if="workspace.error" class="error-banner" role="alert">
           {{ t(workspace.error) }}
-          <button class="text-button" @click="workspace.save()">{{ t('Yeniden dene') }}</button>
+          <button class="text-button" @click="saveNow">{{ t('Yeniden dene') }}</button>
         </div>
         <div class="document-heading">
           <div class="document-name">
@@ -597,13 +605,14 @@ onBeforeUnmount(() => {
                 @update:model-value="workspace.update({ content: $event })"
                 @media="openMedia"
                 @source="modal = 'source'"
-                @save="workspace.save()"
+                @save="saveNow"
                 @ready="editorInitialized"
                 @crash="editorCrashed"
               />
             </div>
             <footer class="editor-status">
-              <span class="save-state" :class="{ 'has-error': workspace.error }" role="status"
+              <span class="save-announcement" role="status">{{ saveAnnouncement }}</span
+              ><span class="save-state" :class="{ 'has-error': workspace.error }"
                 ><LoaderCircle v-if="workspace.saving" :size="13" class="spin" /><Circle
                   v-else-if="workspace.dirty || workspace.error"
                   :size="9"

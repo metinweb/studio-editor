@@ -3,21 +3,23 @@ import { expect } from '@playwright/test'
 import { writeFile } from 'node:fs/promises'
 
 // NVDA (Windows) or VoiceOver (macOS) reads the editor while keys go through the operating
-// system. Assertions check what the screen reader actually spoke; each test writes the full
-// transcript to its output folder.
+// system. Assertions check what the screen reader spoke and, for VoiceOver, the text of the item
+// under its cursor (VoiceOver keeps only its last phrase, often a usage hint). Each test writes
+// the transcript to its output folder.
 test.use({ screenReaderStartOptions: { capture: true } })
 
 const mac = process.platform === 'darwin'
 const body = (page) => page.frameLocator('.studio-editor-frame').locator('body')
-const transcript = async (screenReader) => (await screenReader.spokenPhraseLog()).join('\n')
+const heard = async (screenReader) =>
+  [...(await screenReader.spokenPhraseLog()), ...(await screenReader.itemTextLog())].join('\n')
 const activeLabel = (page) =>
   page.evaluate(() => {
     const element = document.activeElement
     return element.dataset.label || element.getAttribute('aria-label') || element.textContent.trim()
   })
 async function spoken(screenReader, action) {
-  const { spokenPhrase } = await screenReader.capture(action)
-  return spokenPhrase
+  const { spokenPhrase, itemText } = await screenReader.capture(action)
+  return `${spokenPhrase}\n${itemText}`
 }
 // Screen readers may keep the first Escape to leave their focus/interaction mode.
 async function escape(screenReader, closed) {
@@ -32,18 +34,23 @@ async function open(page, screenReader) {
 
 test.afterEach(async ({ screenReader }, testInfo) => {
   const path = testInfo.outputPath('transcript.txt')
-  await writeFile(path, await transcript(screenReader))
+  const spokenLog = (await screenReader.spokenPhraseLog()).join('\n')
+  const itemLog = (await screenReader.itemTextLog()).join('\n')
+  await writeFile(path, `Spoken:\n${spokenLog}\n\nItem text:\n${itemLog}\n`)
   await testInfo.attach('screen-reader-transcript', { path, contentType: 'text/plain' })
 })
 
 test('the document, typing and the bold toggle are announced', async ({ page, screenReader }) => {
   await open(page, screenReader)
   const document = await spoken(screenReader, () => body(page).locator('h1').click())
-  expect(document).toMatch(/Belge (içeriği|düzenleme alanı)/)
+  // NVDA reads the frame and editor labels; VoiceOver reads the line and the text area role.
+  expect(document).toMatch(mac ? /text area/ : /Belge (içeriği|düzenleme alanı)/)
   await screenReader.press('End')
   await screenReader.press('Enter')
   await screenReader.type('ekran okuyucu')
   await expect(body(page).locator('p', { hasText: 'ekran okuyucu' })).toHaveCount(1)
+  // Autosave after each character must not be read aloud.
+  expect(await heard(screenReader)).not.toMatch(/Kaydediliyor|Kaydedilmeyi bekliyor/)
   await screenReader.press('Shift+Home')
   const bold = page.getByRole('button', { name: 'Kalın', exact: true })
   expect(await spoken(screenReader, () => bold.focus())).toContain('Kalın')
@@ -63,9 +70,9 @@ test('menus open, move and close with announced items', async ({ page, screenRea
     .locator('[role=menuitem]')
     .evaluateAll((items) => items.map((item) => item.dataset.label))
   expect(labels).toContain(await activeLabel(page))
-  expect(await transcript(screenReader)).toContain(await activeLabel(page))
+  expect(await heard(screenReader)).toContain(await activeLabel(page))
   await screenReader.press('ArrowDown')
-  expect(await screenReader.lastSpokenPhrase()).toContain(labels[1])
+  expect(await heard(screenReader)).toContain(labels[1])
   await escape(screenReader, async () => !(await page.getByRole('menu').count()))
   await expect(page.getByRole('menu')).toHaveCount(0)
   await expect(insert).toBeFocused()
@@ -87,5 +94,5 @@ test('dialogs announce their name and return focus', async ({ page, screenReader
   await screenReader.press(mac ? 'Command+f' : 'Control+f')
   const search = page.getByRole('textbox', { name: 'Aranacak metin' })
   await expect(search).toBeFocused()
-  expect(await transcript(screenReader)).toContain('Aranacak metin')
+  expect(await heard(screenReader)).toContain('Aranacak metin')
 })

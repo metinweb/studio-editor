@@ -1,11 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const mobileSpecs = /mobile-[\w-]+\.spec\.js$/
-const desktopIgnore = ['**/site/**', '**/screen-reader/**', '**/mobile-*.spec.js']
+const desktopIgnore = ['**/site/**', '**/screen-reader/**', '**/devices/**', '**/mobile-*.spec.js']
 
 export default defineConfig({
   testDir: './tests',
-  testIgnore: ['**/site/**', '**/screen-reader/**'],
+  testIgnore: ['**/site/**', '**/screen-reader/**', '**/devices/**'],
   fullyParallel: true,
   workers: 4,
   timeout: 30000,
