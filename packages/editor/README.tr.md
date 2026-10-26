@@ -88,7 +88,7 @@ Bağımsız düzenleme motoru, tablo araçları, yerleşik resim editörü, medy
 yorumlar ve renklendirilmiş HTML kaynak görünümü içeren **yerel beta paketi**.
 
 Proje MIT lisansıyla açık kaynak olarak yayımlanmıştır.
-Bu paket henüz npm kayıt deposunda yayımlanmadı; aşağıdaki kurulum yerel `.tgz` içindir.
+0.1.0-beta.12 GitHub Packages'ta `@metinweb/studio-editor` adıyla yayımlandı (`.npmrc` ayarı için [RELEASE.md](../../docs/RELEASE.md)); npmjs.org'da henüz yok. Aşağıdaki kurulum yerel `.tgz` içindir.
 
 ## Kurulum
 
@@ -269,7 +269,7 @@ paketlenen bağımlılıkların kendi lisanslarını içerir.
 
 Yeni API: `getModel`, `setModel`, `applyOperations`, `registerPlugin`, `executeCommand`, `getCommands`, `refreshMedia`; paket yardımcıları `createHttpMediaAdapter`, `createDocumentSession`, `renderPrintDocument`, `printDocument`, `exportDocx`, `loadCollaboration`. `direction` prop'u `ltr`, `rtl`, `auto` kabul eder. Slash menüsü, Markdown blok kısayolları, sürüklenebilir bloklar, WebP/kalite, metin önerileri ve DOCX/yazdırma paneli bileşene dahildir. Resim Worker'ı pakete gömülüdür; CSP kullanıyorsanız `worker-src blob:` izni gerekir, desteklenmeyen ortamlarda ana iş parçacığına dönülür.
 
-İş birliği deneysel: canlı binding ve yerel undo vardır; eş zamanlı karmaşık yapı değişiklikleri henüz üretim doğrulamasından geçmemiştir. Yeni `.studio.json` yedekleri ve kalıcı sürüm paneli bağımsız web uygulamasındadır. Proje MIT lisansıyla açık kaynaktır; npm kayıt deposuna yayın yapılmadı.
+İş birliği deneysel: canlı binding ve yerel undo vardır; eş zamanlı karmaşık yapı değişiklikleri henüz üretim doğrulamasından geçmemiştir. Yeni `.studio.json` yedekleri ve kalıcı sürüm paneli bağımsız web uygulamasındadır. Proje MIT lisansıyla açık kaynaktır; paket GitHub Packages'ta yayımlandı, npmjs.org yayını `NPM_TOKEN` bekliyor.
 
 `blockIds` prop'unu kaydedilmiş belgeyle birlikte sağlayabilirsiniz. `transaction.blockIdsAfter`
 değerini HTML ile birlikte saklayın. Şema 2 modeli zaten kimlikleri içerir.

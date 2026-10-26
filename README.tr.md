@@ -20,7 +20,7 @@ Varsayılan dil İngilizcedir. Yan menüdeki **Interface language → Türkçe**
 
 Studio, **TinyMCE kullanmayan** bir Vue 3 + Pinia içerik uygulamasıdır. Görsel editörün motoru bu proje içinde yazılmıştır; TinyMCE, TipTap, ProseMirror, Lexical veya başka bir hazır görsel editöre dayanmaz. HTML kaynak kodu penceresinde CodeMirror, HTML temizlemede DOMPurify kullanılmaya devam eder. Dolayısıyla uygulamanın tamamı bağımlılıksız değildir.
 
-İki dağıtım hazırlanır: bağımsız web uygulaması ve Vue bileşeni. Proje [MIT lisansıyla](LICENSE) açık kaynaktır. Vue paketi henüz npm'ye yayımlanmadı; kaynak veya yerel `.tgz` üzerinden kullanılabilir. Etiketle tetiklenen yayın iş akışı [yayın belgesinde](docs/RELEASE.md) anlatılır.
+İki dağıtım hazırlanır: bağımsız web uygulaması ve Vue bileşeni. Proje [MIT lisansıyla](LICENSE) açık kaynaktır. 0.1.0-beta.12 sürümü GitHub Packages'ta `@metinweb/studio-editor` adıyla yayımlandı; npmjs.org'da henüz yok. Kaynak veya yerel `.tgz` üzerinden de kullanılabilir. Etiketle tetiklenen yayın iş akışı [yayın belgesinde](docs/RELEASE.md) anlatılır.
 
 - [TinyMCE karşılaştırması ve güncel özellik kapsamı](docs/TINYMCE-COMPARISON.md)
 - [Araştırma ve öncelikli yol haritası](docs/ROADMAP.md)

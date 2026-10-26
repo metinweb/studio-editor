@@ -66,7 +66,7 @@ Deploy `dist/` to a static HTTP server. Assets use relative paths, so subdirecto
 
 ## Vue component
 
-The source package is under [`packages/editor`](packages/editor). Build it with `npm run build:library`. The package is **not published to npm**; do not assume an npm registry package with the same name belongs to this project.
+The source package is under [`packages/editor`](packages/editor). Build it with `npm run build:library`. Version 0.1.0-beta.12 is published on GitHub Packages as `@metinweb/studio-editor` ([install instructions](docs/RELEASE.md)); it is not yet on npmjs.org, so do not assume a `studio-editor` package there belongs to this project.
 
 Create a local installable tarball with `npm run package:release`. See the [package API and integration guide](packages/editor/README.md) and [working Vue example](examples/vue/App.vue) for `v-model`, events, options and adapters. The component's `save` event must be connected to your own persistence layer.
 

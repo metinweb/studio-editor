@@ -16,7 +16,7 @@ The default interface is **English**. Set `locale="tr"` for Turkish. Changing th
 
 ## Install from source
 
-This beta is not published to npm. Build a local package from this repository:
+0.1.0-beta.12 is published on GitHub Packages as `@metinweb/studio-editor` (see [RELEASE.md](../../docs/RELEASE.md) for the `.npmrc`); it is not yet on npmjs.org. To build a local package from this repository instead:
 
 ```sh
 npm ci

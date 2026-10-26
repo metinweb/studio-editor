@@ -29,7 +29,7 @@ Web/Vue paketleri MIT `LICENSE`, üçüncü taraf lisans metinleri ve bağımlı
 
 ## npm ve kararlı sürüm
 
-Paketler henüz npm kayıt deposuna yayımlanmadı. `private: true` yanlışlıkla npm yayımını önler; GitHub görünürlüğünü ve MIT lisansını etkilemez. 26 Ekim 2026 itibarıyla `studio-editor` adı npm'de kayıtlı değildir (adın sahipliği yayın anında oluşur).
+**0.1.0-beta.12, 26 Ekim 2026'da GitHub Packages'ta `@metinweb/studio-editor` adıyla herkese açık olarak yayımlandı** ([paket sayfası](https://github.com/users/metinweb/packages/npm/package/studio-editor)). npmjs.org yayını, depoya `NPM_TOKEN` eklenip etiket yeniden çalıştırılınca yapılır; 26 Ekim 2026 itibarıyla `studio-editor` adı npm'de kayıtlı değildir. Kaynak paketteki `private: true` yanlışlıkla yerel yayını önler.
 
 Yayın `.github/workflows/publish.yml` ile yapılır. `packages/editor/package.json` sürümüyle eşleşen bir etiket (`v0.1.0-beta.12`) gönderildiğinde iş akışı lint, tip, birim ve kurulu paket testlerini çalıştırır, etiket/sürüm eşleşmesini denetler ve tarball'ın `private` alanı kaldırılmış kopyalarını yayımlar. Ön sürümler (`-beta`) `beta` dist-tag'iyle yayımlanır.
 
