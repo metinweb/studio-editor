@@ -10,16 +10,20 @@ import { editorState, inputLog, recordInput } from './touch.js'
 const udid = process.env.IOS_UDID
 const english = 'en_US@sw=QWERTY;hw=Automatic'
 
-// The keyboard list is read when an app starts, so Safari is restarted after it changes.
+// The keyboard UI runs outside Safari and keeps the keyboard list it started with, so the
+// simulator restarts after the list changes. Appium boots it again for the next session.
 function useKeyboard(id) {
-  const simctl = (...args) => execFileSync('xcrun', ['simctl', ...args], { stdio: 'pipe' })
+  const simctl = (...args) => execFileSync('xcrun', ['simctl', ...args], { encoding: 'utf8' })
   const write = (domain, ...value) => simctl('spawn', udid, 'defaults', 'write', domain, ...value)
+  const keyboards = () =>
+    simctl('spawn', udid, 'defaults', 'read', '.GlobalPreferences', 'AppleKeyboards')
   write('.GlobalPreferences', 'AppleKeyboards', '-array', id)
   write('com.apple.Preferences', 'KeyboardsCurrentAndNext', '-array', id)
   write('com.apple.Preferences', 'KeyboardLastUsed', id)
-  try {
-    simctl('terminate', udid, 'com.apple.mobilesafari')
-  } catch {}
+  simctl('shutdown', udid)
+  simctl('boot', udid)
+  simctl('bootstatus', udid, '-b')
+  console.log(`Keyboards after restart: ${keyboards().replace(/\s+/g, ' ')}`)
 }
 
 async function openSafari() {
@@ -106,7 +110,6 @@ async function openSafari() {
 
 test('touch and the software keyboard edit the document in Safari on iOS', async () => {
   test.skip(!udid, 'Set IOS_UDID to an iOS Simulator and start Appium')
-  useKeyboard(english)
   const safari = await openSafari()
   try {
     await safari.reset()

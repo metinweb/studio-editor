@@ -113,6 +113,15 @@ jobs:
           IOS_UDID=$(node scripts/ios-simulator.mjs | sed -n 's/^IOS_UDID=//p')
           xcrun simctl boot "$IOS_UDID" || true
           xcrun simctl bootstatus "$IOS_UDID" -b
+      - name: List the simulator's Turkish, Japanese and Chinese keyboard bundles
+        continue-on-error: true
+        run: |
+          ROOT=$(xcrun simctl list runtimes --json | node -e "const { runtimes } = JSON.parse(require('fs').readFileSync(0)); console.log(runtimes.find((r) => r.platform === 'iOS' && r.version === process.env.IOS_VERSION)?.runtimeRoot || '')")
+          ls "$ROOT/System/Library/TextInput" | grep -E "TextInput_(tr|ja|zh)" || true
+          for plist in "$ROOT"/System/Library/TextInput/TextInput_{tr,ja,zh}.bundle/Info.plist; do
+            echo "== $plist"
+            plutil -p "$plist" | head -80
+          done
       - name: Install and start Appium with the XCUITest driver
         run: |
           npm install --global appium@3.8.0
