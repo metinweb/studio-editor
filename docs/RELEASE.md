@@ -31,13 +31,22 @@ Web/Vue paketleri MIT `LICENSE`, üçüncü taraf lisans metinleri ve bağımlı
 
 Paketler henüz npm kayıt deposuna yayımlanmadı. `private: true` yanlışlıkla npm yayımını önler; GitHub görünürlüğünü ve MIT lisansını etkilemez. 26 Ekim 2026 itibarıyla `studio-editor` adı npm'de kayıtlı değildir (adın sahipliği yayın anında oluşur).
 
-Yayın için `.github/workflows/publish.yml` hazırdır:
+Yayın `.github/workflows/publish.yml` ile yapılır. `packages/editor/package.json` sürümüyle eşleşen bir etiket (`v0.1.0-beta.12`) gönderildiğinde iş akışı lint, tip, birim ve kurulu paket testlerini çalıştırır, etiket/sürüm eşleşmesini denetler ve tarball'ın `private` alanı kaldırılmış kopyalarını yayımlar. Ön sürümler (`-beta`) `beta` dist-tag'iyle yayımlanır.
 
-1. npm'de bir otomasyon (automation) token'ı oluşturup depoya `NPM_TOKEN` gizli anahtarı olarak ekleyin; isteğe bağlı olarak `npm` adlı GitHub ortamına onay kuralı koyun.
-2. `packages/editor/package.json` sürümüyle eşleşen etiketi gönderin: `git tag v0.1.0-beta.12 && git push origin v0.1.0-beta.12`.
-3. İş akışı lint, tip, birim ve kurulu paket testlerini çalıştırır, etiket/sürüm eşleşmesini denetler, tarball'ın `private` alanı kaldırılmış kopyasını `--provenance` ile yayımlar. Ön sürümler (`-beta`) `beta` dist-tag'iyle yayımlanır.
+- **GitHub Packages:** her etikette iş akışının kendi `GITHUB_TOKEN`'ıyla `@metinweb/studio-editor` adıyla yayımlanır; ek gizli anahtar gerekmez.
+- **npmjs.org:** depoya `NPM_TOKEN` gizli anahtarı (npm otomasyon token'ı) eklendiğinde aynı iş akışı `studio-editor` adıyla `--provenance` kullanarak yayımlar. Bu anahtar yoksa adım atlanır.
 
-Önce **Actions → Publish npm package → Run workflow** ile `dry-run` seçili çalıştırıp paket içeriğini görebilirsiniz. Kaynak paket `private: true` olarak kalır; yerel `npm publish` bu yüzden reddedilir.
+GitHub Packages'tan kurulum (GitHub'ın npm kayıt deposu, herkese açık paketler için de `read:packages` yetkili bir token ister):
+
+```sh
+# .npmrc
+@metinweb:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+
+npm install @metinweb/studio-editor@beta vue@^3.5 pinia
+```
+
+`import { StudioEditor } from '@metinweb/studio-editor'`; alt yollar aynıdır (`/style.css`, `/browser`, `/lite`). **Actions → Publish npm package → Run workflow** ile `dry-run` seçili çalıştırıp paket içeriğini yayımlamadan görebilirsiniz. Kaynak paket `private: true` olarak kalır; yerel `npm publish` bu yüzden reddedilir.
 
 Mevcut beta, bağımsız güvenlik incelemesi veya bütün fiziksel cihazlarda kabul testi yapıldığı anlamına gelmez. Gerçek mobil/IME/ekran okuyucu kontrolleri ve deneysel ortak düzenlemede eş zamanlı yapısal değişiklikler açık çalışma alanlarıdır. Medya ve iş birliği sunucuları referans uygulamalardır.
 

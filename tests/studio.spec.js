@@ -101,7 +101,8 @@ test('imports sanitized HTML and exports a standalone document', async ({ page }
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Dışa aktar', exact: true }).click()
   const download = await downloadPromise
-  expect(download.suggestedFilename()).toBe('Aktarılan belge.html')
+  // WebKit on Linux replaces spaces in suggested download names with underscores.
+  expect(download.suggestedFilename().replaceAll('_', ' ')).toBe('Aktarılan belge.html')
   const stream = await download.createReadStream()
   const chunks = []
   for await (const chunk of stream) chunks.push(chunk)
