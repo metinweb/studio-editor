@@ -14,17 +14,21 @@ function installed(pkg) {
 }
 const focusedWindow = () => adb('shell', 'dumpsys', 'window').match(/mCurrentFocus=.*/)?.[0] || ''
 // Busy emulators show "… isn't responding" for system apps; choose Wait so taps reach Chrome.
-function dismissNotResponding() {
-  for (let attempt = 0; attempt < 5 && /Not Responding/.test(focusedWindow()); attempt++) {
-    adb('shell', 'uiautomator', 'dump', '/sdcard/window.xml')
-    const wait = adb('shell', 'cat', '/sdcard/window.xml').match(
-      /resource-id="android:id\/aerr_wait"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/,
-    )
-    if (!wait) adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
-    else {
+// (Back would also close the dialog but navigates Chrome when the dialog is already gone.)
+async function dismissNotResponding() {
+  for (let attempt = 0; attempt < 10 && /Not Responding/.test(focusedWindow()); attempt++) {
+    let wait
+    try {
+      adb('shell', 'uiautomator', 'dump', '/sdcard/window.xml')
+      wait = adb('shell', 'cat', '/sdcard/window.xml').match(
+        /resource-id="android:id\/aerr_wait"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/,
+      )
+    } catch {}
+    if (wait) {
       const [left, top, right, bottom] = wait.slice(1).map(Number)
       adb('shell', 'input', 'tap', Math.round((left + right) / 2), Math.round((top + bottom) / 2))
     }
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 }
 
@@ -47,7 +51,11 @@ test('touch and key input edit the document in Chrome on Android', async () => {
     await test.info().attach(name, { path, contentType: 'image/png' })
   }
   try {
-    await context.addInitScript(() => localStorage.setItem('studio-locale', 'tr'))
+    await context.addInitScript(() => {
+      localStorage.setItem('studio-locale', 'tr')
+      // Keeps Chrome's install banner for the web app from covering the page.
+      addEventListener('beforeinstallprompt', (event) => event.preventDefault())
+    })
     const page = context.pages()[0] ?? (await context.newPage())
     await page.goto('http://127.0.0.1:4173/')
     const size = adb('shell', 'wm', 'size')
@@ -60,7 +68,7 @@ test('touch and key input edit the document in Chrome on Android', async () => {
         evaluate: (fn, arg) => page.evaluate(fn, arg),
         screen: async () => ({ width, height }),
         tap: async ({ x, y }) => {
-          dismissNotResponding()
+          await dismissNotResponding()
           adb('shell', 'input', 'tap', x, y)
         },
         type: async (text) => adb('shell', 'input', 'text', text.replaceAll(' ', '%s')),

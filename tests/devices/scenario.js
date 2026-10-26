@@ -16,11 +16,18 @@ import {
 export async function tapElement(device, target) {
   const center = await device.evaluate(elementCenter, target)
   expect(center, `${target.name || target.selector} is visible`).toBeTruthy()
-  await device.evaluate(installProbe)
   const points = probePoints(await device.screen())
-  for (const point of points) await device.tap(point)
-  await expect.poll(() => device.evaluate(() => window.__studioProbe.touches.length)).toBe(2)
-  const touches = await device.evaluate(readProbe)
+  let touches = []
+  // A system dialog or browser bubble can take a probe tap; measure again in that case.
+  for (let attempt = 0; attempt < 3 && touches.length !== 2; attempt++) {
+    await device.evaluate(installProbe)
+    for (const point of points) await device.tap(point)
+    await expect
+      .poll(() => device.evaluate(() => window.__studioProbe.touches.length))
+      .toBe(2)
+      .catch(() => {})
+    touches = await device.evaluate(readProbe)
+  }
   expect(touches.map((touch) => touch.type)).toEqual(['touch', 'touch'])
   await device.tap(deviceMapping(points, touches)(center))
 }

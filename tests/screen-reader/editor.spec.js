@@ -1,4 +1,5 @@
 import { screenReaderTest as test } from '@guidepup/playwright'
+import { voiceOverKeyCodeCommands } from '@guidepup/guidepup'
 import { expect } from '@playwright/test'
 import { writeFile } from 'node:fs/promises'
 
@@ -30,12 +31,13 @@ async function spoken(screenReader, action) {
   const { spokenPhrase, itemText } = await screenReader.capture(action)
   return `${spokenPhrase}\n${itemText}`
 }
-// VoiceOver's cursor does not follow script focus out of the editing frame; its own command moves
-// the cursor to the keyboard focus, as a VoiceOver user would.
-async function focusAndRead(screenReader, locator) {
-  if (!mac) return spoken(screenReader, () => locator.focus())
-  await locator.focus()
-  await screenReader.perform(screenReader.keyboardCommands.moveCursorToKeyboardFocus)
+// Runs a focus change and returns what describes the new focus. VoiceOver's cursor does not always
+// follow script focus across the editing frame, so its own command moves the cursor to the
+// keyboard focus, as a VoiceOver user would, and the item text under the cursor is read.
+async function announce(screenReader, action) {
+  if (!mac) return spoken(screenReader, action)
+  await action()
+  await screenReader.perform(voiceOverKeyCodeCommands.moveCursorToKeyboardFocus)
   return `${await screenReader.lastSpokenPhrase()}\n${await screenReader.itemText()}`
 }
 // Screen readers may keep the first Escape to leave their focus/interaction mode.
@@ -78,9 +80,8 @@ test.afterEach(async ({ page, screenReader }, testInfo) => {
 
 test('the document, typing and the bold toggle are announced', async ({ page, screenReader }) => {
   await open(page, screenReader)
-  const document = await spoken(screenReader, () => body(page).locator('h1').click())
-  // NVDA reads the frame and editor labels; VoiceOver reads the line and the text area role.
-  expect(document).toMatch(mac ? /text area/ : /Belge (içeriği|düzenleme alanı)/)
+  const document = await announce(screenReader, () => body(page).locator('h1').click())
+  expect(document).toMatch(/Belge (içeriği|düzenleme alanı)/)
   // VoiceOver uses Home/End to move its own cursor (and keyboard focus) through the page, so on
   // macOS the caret and selection are set by script. Enter, typing and Space are real keys.
   if (mac) await select(body(page).locator('h1'), true)
@@ -94,7 +95,7 @@ test('the document, typing and the bold toggle are announced', async ({ page, sc
   if (mac) await select(typed)
   else await screenReader.press('Shift+Home')
   const bold = page.getByRole('button', { name: 'Kalın', exact: true })
-  expect(await focusAndRead(screenReader, bold)).toContain('Kalın')
+  expect(await announce(screenReader, () => bold.focus())).toContain('Kalın')
   await screenReader.press('Space')
   await expect(body(page).locator('strong', { hasText: 'ekran okuyucu' })).toHaveCount(1)
   await expect(bold).toHaveAttribute('aria-pressed', 'true')
