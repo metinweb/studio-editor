@@ -218,7 +218,9 @@ test('Turkish, Japanese and Chinese keyboards type into the editor in Safari on 
           await safari.native(async () => {
             const rest = keyboard.candidate ? keyboard.keys.slice(1) : keyboard.keys
             for (const character of rest) await (await safari.key(character)).click()
-            if (keyboard.candidate) await (await safari.key(keyboard.candidate)).click()
+            // The candidate bar lists a cell and its text with the same name.
+            if (keyboard.candidate)
+              await (await safari.driver.$$(`~${keyboard.candidate}`))[0].click()
           })
           await expect.poll(async () => occurrences((await state()).text, result)).toBe(before + 1)
           const events = await safari.device.evaluate(inputLog)
